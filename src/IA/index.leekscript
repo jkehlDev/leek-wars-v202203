@@ -1,0 +1,8 @@
+include('IaResolvers');
+// -- ---------------
+include('IaDdStrength');
+include('IaDdMagic');
+include('IaDdScience');
+include('IaTank');
+include('IaHealer');
+include('IaSummoners');

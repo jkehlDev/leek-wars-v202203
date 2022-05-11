@@ -1,0 +1,170 @@
+function getEmptyBinaryMap() {
+	var map_path_binary = [];
+	fill(map_path_binary, 0, 35);
+	return map_path_binary;
+}
+
+function getEmptyBinaryMapBordered() {
+	var map_binary = clone(full_binary_map, 2);
+	var cell_max, line, cell;
+	for (line = 0; line <= 34; line++) {
+		cell_max = (18 - line % 2);
+		for (cell = 0; cell < cell_max; cell++) {
+			map_binary[line] &= ~(1 << cell);
+		}
+	}
+	return map_binary;
+}
+
+function getFullBinaryMap() {
+	var map_path_binary = [];
+	fill(map_path_binary, (~0), 35);
+	return map_path_binary;
+}
+
+function markBooleanMap(map_boolean, mark_color) {
+	for (var tested_cell in map_boolean) {
+		mark(tested_cell.cell_id, mark_color, 1);
+	}
+}
+
+function markBinaryMap(map_binary, mark_color) {
+	var map_boolean = convertBinaryMapToCellIdMap(map_binary.map, map_binary.coordinates_min, map_binary.coordinates_max);
+	for (var tested_cell in map_boolean) {
+		mark(tested_cell.cell_id, mark_color, 1);
+	}
+}
+
+function binaryMapHasCell(map_binary, cell_id) {
+	var cell_coord = convertCellIdToLineNdCell(cell_id);
+	return binaryMapHasCellByCoord(map_binary, cell_coord);
+}
+
+function binaryMapHasCellByCoord(map_binary, cell_coord) {
+	return ((map_binary[cell_coord.line] & (1 << cell_coord.cell)) !== 0);
+}
+
+function binaryMapEmpty(map_binary, line_min, line_max) {
+	return !binaryMapNotEmpty(map_binary, line_min, line_max);
+}
+
+function binaryMapNotEmpty(map_binary, line_min, line_max) {
+	for (var line = line_min; line <= line_max; line++) {
+		if (map_binary[line] !== 0) {
+			return true
+		}
+	}
+	return false;
+}
+
+function resolveBinaryMapLineBorders(map_binary, offset) {
+	var index;
+	var line_min = 0;
+	for (index = 0; index < 35; index++) {
+		if (map_binary[index] > 0) {
+			line_min = index;
+			break;
+		}
+
+	}
+	var line_max = 34;
+	for (index = 34; index > -1; index--) {
+		if (map_binary[index] > 0) {
+			line_max = index;
+			break;
+		}
+	}
+	// - --
+	return {
+		line_min: max(0, line_min - offset),
+		line_max: min(34, line_max + offset)
+	};
+}
+
+function getPathLengthByPathCube(pathCube, cellTo) {
+	if (pathCube.cell_origin === cellTo) {
+		return 0;
+	}
+	var coor = convertCellIdToLineNdCell(cellTo);
+	for (var level = 1; level <= pathCube.pathRange; level++) {
+		if (pathCube.map[level][coor.line] & (1 << coor.cell)) {
+			return level;
+		}
+	}
+	return getPathLength(pathCube.cell_origin, cellTo);
+}
+
+/**
+ * Resolve indexed array of obstacles cells
+ * */
+function resolveCellsObstacles() {
+	var obstacleCellIds = getObstacles();
+	var cellsObstacles = [];
+	for (var cellId in obstacleCellIds) {
+		cellsObstacles[cellId] = {
+			cell_id: cellId,
+			cell_state: true
+		};
+	}
+	return cellsObstacles;
+};
+
+function arrayInclude(array, f) {
+	var isInclude = false;
+	for (var elmt in array) {
+		if (f(elmt)) {
+			isInclude = true;
+			break;
+		}
+	}
+	return isInclude;
+}
+
+function arrayCount(array, f) {
+	return count(arrayFilter(array, f));
+}
+
+function decimal(value, nb) {
+	return ceil(value * pow(10, nb)) / pow(10, nb);
+}
+
+/**
+ * Return indexed array, callback give index for each element in array
+ * */
+function arrayIndex(array, f) {
+	var result = [];
+	for (var elmt in array) {
+		result[f(elmt)] = elmt;
+	}
+	return result;
+}
+
+// ----
+function forEachLineNdCell(line_min, line_max, f) {
+	var cell_max, line, cell;
+	line_min = line_min > 0 ? line_min : 0;
+	line_max = line_max < 34 ? line_max : 34;
+	for (line = line_min; line <= line_max; line++) {
+		cell_max = (18 - line % 2);
+		for (cell = 0; cell < cell_max; cell++) {
+			f(line, cell);
+		}
+	}
+}
+
+function ArrayAccumulate(arrays){
+	return arrayFoldLeft(arrays, function(v0, vx){
+		if(typeOf(vx) === TYPE_ARRAY){
+			pushAll(v0, vx);
+		}else{
+			push(v0, vx);
+		}
+		return v0;
+	}, []);	
+}
+
+
+
+
+
+

@@ -1,0 +1,50 @@
+/**
+ * { radar_leek_id,	radar_zones }[leek_id]
+ * { map, coordinates_min, coordinates_max, leeks: [ LEEK_TYPE_ALLY: [], LEEK_TYPE_ALLY_SUMMON: [], LEEK_TYPE_ENEMY: [], LEEK_TYPE_ENEMY_SUMMON: []] }
+ * */
+global radar_zones_by_leek;
+
+/**
+ * Balance index : allies <<< - 0 + >>> enemies
+ * { cell_id, enemies_data, allies_data, balance_life, balance_strenght, balance_magic, balance_wisdom }
+ * { zone_sum_life, zone_count_leeks, zone_average_lifeRate, zone_sum_tp, zone_average_power,
+ *   zone_average_strength, zone_average_wisdom, zone_average_magic, zone_average_resistance }
+ */
+global radar_tactic_map_by_cells;
+// -- ----------------
+function refreshRadarZones() {
+	radar_zones_by_leek = [];
+	for (var leek in getAllAliveLeeks()) {
+		radar_zones_by_leek[leek.leek_id] = resolveZonesRadar(2, leek);
+	}
+}
+
+/**
+ * { radar_leek_id, radar_zones, leek_path_map, all_leeks_in_zones }
+ * radar_zones[] : { map, coordinates_min, coordinates_max, leeks: [ LEEK_TYPE_ALLY: [], LEEK_TYPE_ALLY_SUMMON: [], LEEK_TYPE_ENEMY: [], LEEK_TYPE_ENEMY_SUMMON: []] }
+ * all_leeks_in_zones[] : [ LEEK_TYPE_ALLY: [], LEEK_TYPE_ALLY_SUMMON: [], LEEK_TYPE_ENEMY: [], LEEK_TYPE_ENEMY_SUMMON: []]
+ * */
+function myLeekRadarZones() {
+	return radar_zones_by_leek[myLeek().leek_id];
+}
+
+function refreshRadarTactic() {
+	radar_tactic_map_by_cells = [];
+	var leek, radar_zone, cellsInMap, cell, zone;
+	for (cell in full_path_map_cells) {
+		radar_tactic_map_by_cells[cell.cell_id] = new TacticMapCell(cell.cell_id);
+	}
+	for (radar_zone in radar_zones_by_leek) {
+		leek = getLeekById(radar_zone.radar_leek_id);
+		for (zone = 0; zone < 2; zone++) {
+			cellsInMap = convertBinaryMapToCellIdMap(
+				radar_zone.radar_zones[zone].map,
+				radar_zone.radar_zones[zone].coordinates_min,
+				radar_zone.radar_zones[zone].coordinates_max
+			);
+			for (cell in cellsInMap) {
+				radar_tactic_map_by_cells[cell.cell_id].addLeek(leek, 1 - (0.25 * zone));
+			}
+		}
+	}
+}

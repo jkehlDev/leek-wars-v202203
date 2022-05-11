@@ -1,0 +1,97 @@
+class TacticMapCell {
+	cell_id;
+	tactical_value;
+	enemies_data;
+	allies_data;
+
+	// Balance index : allies <<< - 0 + >>> enemies
+	balance_life;
+	balance_strenght;
+	balance_magic;
+	balance_wisdom;
+
+	constructor(cell_id) {
+		this.cell_id = cell_id;
+		this.tactical_value = tactical_map_area[cell_id];
+		this.enemies_data = new TacticMapData();
+		this.allies_data = new TacticMapData();
+		this.balance_life = 0;
+		this.balance_strenght = 0;
+		this.balance_magic = 0;
+		this.balance_wisdom = 0;
+	}
+
+	addLeek(leek, factor) {
+		if (leek.leek_isEnemy) {
+			this.enemies_data.zone_count_leeks += 1;
+			this.enemies_data.zone_sum_life += leek.leek_life * factor;
+			this.enemies_data.zone_average_lifeRate = getAverageData(this.enemies_data.zone_average_lifeRate, leek.leek_lifeRate());
+			this.enemies_data.zone_sum_tp += leek.leek_tp;
+			this.enemies_data.zone_average_power = getAverageData(this.enemies_data.zone_average_power, leek.leek_power * factor);
+			this.enemies_data.zone_average_strength = getAverageData(this.enemies_data.zone_average_strength, leek.leek_strength * factor);
+			this.enemies_data.zone_average_wisdom = getAverageData(this.enemies_data.zone_average_wisdom, leek.leek_wisdom * factor);
+			this.enemies_data.zone_average_magic = getAverageData(this.enemies_data.zone_average_magic, leek.leek_magic * factor);
+			this.enemies_data.zone_average_resistance = getAverageData(this.enemies_data.zone_average_resistance, leek.leek_resistance * factor);
+		} else {
+			this.allies_data.zone_count_leeks += 1;
+			this.allies_data.zone_sum_life += leek.leek_life * factor;
+			this.allies_data.zone_average_lifeRate = getAverageData(this.allies_data.zone_average_lifeRate, leek.leek_lifeRate());
+			this.allies_data.zone_sum_tp += leek.leek_tp;
+			this.allies_data.zone_average_power = getAverageData(this.allies_data.zone_average_power, leek.leek_power * factor);
+			this.allies_data.zone_average_strength = getAverageData(this.allies_data.zone_average_strength, leek.leek_strength * factor);
+			this.allies_data.zone_average_wisdom = getAverageData(this.allies_data.zone_average_wisdom, leek.leek_wisdom * factor);
+			this.allies_data.zone_average_magic = getAverageData(this.allies_data.zone_average_magic, leek.leek_magic * factor);
+			this.allies_data.zone_average_resistance = getAverageData(this.allies_data.zone_average_resistance, leek.leek_resistance * factor);
+		}
+		var sumTp = this.enemies_data.zone_sum_tp + this.allies_data.zone_sum_tp;
+		var sumCountLeeks = this.enemies_data.zone_count_leeks + this.allies_data.zone_count_leeks;
+		this.balance_life = round(((this.enemies_data.zone_sum_life) - (this.allies_data.zone_sum_life)) / sumCountLeeks);
+		this.balance_strenght = round(((this.enemies_data.zone_average_strength * this.enemies_data.zone_sum_tp) - (this.allies_data.zone_average_strength * this.allies_data.zone_sum_tp)) / sumTp);
+		this.balance_magic = round(((this.enemies_data.zone_average_magic * this.enemies_data.zone_sum_tp) - (this.allies_data.zone_average_magic * this.allies_data.zone_sum_tp)) / sumTp);
+		this.balance_wisdom = round(((this.enemies_data.zone_average_wisdom * this.enemies_data.zone_sum_tp) - (this.allies_data.zone_average_wisdom * this.allies_data.zone_sum_tp)) / sumTp);
+	}
+
+	compareTo(to) {
+		return 
+		(this.balance_life < to.balance_life ? -1 :
+			(this.balance_life > to.balance_life ? 1 :
+				(this.balance_strenght < to.balance_strenght ? -1 :
+					(this.balance_strenght > to.balance_strenght ? 1 :
+						(this.balance_magic < to.balance_magic ? -1 :
+							(this.balance_magic > to.balance_magic ? 1 :
+								(this.balance_wisdom < to.balance_wisdom ? -1 :
+									(this.balance_wisdom > to.balance_wisdom ? 1 :
+										0))))))));
+	}
+}
+
+class TacticMapData {
+	zone_sum_life;
+	zone_count_leeks;
+	zone_average_lifeRate;
+	zone_sum_tp;
+	zone_average_power;
+	zone_average_strength;
+	zone_average_wisdom;
+	zone_average_magic;
+	zone_average_resistance;
+
+	constructor() {
+		this.zone_count_leeks = 0;
+		this.zone_sum_life = 0;
+		this.zone_average_lifeRate = null;
+		this.zone_sum_tp = 0;
+		this.zone_average_power = null;
+		this.zone_average_strength = null;
+		this.zone_average_wisdom = null;
+		this.zone_average_magic = null;
+		this.zone_average_resistance = null;
+	}
+}
+
+function getAverageData(fromData, addData) {
+	if (fromData === null) {
+		return addData;
+	}
+	return average([fromData, addData]);
+}

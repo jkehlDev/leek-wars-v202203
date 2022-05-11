@@ -1,0 +1,23 @@
+function _IA_tank() {
+	console.info('ROLE_TANK');
+	// - ---
+	var target_position_cell = resolveTacticalPositionByTargetsLeeksNdTacticalArea(
+		ArrayAccumulate([
+			getLeeksByTypeNdRole(LEEK_TYPE_ENEMY, LEEK_ROLE_DD_STRENGTH),
+			getLeeksByTypeNdRole(LEEK_TYPE_ENEMY, LEEK_ROLE_DD_MAGIC),
+			getLeeksByTypeNdRole(LEEK_TYPE_ENEMY, LEEK_ROLE_DD_SCIENCE),
+		]),
+		_sortLeekByLevelDSC,
+		tactical_areas.TACTICAL_TANK,
+		_sortPositionsNearestTarget
+	);
+	var currentLeek = myLeek();
+	var pathing_binary_map = resolvePathBetween(currentLeek.leek_cell, target_position_cell.cell_id);
+	// ----
+	var leek_armury = getLeekArmury(currentLeek);
+	
+	// ---
+	console.info(leek_armury);
+	console.info('target_position_cell_id ' + target_position_cell);
+	moveTowardCell(target_position_cell.cell_id);
+}

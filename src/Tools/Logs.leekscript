@@ -1,0 +1,29 @@
+global console = {
+	info: function(values) {
+		if (typeOf(values) === TYPE_ARRAY) {
+			debug(arrayFoldLeft(values, function(val1, val2) {
+				return val1 + " | \n | " + val2
+			}, ''));
+		} else {
+			debug(' | ' + values + ' | ');
+		}
+	},
+	warn: function(values) {
+		if (typeOf(values) === TYPE_ARRAY) {
+			debugW(arrayFoldLeft(values, function(val1, val2) {
+				return val1 + " | \n | " + val2
+			}, ''));
+		} else {
+			debugW(' | ' + values + ' | ');
+		}
+	},
+	error: function(values) {
+		if (typeOf(values) === TYPE_ARRAY) {
+			debugE(arrayFoldLeft(values, function(val1, val2) {
+				return val1 + " | \n | " + val2
+			}, ''));
+		} else {
+			debugE(' | ' + values + ' | ');
+		}
+	}
+}

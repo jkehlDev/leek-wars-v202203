@@ -1,0 +1,94 @@
+function _sortPositionsNearestTarget(targeted_leek, myCurrent_leek) {
+	return function(cell1, cell2) {
+		var dist_1 = getPathLength(targeted_leek.leek_cell, cell1.cell_id);
+		dist_1 = dist_1 === null ? 100 : dist_1;
+		var dist_2 = getPathLength(targeted_leek.leek_cell, cell2.cell_id);
+		dist_2 = dist_2 === null ? 100 : dist_2;
+		var dist_from_my_1 = getPathLength(myCurrent_leek.leek_cell, cell1.cell_id);
+		dist_from_my_1 = dist_from_my_1 === null ? 100 : dist_from_my_1;
+		var dist_from_my_2 = getPathLength(myCurrent_leek.leek_cell, cell2.cell_id);
+		dist_from_my_2 = dist_from_my_2 === null ? 100 : dist_from_my_2;
+		return ((dist_1 > dist_2) ? 1 :
+			((dist_1 < dist_2) ? -1 :
+				((dist_from_my_1 > dist_from_my_2) ? 1 :
+					((dist_from_my_1 < dist_from_my_2) ? -1 :
+						0))));
+	};
+}
+
+function _sortPositionsFearestTarget(targeted_leek, myCurrent_leek) {
+	return function(cell1, cell2) {
+		var dist_1 = getPathLength(targeted_leek.leek_cell, cell1.cell_id);
+		dist_1 = dist_1 === null ? 100 : dist_1;
+		var dist_2 = getPathLength(targeted_leek.leek_cell, cell2.cell_id);
+		dist_2 = dist_2 === null ? 100 : dist_2;
+		var dist_from_my_1 = getPathLength(myCurrent_leek.leek_cell, cell1.cell_id);
+		dist_from_my_1 = dist_from_my_1 === null ? 100 : dist_from_my_1;
+		var dist_from_my_2 = getPathLength(myCurrent_leek.leek_cell, cell2.cell_id);
+		dist_from_my_2 = dist_from_my_2 === null ? 100 : dist_from_my_2;
+		return ((dist_1 < dist_2) ? 1 :
+			((dist_1 > dist_2) ? -1 :
+				((dist_from_my_1 > dist_from_my_2) ? 1 :
+					((dist_from_my_1 < dist_from_my_2) ? -1 :
+						0))));
+	};
+}
+
+function _sortNoSort(leek1, leek2) {
+	return 0;
+}
+
+function _sortLeekByLevelDSC(leek1, leek2) {
+	return ((leek1.leek_level > leek2.leek_level) ? -1 :
+		((leek1.leek_level < leek2.leek_level) ? 1 : 0));
+}
+
+function _sortLeekByLevelASC(leek1, leek2) {
+	return ((leek1.leek_level < leek2.leek_level) ? -1 :
+		((leek1.leek_level > leek2.leek_level) ? 1 : 0));
+}
+
+function resolveTacticalPositionByTargetsLeeksNdTacticalArea(target_leeks, targetSorter, tactical_area, positionsSorter) {
+	var target_position_cell_id = null;
+	if (count(target_leeks) > 0) {
+		var positions_bynary_map, intersect_positions, positions_map_cells, target_position_cell_ids;
+		var target_leeks_sorted = arraySort(target_leeks, targetSorter);
+		for (var target_leek in target_leeks_sorted) {
+			positions_bynary_map = resolveAreaTemplateOnCell(tactical_area, target_leek.leek_cell, true);
+			positions_bynary_map.map = intersection(
+				radar_zones_by_leek[target_leek.leek_id].leek_path_map.mapAll,
+				positions_bynary_map.map,
+				positions_bynary_map.coordinates_min.line,
+				positions_bynary_map.coordinates_max.line);
+			
+			//markBinaryMap(positions_bynary_map, COLOR_BLUE);
+			
+			intersect_positions = intersection(
+				myLeek_current_path.mapAll,
+				positions_bynary_map.map,
+				myLeek_current_path.coordinates_min.line,
+				myLeek_current_path.coordinates_max.line);
+			
+			if (binaryMapNotEmpty(intersect_positions,
+					myLeek_current_path.coordinates_min.line,
+					myLeek_current_path.coordinates_max.line)) {
+				positions_map_cells = convertBinaryMapToCellIdMap(
+					intersect_positions,
+					myLeek_current_path.coordinates_min,
+					myLeek_current_path.coordinates_max);
+
+			} else {
+				positions_map_cells = convertBinaryMapToCellIdMap(
+					positions_bynary_map.map,
+					positions_bynary_map.coordinates_min,
+					positions_bynary_map.coordinates_max);
+			}
+			target_position_cell_ids = arraySort(positions_map_cells, positionsSorter(target_leek, myLeek()));
+			if (count(target_position_cell_ids) > 0) {
+				target_position_cell_id = shift(target_position_cell_ids);
+				break;
+			}
+		}
+	}
+	return target_position_cell_id;
+} 

@@ -1,0 +1,274 @@
+/**
+ * Select available tools of leek wich have effect and can by applly on targets
+ * sorted by cost descending
+ * */
+function _selectAvailableTools(tool_effectOf, currentLeek, targets) {
+	var results = arrayFilter(arrayMap(currentLeek.leek_tools, function(tool_id) {
+		return getToolById(tool_id);
+	}), function(tool) {
+		return arrayInclude(tool.tool_effects, _filterIsToolHaveEffectOf(tool_effectOf, targets)) && _isToolAvailableForLeek(tool, currentLeek);
+	});
+	return arrayMap(arraySort(results, _sortToolByCostASC), function(tool) {
+		return tool.tool_id;
+	});
+}
+
+// ----------
+function _filterIsToolHaveEffectOf(tool_effectOf, targets) {
+	return function(tool_effect) {
+		return (tool_effect.type === tool_effectOf) && ((tool_effect.targets & targets) !== 0);
+	};
+}
+
+function _isToolAvailableForLeek(tool, currentLeek) {
+	return (tool.tool_isWeapon || !_isToolHaveCooldownForLeek(tool, currentLeek)) && (currentLeek.leek_tp >= tool.tool_cost);
+}
+
+function _isToolHaveCooldownForLeek(tool, currentLeek) {
+	return arrayInclude(currentLeek.leek_chipsCooldown, function(chip_cooldown) {
+		return chip_cooldown.chip === tool.tool_id && chip_cooldown.cooldown > 0;
+	});
+}
+
+function _sortToolByCostASC(tool1, tool2) {
+	return (tool1.tool_cost > tool2.tool_cost) ? -1 :
+		((tool1.tool_cost < tool2.tool_cost) ? 1 : 0);
+}
+// -----------
+/**
+ * absoluteShieldTools
+ * relativeShieldTools
+ * resitanceRawBuffTools
+ * damageReturnTools
+ * absoluteShieldStealTools
+ * */
+function getShieldSet(currentLeek) {
+	return {
+		absoluteShieldTools: _selectAvailableTools(
+			EFFECT_ABSOLUTE_SHIELD,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		relativeShieldTools: _selectAvailableTools(
+			EFFECT_RELATIVE_SHIELD,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		resitanceRawBuffTools: _selectAvailableTools(
+			EFFECT_RAW_BUFF_RESISTANCE,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		damageReturnTools: _selectAvailableTools(
+			EFFECT_DAMAGE_RETURN,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		absoluteShieldStealTools: _selectAvailableTools(
+			EFFECT_STEAL_ABSOLUTE_SHIELD,
+			currentLeek,
+			EFFECT_TARGET_ENEMIES
+		)
+	};
+}
+
+/**
+ * healTools
+ * wisdomRawBuffTools
+ * */
+function getHealSet(currentLeek) {
+	return {
+		healTools: _selectAvailableTools(
+			EFFECT_HEAL,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		wisdomRawBuffTools: _selectAvailableTools(
+			EFFECT_RAW_BUFF_WISDOM,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		)
+	};
+}
+
+/**
+ * resistanceRawBuffTools
+ * magicRawBuffTools
+ * mpRawBuffTools
+ * strengthRawBuffTools
+ * tpRawBuffTools
+ * wisdomRawBuffTools
+ * */
+function getBuffSet(currentLeek) {
+	return {
+		resistanceRawBuffTools: _selectAvailableTools(
+			EFFECT_RAW_BUFF_RESISTANCE,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		magicRawBuffTools: _selectAvailableTools(
+			EFFECT_RAW_BUFF_MAGIC,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		mpRawBuffTools: _selectAvailableTools(
+			EFFECT_RAW_BUFF_MP,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		strengthRawBuffTools: _selectAvailableTools(
+			EFFECT_RAW_BUFF_STRENGTH,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		tpRawBuffTools: _selectAvailableTools(
+			EFFECT_RAW_BUFF_TP,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		wisdomRawBuffTools: _selectAvailableTools(
+			EFFECT_RAW_BUFF_WISDOM,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		)
+	};
+}
+
+/**
+ * damageTools
+ * strengthRawBuffTools
+ * */
+function getStrengthSet(currentLeek) {
+	return {
+		damageTools: _selectAvailableTools(
+			EFFECT_DAMAGE,
+			currentLeek,
+			EFFECT_TARGET_ENEMIES
+		),
+		strengthRawBuffTools: _selectAvailableTools(
+			EFFECT_RAW_BUFF_STRENGTH,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		)
+	};
+}
+
+/**
+ * damageTools
+ * magicRawBuffTools
+ * */
+function getMagicSet(currentLeek) {
+	return {
+		damageTools: _selectAvailableTools(
+			EFFECT_POISON,
+			currentLeek,
+			EFFECT_TARGET_ENEMIES
+		),
+		magicRawBuffTools: _selectAvailableTools(
+			EFFECT_RAW_BUFF_MAGIC,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		)
+	};
+}
+
+/**
+ * summonsTools
+ * */
+function getSummonSet(currentLeek) {
+	return {
+		summonsTools: _selectAvailableTools(
+			EFFECT_SUMMON,
+			currentLeek,
+			EFFECT_TARGET_ENEMIES
+		)
+	};
+}
+
+/**
+ * damageTools
+ * boostVitalityTools
+ * buffAgilityTools
+ * buffStrengthTools
+ * buffMpTools
+ * buffResistanceTools
+ * buffTpTools
+ * buffWisdomTools
+ * scienceRawBuffTools 
+ * */
+function getScienceSet(currentLeek) {
+	return {
+		damageTools: _selectAvailableTools(
+			EFFECT_NOVA_DAMAGE,
+			currentLeek,
+			EFFECT_TARGET_ENEMIES
+		),
+		boostVitalityTools: _selectAvailableTools(
+			EFFECT_NOVA_VITALITY,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		buffAgilityTools: _selectAvailableTools(
+			EFFECT_BUFF_AGILITY currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		buffStrengthTools: _selectAvailableTools(
+			EFFECT_BUFF_STRENGTH currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		buffMpTools: _selectAvailableTools(
+			EFFECT_BUFF_MP currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		buffResistanceTools: _selectAvailableTools(
+			EFFECT_BUFF_RESISTANCE currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		buffTpTools: _selectAvailableTools(
+			EFFECT_BUFF_TP currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		buffWisdomTools: _selectAvailableTools(
+			EFFECT_BUFF_WISDOM currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		),
+		scienceRawBuffTools: _selectAvailableTools(
+			EFFECT_RAW_BUFF_SCIENCE,
+			currentLeek,
+			EFFECT_TARGET_ALLIES | EFFECT_TARGET_CASTER
+		)
+	};
+}
+/**
+ * shieldSet: 
+ * - absoluteShieldTools
+ * - relativeShieldTools
+ * - resitanceRawBuffTools
+ * - damageReturnTools
+ * - absoluteShieldStealTools
+ * healSet: 
+ * - healTools
+ * - wisdomRawBuffTools
+ * buffSet: 
+ * - resistanceRawBuffTools
+ * - magicRawBuffTools
+ * - mpRawBuffTools
+ * - strengthRawBuffTools
+ * - tpRawBuffTools
+ * - wisdomRawBuffTools
+ * strengthSet: 
+ * magicSet: 
+ * summonSet: 
+ * scienceSet: 
+ * */
+function getLeekArmury(currentLeek) {
+	return {
+		shieldSet: getShieldSet(currentLeek),
+		healSet: getHealSet(currentLeek),
+		buffSet: getBuffSet(currentLeek),
+		strengthSet: getStrengthSet(currentLeek),
+		magicSet: getMagicSet(currentLeek),
+		summonSet: getSummonSet(currentLeek),
+		scienceSet: getScienceSet(currentLeek),
+	};
+}
