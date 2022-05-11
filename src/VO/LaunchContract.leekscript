@@ -1,44 +1,30 @@
 	/**
-	 * CONSTRUCTOR - LaunchContract
-	 * 
-	 * (cast_type, targets_rules, target_leeks_ids, priorities, contract_type, caster_leek_id, caster_tool_id, caster_pathmap)
-	 * 
-	 * cast_type : One of CAST_ON_TARGET | CAST_AROUND | CAST_PUSH
-	 * 
-	 * targets_rules : Binary concat of TARGET_ONLY_ALLIES | TARGET_ONLY_ENEMIES | .. or 0
-	 * 
-	 * target_leeks_ids : number[]
-	 * 
-	 * priorities : {SORT_MAX_TARGETS | SORT_MAX_EFFECT_VALUE | SORT_SAFER_CAST_CELL | SORT_SAFER_TARGET_CELL}[]
-	 * 
-	 * contract_type : One of CONTRACT_DAMAGE | CONTRACT_HEAL | CONTRACT_EFFECT | CONTRACT_SUMMON
-	 * 
-	 * caster_leek_id : number
-	 * caster_tool_id : number
-	 * caster_pathmap : binary map {map, coordinates_min, coordinates_max}
+	 * LaunchContract Object
+	 * @constructor launch_resolvers, launch_filters, launch_sorters, caster_leek_id, caster_tool_id
+	 * launch_resolvers : One of (CAST_ON_TARGET, CAST_AROUND, CAST_PUSH)
+	 * launch_filters : Binary union of (TARGET_ONLY_ALLIES, TARGET_ONLY_ENEMIES, ...)
+	 * launch_sorters : Array of (SORT_MAX_TARGETS, SORT_MAX_EFFECT_VALUE, SORT_SAFER_CAST_CELL, SORT_SAFER_TARGET_CELL)
+	 * caster_leek_id : leek id
+	 * caster_tool_id : leek id
 	 * */
 	class LaunchContract {
 		cast_type;
 		targets_rules;
 		target_leeks_ids;
 		priorities;
-		contract_type;
 		caster_leek_id;
 		caster_tool_id;
 		caster_pathmap;
 
-		constructor(cast_type, targets_rules, target_leeks_ids, priorities, caster_leek_id, caster_tool_id, caster_pathmap) {
-			this.cast_type = cast_type;
-			this.targets_rules = targets_rules;
-			this.target_leeks_ids = target_leeks_ids;
-			this.priorities = arrayFoldRight(priorities, function(priority, next) {
+		constructor(resolver, filters, sorters, caster_leek_id, caster_tool_id) {
+			this.cast_type = resolver;
+			this.targets_rules = filters;
+			this.target_leeks_ids = radar_zones_by_leek[caster_leek_id].all_leeks_in_zones;
+			this.priorities = arrayFoldRight(sorters, function(priority, next) {
 				return launch_sorters._sort_options[priority](next);
 			}, launch_sorters._isEqual);
 			this.caster_leek_id = caster_leek_id;
 			this.caster_tool_id = caster_tool_id;
-			this.caster_pathmap = caster_pathmap;
+			this.caster_pathmap = radar_zones_by_leek[caster_leek_id].radar_zones[0];
 		}
 	}
-
-
-	

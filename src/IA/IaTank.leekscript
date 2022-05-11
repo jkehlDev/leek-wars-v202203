@@ -15,9 +15,14 @@ function _IA_tank() {
 	var pathing_binary_map = resolvePathBetween(currentLeek.leek_cell, target_position_cell.cell_id);
 	// ----
 	var leek_armury = getLeekArmury(currentLeek);
-	
+	var contract_resistance = new LaunchContract(
+		launch_resolvers.CAST_AROUND,
+		launch_filters.TARGET_ONLY_CASTER,
+		[launch_sorters.SORT_MAX_EFFECT_VALUE],
+		myLeek_id,
+		CHIP_SOLIDIFICATION);
+	var testLaunchs = new Launchs(contract_resistance);
 	// ---
-	console.info(leek_armury);
-	console.info('target_position_cell_id ' + target_position_cell);
+	console.info(testLaunchs.selected_launchs);
 	moveTowardCell(target_position_cell.cell_id);
 }
