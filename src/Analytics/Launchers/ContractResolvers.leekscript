@@ -33,12 +33,14 @@ class Launchs {
 		this.selected_launchs = launch_filters._filterBeforeLinearize(
 			this.all_launchs,
 			this.launch_contract.targets_rules);
+		
 		//console.info(['this.selected_launchs filtered', this.selected_launchs]);
 		this.selected_launchs = linearizeLaunchLst(this.selected_launchs);
+		//console.info(['this.selected_launchs linearized', this.selected_launchs]);
 		this.selected_launchs = launch_filters._filterAfterLinearize(
 			this.selected_launchs,
 			this.launch_contract.targets_rules);
-		
+		//console.info(['this.selected_launchs filtered After Linearized', this.selected_launchs]);
 		this.selected_launchs = launch_sorters._sort(this.selected_launchs, this.launch_contract.priorities);
 		//console.info(['this.selected_launchs sorted', this.selected_launchs]);
 	}

@@ -13,13 +13,10 @@ function _IA_healer() {
 		tactical_areas.TACTICAL_CHEESE,
 		_sortPositionsFearestTarget
 	);
-var currentLeek = myLeek();
+    var currentLeek = myLeek();
 	var pathing_binary_map = resolvePathBetween(currentLeek.leek_cell, target_position_cell.cell_id);
 	// ----
 	var leek_armury = getLeekArmury(currentLeek);
-	
 	// ---
-	console.info(leek_armury);
-	console.info('target_position_cell_id ' + target_position_cell);
 	moveTowardCell(target_position_cell.cell_id);
 }
