@@ -1,0 +1,19 @@
+/**
+ * global LEEK_ROLE_UNDEFINED = -1;
+ * global LEEK_ROLE_DD_STRENGTH = 0;
+ * global LEEK_ROLE_SUMMONERS = 1;
+ * global LEEK_ROLE_TANK = 2;
+ * global LEEK_ROLE_HEALER = 3;
+ * global LEEK_ROLE_DD_MAGIC = 4;
+ * global LEEK_ROLE_DD_SCIENCE = 5;
+ */
+global resolve_IA_by_role = {
+	_resolver: [
+		_IA_DD_strength,
+		_IA_summoners,
+		_IA_tank
+		_IA_healer,
+		_IA_DD_magic,
+		_IA_DD_science,
+	]
+}

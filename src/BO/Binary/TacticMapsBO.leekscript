@@ -1,0 +1,99 @@
+/**
+ * Resolve Map filtered cells with LOS {map, cell_From, line_min, line_max, entityToIgnore}
+ * */
+function filter_cells_Los(map_binary, cell_From, coordinates_min, coordinates_max, entityToIgnore) {
+	var filtered_map_binary = clone(map_binary, 2);
+	var partId, cell, cell_enable;
+
+	var line_min = coordinates_min.line > 0 ? coordinates_min.line : 0;
+	var line_max = coordinates_max.line < 34 ? coordinates_max.line : 34;
+	var cell_min = coordinates_min.cell > 0 ? coordinates_min.cell : 0;
+	var cell_max = coordinates_max.cell < 17 ? coordinates_max.cell : 17;
+
+	if (cell_max === 17) {
+		for (var line = line_min; line <= line_max; line++) {
+			cell_max = (17 - line % 2);
+			partId = floor(line / 2) * (18 + 17) + line % 2 * 18;
+			for (cell = cell_min; cell <= cell_max; cell++) {
+				cell_enable = filtered_map_binary[line] & (1 << cell) ? true : false;
+				if (cell_enable && !lineOfSight(cell_From, partId + cell, entityToIgnore)) {
+					filtered_map_binary[line] &= ~(1 << cell);
+				}
+			}
+		}
+	} else {
+		for (var line = line_min; line <= line_max; line++) {
+			partId = floor(line / 2) * (18 + 17) + line % 2 * 18;
+			for (cell = cell_min; cell <= cell_max; cell++) {
+				cell_enable = filtered_map_binary[line] & (1 << cell) ? true : false;
+				if (cell_enable && !lineOfSight(cell_From, partId + cell, entityToIgnore)) {
+					filtered_map_binary[line] &= ~(1 << cell);
+				}
+			}
+		}
+	}
+	return {
+		map: filtered_map_binary,
+		cell_From: cell_From,
+		coordinates_min: {
+			line: line_min,
+			cell: cell_min
+		},
+		coordinates_max: {
+			line: line_max,
+			cell: cell_max
+		},
+		entityIgnored: entityToIgnore
+	};
+}
+
+/**
+ * Resolve Full Map filtered hide cells
+ *  { map, coordinates_min: { line: 0, cell: 0 }, coordinates_max: { line: 34, cell: 17 } }
+ * */
+function filter_cells_hide() {
+	return {
+		map: soustraire(inverser(resolvePathMap(40, myLeek().leek_cell, 40, obstacles_map_binary_bordered, false).mapAll), obstacles_map_binary, 0, 34),
+		coordinates_min: {
+			line: 0,
+			cell: 0
+		},
+		coordinates_max: {
+			line: 34,
+			cell: 17
+		}
+	};
+}
+
+/**
+ * Resolve Full Map filtered obstacles cells (with leeks)
+ * { map, coordinates_min: { line: 0, cell: 0 }, coordinates_max: { line: 34, cell: 17 } }
+ * */
+function filter_cells_all_obstacles() {
+	var result = clone(obstacles_map_binary, 2);
+	var leek_id, coord;
+	for (leek_id in getAllies()) {
+		if (isAlive(leek_id) && leek_id !== myLeek_id) {
+			coord = convertCellIdToLineNdCell(getCell(leek_id));
+			result[coord.line] |= 1 << coord.cell;
+		}
+	}
+	for (leek_id in getEnemies()) {
+		if (isAlive(leek_id)) {
+			coord = convertCellIdToLineNdCell(getCell(leek_id));
+			result[coord.line] |= 1 << coord.cell;
+		}
+	}
+	return {
+		map: result,
+		coordinates_min: {
+			line: 0,
+			cell: 0
+		},
+		coordinates_max: {
+			line: 34,
+			cell: 17
+		}
+	};
+}
+

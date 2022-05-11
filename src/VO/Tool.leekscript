@@ -1,0 +1,49 @@
+class Tool {
+	tool_id;
+	tool_name;
+	tool_isWeapon;
+	tool_isChip;
+	tool_launchType;
+	tool_effectAreaType;
+	tool_hasCooldown;
+	tool_cooldown;
+	tool_effects;
+	tool_cost;
+	tool_rangeMin;
+	tool_rangeMax;
+	tool_needLos;
+
+	constructor(id) {
+		this.tool_id = id;
+		this.tool_isWeapon = isWeapon(this.tool_id);
+		this.tool_isChip = !this.tool_isWeapon;
+
+		if (this.tool_isWeapon) {
+			this.tool_name = getWeaponName(this.tool_id);
+			this.tool_launchType = getWeaponLaunchType(this.tool_id);
+			this.tool_effectAreaType = getWeaponArea(this.tool_id);
+			this.tool_cooldown = 0;
+			this.tool_hasCooldown = false;
+			this.tool_effects = arrayMap(getWeaponEffects(this.tool_id), function(effect) {
+				return new ToolEffect(effect);
+			});
+			this.tool_cost = getWeaponCost(this.tool_id);
+			this.tool_rangeMin = getWeaponMinRange(this.tool_id);
+			this.tool_rangeMax = getWeaponMaxRange(this.tool_id);
+			this.tool_needLos = weaponNeedLos(this.tool_id);
+		} else {
+			this.tool_name = getChipName(this.tool_id);
+			this.tool_launchType = getChipLaunchType(this.tool_id);
+			this.tool_effectAreaType = getChipArea(this.tool_id);
+			this.tool_cooldown = getChipCooldown(this.tool_id);
+			this.tool_hasCooldown = this.tool_cooldown > 0;
+			this.tool_effects = arrayMap(getChipEffects(this.tool_id), function(effect) {
+				return new ToolEffect(effect);
+			});
+			this.tool_cost = getChipCost(this.tool_id);
+			this.tool_rangeMin = getChipMinRange(this.tool_id);
+			this.tool_rangeMax = getChipMaxRange(this.tool_id);
+			this.tool_needLos = chipNeedLos(this.tool_id);
+		}
+	}
+}

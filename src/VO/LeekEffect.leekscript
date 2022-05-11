@@ -1,0 +1,63 @@
+class LeekEffect {
+	type;
+	value;
+	caster_id;
+	turns;
+	critical;
+	tool_id;
+	target_id;
+	modifiers;
+	isStackable;
+	isIrreductible;
+	isMultipliedByTargets;
+	isNotReplaceable;
+	isOnCaster;
+
+	constructor(effect) {
+		if (typeOf(effect) === TYPE_ARRAY) {
+			this.type = effect[0];
+			this.value = effect[1];
+			this.caster_id = effect[2];
+			this.turns = effect[3];
+			this.critical = effect[4];
+			this.tool_id = effect[5];
+			this.target_id = effect[6];
+			this.modifiers = effect[7];
+			this.isStackable = (this.modifiers & EFFECT_MODIFIER_STACKABLE) !== 0;
+			this.isIrreductible = (this.modifiers & EFFECT_MODIFIER_IRREDUCTIBLE) !== 0;
+			this.isMultipliedByTargets = (this.modifiers & EFFECT_MODIFIER_MULTIPLIED_BY_TARGETS) !== 0;
+			this.isNotReplaceable = (this.modifiers & EFFECT_MODIFIER_NOT_REPLACEABLE) !== 0;
+			this.isOnCaster = (this.modifiers & EFFECT_MODIFIER_ON_CASTER) !== 0;
+		} else {
+			this.type = effect.type;
+			this.value = effect.value;
+			this.caster_id = effect.caster_id;
+			this.turns = effect.turns;
+			this.critical = effect.critical;
+			this.tool_id = effect.tool_id;
+			this.target_id = effect.target_id;
+			this.modifiers = effect.modifiers;
+			this.isStackable = effect.isStackable;
+			this.isIrreductible = effect.isIrreductible;
+			this.isMultipliedByTargets = effect.isMultipliedByTargets;
+			this.isNotReplaceable = effect.isNotReplaceable;
+			this.isOnCaster = effect.isOnCaster;
+		}
+	}
+
+	constructor(toolEffect, caster, target, toolId) {
+		this.type = toolEffect.type;
+		this.value = average([toolEffect.value_min, toolEffect.value_max]);
+		this.caster_id = caster;
+		this.turns = toolEffect.nbTurns;
+		this.critical = false;
+		this.tool_id = toolId;
+		this.target_id = target;
+		this.modifiers = toolEffect.modifiers;
+		this.isStackable = toolEffect.isStackable;
+		this.isIrreductible = toolEffect.isIrreductible;
+		this.isMultipliedByTargets = toolEffect.isMultipliedByTargets;
+		this.isNotReplaceable = toolEffect.isNotReplaceable;
+		this.isOnCaster = toolEffect.isOnCaster;
+	}
+}

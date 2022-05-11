@@ -1,0 +1,14 @@
+function resolveTacticalMapArea() {
+	var tacticalMapArea = [];
+	fill(tacticalMapArea, 0, 613);
+	var map_test = dilater(obstacles_map_binary_bordered, true);
+	map_test = dilater(map_test, true);
+	map_test = contracter(map_test, true);
+	map_test = contracter(map_test, true);
+	var map_cells = convertBinaryMapToCellIdMap(map_test, {line:0 cell:0}, {line:34 cell:17});
+	arrayIter(map_cells, function(cell){
+		tacticalMapArea[cell.cell_id] = 2;
+	});
+	return tacticalMapArea;
+}
+// ----------------

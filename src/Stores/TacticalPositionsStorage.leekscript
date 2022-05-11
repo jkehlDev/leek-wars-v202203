@@ -1,0 +1,37 @@
+function _getCheeseTacticalArea() {
+	var enabled = generateLaunchAreaTemplateXY_square(2, 7, LAUNCH_TYPE_CIRCLE);
+	var disabled = generateLaunchAreaTemplateXY_square(2, 7, LAUNCH_TYPE_LINE);
+	return _resolveTacticalArea(enabled, disabled);
+}
+
+function _getCrossTacticalArea() {
+	var enabled = generateLaunchAreaTemplateXY_square(4, 8, LAUNCH_TYPE_DIAGONAL);
+	var disabled = generateLaunchAreaTemplateXY_square(6, 6, LAUNCH_TYPE_DIAGONAL);
+	return _resolveTacticalArea(enabled, disabled);
+}
+
+function _resolveTacticalArea(enabled, disabled) {
+	var templateXY = [];
+	for (var posXY in enabled) {
+		if (!arrayInclude(disabled, function(posDisabled) {
+				return posDisabled.X === posXY.X && posDisabled.Y === posXY.Y;
+			})) {
+			push(templateXY, posXY);
+		}
+	}
+	return resolveAreaTemplate(templateXY);
+}
+// - ----
+global TACTICAL_CHEESE = 'CHEESE';
+global TACTICAL_CROSS = 'CROSS';
+
+/**
+ * tactical positions templates 
+ * [TACTICAL_CHEESE, TACTICAL_CROSS]
+ * */
+global tactical_areas = {
+	TACTICAL_CHEESE: effect_area_template_by_area_type_id[AREA_X_3],
+	TACTICAL_CROSS: _getCrossTacticalArea(),
+	TACTICAL_TANK: effect_area_template_by_area_type_id[AREA_CIRCLE_1]
+}
+// - ----

@@ -1,0 +1,72 @@
+/**
+ * Convert cellId into line and cell binary map coordinates {line, cell}
+ * */
+function convertCellIdToLineNdCell(cell_id) {
+	return {
+		line: floor(cell_id / 35) * 2 + floor((cell_id % 35) / 18),
+		cell: (cell_id % 35) % 18
+	};
+}
+
+/**
+ * Convert line and cell binary map coordinates {line, cell} into cellId
+ * */
+function convertLineNdCellToCellId(line, cell) {
+	return floor(line / 2) * (18 + 17) + line % 2 * 18 + cell;
+}
+
+/**
+ * Convert binary scaled map into cellId Array
+ * */
+function convertBinaryMapToCellIdMap(map_binary, coordinates_min, coordinates_max) {
+	var map_boolean = [];
+		
+	var line_min = coordinates_min.line > 0 ? coordinates_min.line : 0;
+	var line_max = coordinates_max.line < 34 ? coordinates_max.line : 34;
+	var cell_min = coordinates_min.cell > 0 ? coordinates_min.cell : 0;
+	var cell_max = coordinates_max.cell < 17 ? coordinates_max.cell : 17;
+	
+	var index = 0;
+	var line, cell, partCellId;
+	var isBorderCellMax = cell_max === 17;
+	if (isBorderCellMax) {
+		for (line = line_min; line <= line_max; line++) {
+			cell_max = (17 - line % 2);
+			partCellId = convertLineNdCellToCellId(line, 0);
+			for (cell = cell_min; cell <= cell_max; cell++) {
+				if (map_binary[line] & (1 << cell)) {
+					map_boolean[index] = {
+						cell_id: partCellId + cell
+					};
+					index++;
+				}
+			}
+		}
+	} else {
+		for (line = line_min; line <= line_max; line++) {
+			partCellId = convertLineNdCellToCellId(line, 0);
+			for (cell = cell_min; cell <= cell_max; cell++) {
+				if (map_binary[line] & (1 << cell)) {
+					map_boolean[index] = {
+						cell_id: partCellId + cell
+					};
+					index++;
+				}
+			}
+		}
+	}
+	return map_boolean;
+}
+
+/**
+ * Convert cellId Array into binary full map
+ * */
+function convertCellIdMapToBinaryMap(map_boolean, withBorder) {
+	var map_binary = withBorder ? clone(empty_binary_map_bordored, 2) : clone(empty_binary_map, 2);
+	var binary_coordinate;
+	for (var map_cell in map_boolean) {
+		binary_coordinate = convertCellIdToLineNdCell(map_cell.cell_id);
+		map_binary[binary_coordinate.line] |= (1 << binary_coordinate.cell);
+	}
+	return map_binary;
+}

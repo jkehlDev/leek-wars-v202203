@@ -1,0 +1,104 @@
+/**
+ * Resolve Binary Map tool launch area templating
+ * */
+function resolveLaunchAreaTemplateByToolId(tool_id) {
+	var tool = getToolById(tool_id);
+	var launch_area_templateXY = generateLaunchAreaTemplateXY_square(tool.tool_rangeMin, tool.tool_rangeMax, tool.tool_launchType);
+	return resolveAreaTemplate(launch_area_templateXY);
+}
+
+/**
+ * Resolve Binary Map tool launch area templating
+ * { map, center_binary_coordinates, coordinates_min: {line: line_min, cell: cell_min},	coordinates_max: {line: line_max, cell: cell_max}, range }
+ * */
+function resolveAreaTemplate(launch_area_templateXY) {
+	var resolve = function(launch_area_templateXY, cell_origin) {
+		var origin_cellXY = getCellXYFromId(cell_origin);
+		var map_template_binary = clone(empty_binary_map, 2);
+		var coord = convertCellIdToLineNdCell(cell_origin);
+		var line_min = coord.line;
+		var line_max = coord.line;
+		var cell_min = coord.cell;
+		var cell_max = coord.cell;
+		for (var template_offsetXY in launch_area_templateXY) {
+			if (checkInnerPlayedMap(origin_cellXY, template_offsetXY)) {
+				coord = convertCellIdToLineNdCell(applyTemplateOn(cell_origin, template_offsetXY));
+				line_min = line_min > coord.line ? coord.line : line_min;
+				line_max = line_max < coord.line ? coord.line : line_max;
+				cell_min = cell_min > coord.cell ? coord.cell : cell_min;
+				cell_max = cell_max < coord.cell ? coord.cell : cell_max;
+				map_template_binary[coord.line] |= (1 << coord.cell);
+			}
+		}
+		return {
+			map: map_template_binary,
+			center_binary_coordinates: convertCellIdToLineNdCell(cell_origin),
+			coordinates_min: {line: line_min, cell: cell_min},
+			coordinates_max: {line: line_max, cell: cell_max},
+		};
+	};
+	return [resolve(launch_area_templateXY, 323), resolve(launch_area_templateXY, 306)];
+}
+
+
+/**
+ * Resolve tool launch area binary map on cell
+ * { map, coordinates_min: {line: line_min, cell: cell_min}, coordinates_max: {line: line_max, cell: cell_max},	cell_center	}
+ * */
+function resolveToolLaunchAreaTemplateOnCell(tool_id, cell_center_id, hasObstacles) {
+	var selected_launch_area_templates_binary = getLaunchAreaTemplateByToolId(tool_id);
+	return resolveAreaTemplateOnCell(selected_launch_area_templates_binary, cell_center_id, hasObstacles);
+}
+
+/**
+ * Resolve tool effect area binary map on cell
+ * { map, coordinates_min: {line: line_min, cell: cell_min}, coordinates_max: {line: line_max, cell: cell_max},	cell_center	}
+ * */
+function resolveToolEffectAreaTemplateOnCell(tool_id, cell_center_id, hasObstacles) {
+	var selected_effect_area_templates_binary = getEffectAreaTemplateByToolId(tool_id);
+	return resolveAreaTemplateOnCell(selected_effect_area_templates_binary, cell_center_id, hasObstacles);
+}
+
+/**
+ * Utility - resolve area template binary on cell
+ * { map, coordinates_min: {line: line_min, cell: cell_min}, coordinates_max: {line: line_max, cell: cell_max},	cell_center	}
+ * */
+function resolveAreaTemplateOnCell(selected_area_templates_binary, cell_center_id, hasObstacles) {
+	var cell_center_binary_coordinates = convertCellIdToLineNdCell(cell_center_id);
+	var selected_area_template_binary = selected_area_templates_binary[(cell_center_binary_coordinates.line % 2)];
+	var translate_coordinates = {
+		line: selected_area_template_binary.center_binary_coordinates.line - cell_center_binary_coordinates.line,
+		cell: selected_area_template_binary.center_binary_coordinates.cell - cell_center_binary_coordinates.cell
+	}
+	
+	var line_min = selected_area_template_binary.coordinates_min.line - translate_coordinates.line;
+	line_min < 0 ? 0 : line_min;
+	var line_max = selected_area_template_binary.coordinates_max.line - translate_coordinates.line;
+	line_max > 34 ? 34 : line_max;	
+	
+	var cell_min = selected_area_template_binary.coordinates_min.cell - translate_coordinates.cell;
+	cell_min < 0 ? 0 : cell_min;
+	var cell_max = selected_area_template_binary.coordinates_max.cell - translate_coordinates.cell;
+	cell_max > 17 ? 17 : cell_max;	
+	
+	var map_binary = clone(empty_binary_map, 2);
+	if (translate_coordinates.cell > 0) {
+		for (var line = line_min; line <= line_max; line++) {
+			map_binary[line] |= (selected_area_template_binary.map[line + translate_coordinates.line] >> (translate_coordinates.cell));
+		}
+	} else {
+		for (var line = line_min; line <= line_max; line++) {
+			map_binary[line] |= (selected_area_template_binary.map[line + translate_coordinates.line] << (-translate_coordinates.cell));
+		}
+	}
+	if(hasObstacles){
+		map_binary = soustraire(map_binary, obstacles_map_binary, line_min, line_max);
+	}	
+	
+	return {
+		map: map_binary,
+		coordinates_min: {line: line_min, cell: cell_min},
+		coordinates_max: {line: line_max, cell: cell_max},
+		cell_center: cell_center_id
+	};
+}

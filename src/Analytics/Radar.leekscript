@@ -1,0 +1,102 @@
+/**
+ * Resolver - Radar zone by leek  
+ * {
+ *		radar_leek_id : leek.leek_id,
+ *		radar_zones : radar_zones
+ *	}
+ * */
+function resolveZonesRadar(deep_factor, radarleek) {
+	var enemies = [];
+	var radar_leek_path_map = resolvePathMap(radarleek.leek_mpMax * deep_factor, radarleek.leek_mpMax, radarleek.leek_cell, obstacles_map_binary_bordered, true);
+	var radar_zones = [];
+	var zone, index, leek;
+	var sortByPathLengthAsc = function(pathLength1, pathLength2) {
+		return pathLength1 < pathLength2 ? -1 : pathLength1 > pathLength2 ? 1 : 0;
+	};
+	var all_leeks_in_zones = [
+		LEEK_TYPE_ALLY: [],
+		LEEK_TYPE_ALLY_SUMMON: [],
+		LEEK_TYPE_ENEMY: [],
+		LEEK_TYPE_ENEMY_SUMMON: [],
+	];
+
+	for (zone = 0; zone < deep_factor; zone++) {
+		var map = radar_leek_path_map.mapZones[zone];
+		radar_zones[zone] = {
+			map: map !== null ? map : clone(empty_binary_map, 2),
+			coordinates_min: radar_leek_path_map.coordinates_min,
+			coordinates_max: radar_leek_path_map.coordinates_max,
+			leeks: [
+				LEEK_TYPE_ALLY: [],
+				LEEK_TYPE_ALLY_SUMMON: [],
+				LEEK_TYPE_ENEMY: [],
+				LEEK_TYPE_ENEMY_SUMMON: [],
+			]
+		};
+
+		// - ----
+		// LEEK_TYPE_ALLY
+		for (leek in getAliveLeeksByType(LEEK_TYPE_ALLY)) {
+			if (radar_zones[zone].map[leek.leek_coordinates.line] & (1 << leek.leek_coordinates.cell)) {
+				radar_zones[zone].leeks[LEEK_TYPE_ALLY][leek.leek_id] = {
+					leek_id: leek.leek_id,
+					pathLength: getPathLengthByPathCube(radar_leek_path_map, leek.leek_cell)
+				};
+			}
+		}
+		radar_zones[zone].leeks[LEEK_TYPE_ALLY] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ALLY], sortByPathLengthAsc);
+		pushAll(all_leeks_in_zones[LEEK_TYPE_ALLY], clone(radar_zones[zone].leeks[LEEK_TYPE_ALLY], 2));
+		// - ----
+		// LEEK_TYPE_ENEMY
+		for (leek in getAliveLeeksByType(LEEK_TYPE_ENEMY)) {
+			if (radar_zones[zone].map[leek.leek_coordinates.line] & (1 << leek.leek_coordinates.cell)) {
+				radar_zones[zone].leeks[LEEK_TYPE_ENEMY][leek.leek_id] = {
+					leek_id: leek.leek_id,
+					pathLength: getPathLengthByPathCube(radar_leek_path_map, leek.leek_cell)
+				};
+			}
+		}
+		radar_zones[zone].leeks[LEEK_TYPE_ENEMY] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ENEMY], sortByPathLengthAsc);
+		pushAll(all_leeks_in_zones[LEEK_TYPE_ENEMY], clone(radar_zones[zone].leeks[LEEK_TYPE_ENEMY], 2));
+		// - ----
+		// LEEK_TYPE_ALLY_SUMMON
+		for (leek in getAliveLeeksByType(LEEK_TYPE_ALLY_SUMMON)) {
+			if (radar_zones[zone].map[leek.leek_coordinates.line] & (1 << leek.leek_coordinates.cell)) {
+				radar_zones[zone].leeks[LEEK_TYPE_ALLY_SUMMON][leek.leek_id] = {
+					leek_id: leek.leek_id,
+					pathLength: getPathLengthByPathCube(radar_leek_path_map, leek.leek_cell)
+				};
+			}
+		}
+		radar_zones[zone].leeks[LEEK_TYPE_ALLY_SUMMON] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ALLY_SUMMON], sortByPathLengthAsc);
+		pushAll(all_leeks_in_zones[LEEK_TYPE_ALLY_SUMMON], clone(radar_zones[zone].leeks[LEEK_TYPE_ALLY_SUMMON], 2));
+		// - ----
+		// LEEK_TYPE_ENEMY_SUMMON
+		for (leek in getAliveLeeksByType(LEEK_TYPE_ENEMY_SUMMON)) {
+			if (radar_zones[zone].map[leek.leek_coordinates.line] & (1 << leek.leek_coordinates.cell)) {
+				radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON][leek.leek_id] = {
+					leek_id: leek.leek_id,
+					pathLength: getPathLengthByPathCube(radar_leek_path_map, leek.leek_cell)
+				};
+			}
+		}
+		radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON], sortByPathLengthAsc);
+		pushAll(all_leeks_in_zones[LEEK_TYPE_ENEMY_SUMMON], clone(radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON], 2));		
+	}
+		return {
+			radar_leek_id: radarleek.leek_id,
+			radar_zones: radar_zones,
+			leek_path_map: radar_leek_path_map,
+			all_leeks_in_zones: all_leeks_in_zones
+		};
+}
+
+function isLeekStickByLeekId(leek) {
+	var myPathCube = resolvePathMap(1, 1, leek.leek_cell, obstacles_map_binary_with_leek.map, false);
+	var move_options = convertBinaryMapToCellIdMap(myPathCube.map[1], myPathCube.coordinates_min, myPathCube.coordinates_max);
+	if (count(move_options) === 0) {
+		console.warn('Stick position detected at ' + leek.leek_cell);
+		return true;
+	}
+	return false;
+}

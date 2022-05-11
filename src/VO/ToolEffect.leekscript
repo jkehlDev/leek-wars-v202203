@@ -1,0 +1,41 @@
+class ToolEffect {
+	type;
+	value;
+	value_min;
+	value_max;
+	nbTurns;
+	targets;
+	modifiers;
+	isStackable;
+	isIrreductible;
+	isMultipliedByTargets;
+	isNotReplaceable;
+	isOnCaster;
+	effectTargetAlly;
+	effectTargetEnemy;
+	effectTargetCaster;
+	effectTargetSummons;
+	effectTargetNonSummons;
+
+	constructor(effect) {
+		this.type = effect[0];
+		
+		this.value_min = effect[1];
+		this.value_max = effect[2];
+		this.value = average([this.value_min, this.value_max]);
+		
+		this.nbTurns = effect[3];
+		this.targets = effect[4];
+		this.effectTargetAlly = (this.targets & EFFECT_TARGET_ALLIES) !== 0;
+		this.effectTargetEnemy = (this.targets & EFFECT_TARGET_ENEMIES) !== 0;
+		this.effectTargetCaster = (this.targets & EFFECT_TARGET_CASTER) !== 0;
+		this.effectTargetSummons = (this.targets & EFFECT_TARGET_SUMMONS) !== 0;
+		this.effectTargetNonSummons = (this.targets & EFFECT_TARGET_NON_SUMMONS) !== 0;
+		this.modifiers = effect[5];
+		this.isStackable = (this.modifiers & EFFECT_MODIFIER_STACKABLE) !== 0;
+		this.isIrreductible = (this.modifiers & EFFECT_MODIFIER_IRREDUCTIBLE) !== 0;
+		this.isMultipliedByTargets = (this.modifiers & EFFECT_MODIFIER_MULTIPLIED_BY_TARGETS) !== 0;
+		this.isNotReplaceable = (this.modifiers & EFFECT_MODIFIER_NOT_REPLACEABLE) !== 0;
+		this.isOnCaster = (this.modifiers & EFFECT_MODIFIER_ON_CASTER) !== 0;
+	}
+}

@@ -1,0 +1,39 @@
+function dilater(map_binary, withBorder) {
+	var map_boolean = [];
+	var line_before, line_after;
+	for (var line = 0; line < 35; line++) {
+		line_before = map_binary[line - 1] !== null ? map_binary[line - 1] : (withBorder ? ~0 : 0);
+		line_after = map_binary[line + 1] !== null ? map_binary[line + 1] : (withBorder ? ~0 : 0);
+		map_boolean[line] = (line % 2 === 0) ?
+			(map_binary[line] | line_before | line_after | (line_before << 1) | (line_after << 1)) :
+			(map_binary[line] | line_before | line_after | (line_before >> 1) | (line_after >> 1));
+	}
+	return map_boolean;
+}
+
+function dilatation(map_binary, withBorder) {
+	var map_boolean = [];
+	var line_before, line_after;
+	for (var line = 0; line < 35; line++) {
+		line_before = map_binary[line - 1] !== null ? map_binary[line - 1] : (withBorder ? ~0 : 0);
+		line_after = map_binary[line + 1] !== null ? map_binary[line + 1] : (withBorder ? ~0 : 0);
+		map_boolean[line] = (line % 2 === 0) ?
+			( line_before | line_after | (line_before << 1) | (line_after << 1)) :
+			( line_before | line_after | (line_before >> 1) | (line_after >> 1));
+	}
+	return map_boolean;
+}
+
+
+function contracter(map_binary, withBorder) {
+	var map_boolean = [];
+	var line_before, line_after;
+	for (var line = 0; line < 35; line++) {
+		line_before = map_binary[line - 1] !== null ? map_binary[line - 1] : (withBorder ? ~0 : 0);
+		line_after = map_binary[line + 1] !== null ? map_binary[line + 1] : (withBorder ? ~0 : 0);
+		map_boolean[line] = (line % 2 === 0) ?
+			(map_binary[line] & line_before & line_after & (line_before << 1) & (line_after << 1)) :
+			(map_binary[line] & line_before & line_after & (line_before >> 1) & (line_after >> 1));
+	}
+	return map_boolean;
+}

@@ -1,0 +1,186 @@
+global shackle_minEffect = [
+	EFFECT_SHACKLE_AGILITY: function(shackle_value_tmp, target_tmp) {
+		return min(shackle_value_tmp, target_tmp.leek_agility)
+	},
+	EFFECT_SHACKLE_MAGIC: function(shackle_value_tmp, target_tmp) {
+		return min(shackle_value_tmp, target_tmp.leek_magic)
+	},
+	EFFECT_SHACKLE_MP: function(shackle_value_tmp, target_tmp) {
+		return min(shackle_value_tmp, target_tmp.leek_mpMax)
+	},
+	EFFECT_SHACKLE_STRENGTH: function(shackle_value_tmp, target_tmp) {
+		return min(shackle_value_tmp, target_tmp.leek_strength)
+	},
+	EFFECT_SHACKLE_TP: function(shackle_value_tmp, target_tmp) {
+		return min(shackle_value_tmp, target_tmp.leek_tpMax)
+	},
+	EFFECT_SHACKLE_WISDOM: function(shackle_value_tmp, target_tmp) {
+		return min(shackle_value_tmp, target_tmp.leek_wisdom)
+	}
+]
+
+function _effect_shackle_typeOf(shackle_type) {
+	return function(caster, target, effect, toolId, targets_count) {
+		var shackle_value = (effect.isMultipliedByTargets ? effect.value * targets_count : effect.value) * (1 + caster.leek_magic / 100);
+		return shackle_minEffect[shackle_type](shackle_value, target);
+	};
+};
+
+function _effect_buff_raw_valuOf(caster, target, effect, toolId, targets_count) {
+	return (effect.isMultipliedByTargets ? effect.value * targets_count : effect.value);
+};
+
+function _effect_buff_valuOf(caster, target, effect, toolId, targets_count) {
+	return (effect.isMultipliedByTargets ? effect.value * targets_count : effect.value) * (1 + caster.leek_science / 100);
+};
+// ---
+
+/**
+ * Evaluate value of effect on target leek by a caster [EFFECT_ID] : 
+ * (
+ * caster : Leek, 
+ * target : Leek, 
+ * effect  : LeekEffect | ToolEffect, 
+ * targets_count : number
+ * ) => resolved_value as number
+ * */
+global EvalEffectValue = [
+	EFFECT_DAMAGE: function(caster, target, effect, targets_count) {
+		var value = (effect.isMultipliedByTargets ? effect.value * targets_count : effect.value) * (1 + caster.leek_strength / 100);
+		var target_absolute_shield = getEffectSumValueOfLeek(target, EFFECT_ABSOLUTE_SHIELD) * (1 + target.leek_resistance / 100);
+		var target_absolute_vulnerability = getEffectSumValueOfLeek(target, EFFECT_ABSOLUTE_VULNERABILITY);
+		var target_relative_shield = getEffectSumValueOfLeek(target, EFFECT_RELATIVE_SHIELD) * (1 + target.leek_resistance / 100);
+		var target_vulnerability = getEffectSumValueOfLeek(target, EFFECT_VULNERABILITY);
+		var dmg_value = value * (1 - ((target_relative_shield / 100) - (target_vulnerability / 100))) - (target_absolute_shield - target_absolute_vulnerability);
+		return min(dmg_value, target.leek_life);
+	},
+	EFFECT_POISON: function(caster, target, effect, targets_count) {
+		var dmg_value = (effect.isMultipliedByTargets ? effect.value * targets_count : effect.value) * (1 + (caster.leek_magic / 100));
+		return min(dmg_value, target.leek_life);
+	},
+	EFFECT_LIFE_DAMAGE: function(caster, target, effect, toolId, targets_count) {
+		var value = caster.leek_life * ((effect.isMultipliedByTargets ? effect.value * targets_count : effect.value) / 100);
+		var target_absolute_shield = getEffectSumValueOfLeek(target, EFFECT_ABSOLUTE_SHIELD) * (1 + target.leek_resistance / 100);
+		var target_absolute_vulnerability = getEffectSumValueOfLeek(target, EFFECT_ABSOLUTE_VULNERABILITY);
+		var target_relative_shield = getEffectSumValueOfLeek(target, EFFECT_RELATIVE_SHIELD) * (1 + target.leek_resistance / 100);
+		var target_vulnerability = getEffectSumValueOfLeek(target, EFFECT_VULNERABILITY);
+		var target_damage_return = getEffectSumValueOfLeek(target, EFFECT_DAMAGE_RETURN) * (1 + target.leek_agility / 100);
+		var dmg_value = value * (1 - (target_relative_shield - target_vulnerability)) - (target_absolute_shield - target_absolute_vulnerability);
+		return min(dmg_value, target.leek_life);
+	},
+	EFFECT_NOVA_DAMAGE: function(caster, target, effect, toolId, targets_count) {
+		var dmg_value = (effect.isMultipliedByTargets ? effect.value * targets_count : effect.value) * (1 + caster.leek_science / 100);
+		return min(dmg_value, target.leek_lifeMax);
+	},
+	EFFECT_NOVA_VITALITY: function(caster, target, effect, toolId, targets_count) {
+		return (effect.isMultipliedByTargets ? effect.value * targets_count : effect.value) * (1 + caster.leek_science / 100);
+	},
+	EFFECT_HEAL: function(caster, target, effect, toolId, targets_count) {
+		var value = (effect.isMultipliedByTargets ? effect.value * targets_count : effect.value) * (1 + caster.leek_wisdom / 100);
+		return min(target.leek_lifeMax - target.leek_life, value);
+	},
+	EFFECT_BOOST_MAX_LIFE: function(caster, target, effect, targets_count) {
+		return (effect.isMultipliedByTargets ? effect.value * targets_count : effect.value) * (1 + caster.leek_wisdom / 100);
+	},
+	EFFECT_AFTEREFFECT: _effect_buff_valuOf,
+	EFFECT_BUFF_AGILITY: _effect_buff_valuOf,
+	EFFECT_BUFF_STRENGTH: _effect_buff_valuOf,
+	EFFECT_BUFF_MP: _effect_buff_valuOf,
+	EFFECT_BUFF_RESISTANCE: _effect_buff_valuOf,
+	EFFECT_BUFF_TP: _effect_buff_valuOf,
+	EFFECT_BUFF_WISDOM: _effect_buff_valuOf,
+	EFFECT_DAMAGE_RETURN: function(caster, target, effect, toolId, targets_count) {
+		return (effect.isMultipliedByTargets ? effect.value * targets_count : effect.value) * (1 + caster.leek_agility / 100);
+	},
+	EFFECT_SHACKLE_AGILITY: _effect_shackle_typeOf(EFFECT_SHACKLE_AGILITY),
+	EFFECT_SHACKLE_MAGIC: _effect_shackle_typeOf(EFFECT_SHACKLE_MAGIC),
+	EFFECT_SHACKLE_MP: _effect_shackle_typeOf(EFFECT_SHACKLE_MP),
+	EFFECT_SHACKLE_STRENGTH: _effect_shackle_typeOf(EFFECT_SHACKLE_STRENGTH),
+	EFFECT_SHACKLE_TP: _effect_shackle_typeOf(EFFECT_SHACKLE_TP),
+	EFFECT_SHACKLE_WISDOM: _effect_shackle_typeOf(EFFECT_SHACKLE_WISDOM),
+	EFFECT_RAW_BUFF_AGILITY: _effect_buff_raw_valuOf,
+	EFFECT_RAW_BUFF_STRENGTH: _effect_buff_raw_valuOf,
+	EFFECT_RAW_BUFF_MP: _effect_buff_raw_valuOf,
+	EFFECT_RAW_BUFF_RESISTANCE: _effect_buff_raw_valuOf,
+	EFFECT_RAW_BUFF_TP: _effect_buff_raw_valuOf,
+	EFFECT_RAW_BUFF_WISDOM: _effect_buff_raw_valuOf,
+	EFFECT_RAW_BUFF_MAGIC: _effect_buff_raw_valuOf,
+	EFFECT_RAW_BUFF_SCIENCE: _effect_buff_raw_valuOf,
+	EFFECT_RAW_BUFF_POWER: _effect_buff_raw_valuOf,
+	EFFECT_ABSOLUTE_SHIELD: function(caster, target, effect, toolId, targets_count) {
+		return (effect.isMultipliedByTargets ? effect.value * targets_count : effect.value) * (1 + target.leek_resistance / 100);
+	},
+	EFFECT_RELATIVE_SHIELD: function(caster, target, effect, toolId, targets_count) {
+		return (effect.isMultipliedByTargets ? effect.value * targets_count : effect.value) * (1 + target.leek_resistance / 100);
+	},
+	EFFECT_ABSOLUTE_VULNERABILITY: _effect_buff_raw_valuOf,
+	EFFECT_DAMAGE_TO_ABSOLUTE_SHIELD: _effect_buff_raw_valuOf,
+	EFFECT_DAMAGE_TO_STRENGTH: _effect_buff_raw_valuOf,
+	EFFECT_DAMAGE_TO_STRENGTH: _effect_buff_raw_valuOf,
+	EFFECT_NOVA_DAMAGE_TO_MAGIC: _effect_buff_raw_valuOf,
+	EFFECT_POISON_TO_SCIENCE: _effect_buff_raw_valuOf,
+	EFFECT_PROPAGATION: _effect_buff_raw_valuOf,
+	EFFECT_VULNERABILITY: _effect_buff_raw_valuOf,
+	EFFECT_TELEPORT : _effect_buff_raw_valuOf,
+	EFFECT_SUMMON : _effect_buff_raw_valuOf,
+	EFFECT_STEAL_ABSOLUTE_SHIELD : _effect_buff_raw_valuOf,
+	EFFECT_RESURRECT : _effect_buff_raw_valuOf,
+	EFFECT_REMOVE_SHACKLES : _effect_buff_raw_valuOf,
+	EFFECT_PUSH: _effect_buff_raw_valuOf,
+	EFFECT_RAW_ABSOLUTE_SHIELD : _effect_buff_raw_valuOf,
+	EFFECT_MOVED_TO_MP: _effect_buff_raw_valuOf,
+	EFFECT_ALLY_KILLED_TO_AGILITY: _effect_buff_raw_valuOf,
+	EFFECT_ATTRACT: _effect_buff_raw_valuOf,
+	EFFECT_INVERT:_effect_buff_raw_valuOf,
+	EFFECT_KILL: function(caster, target, effect, toolId, targets_count) {
+		return target.leek_life;
+	}
+];
+
+/**
+ * True if effect could be apply on target by caster, False otherwise
+ * */
+function canApplyEffectOnLeek(caster_leek, target_leek, effect_tested) {
+	var isAvailableTargetForEffect = function(caster_leek, target_leek, effect_tested) {
+		if (target_leek !== null) {
+			if (effect_tested.effectTargetAlly && effect_tested.effectTargetSummons) {
+				if (target_leek.leek_isAlly && target_leek.leek_isSummon) {
+					return true;
+				}
+			}
+			if (effect_tested.effectTargetEnemy && effect_tested.effectTargetSummons) {
+				if (target_leek.leek_isEnemy && target_leek.leek_isSummon) {
+					return true;
+				}
+			}
+			if (effect_tested.effectTargetAlly && effect_tested.effectTargetNonSummons) {
+				if (target_leek.leek_isAlly && !target_leek.leek_isSummon) {
+					return true;
+				}
+			}
+			if (effect_tested.effectTargetEnemy && effect_tested.effectTargetNonSummons) {
+				if (target_leek.leek_isEnemy && !target_leek.leek_isSummon) {
+					return true;
+				}
+			}
+		}
+		if (effect_tested.effectTargetCaster && (target_leek === null || target_leek.leek_id === caster_leek.leek_id)) {
+			return true;
+		}
+		return false;
+	};
+	return (effect_tested.isStackable || !arrayInclude(target_leek.leek_effects, function(targetEffect) {
+		return effect_tested.type === effect_tested.type;
+	})) && isAvailableTargetForEffect(caster_leek, target_leek, effect_tested);
+}
+
+/**
+ * Current sum value of an effect on target leek 
+ * */
+function getEffectSumValueOfLeek(target_leek, effect_tested) {
+	return arrayFoldLeft(arrayFilter(target_leek.leek_effects, function(effect) {
+		return effect.type === effect_tested.type
+	}), function(total, effect) {
+		return total + effect.value;
+	}, 0);
+}
