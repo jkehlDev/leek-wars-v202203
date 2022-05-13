@@ -4,11 +4,27 @@
  * */
 global radar_zones_by_leek;
 
-/**
- * Balance index : allies <<< - 0 + >>> enemies
- * { cell_id, enemies_data, allies_data, balance_life, balance_strenght, balance_magic, balance_wisdom }
- * { zone_sum_life, zone_count_leeks, zone_average_lifeRate, zone_sum_tp, zone_average_power,
- *   zone_average_strength, zone_average_wisdom, zone_average_magic, zone_average_resistance }
+/*
+ * 	By cell_id;
+ *  cell_id;
+ *	enemies_data;
+ *	allies_data;
+ * => 
+ *  zone_sum_life;
+ *	zone_count_leeks;
+ *	zone_average_lifeRate;
+ *	zone_sum_tp;
+ *	zone_average_power;
+ *	zone_average_strength;
+ *	zone_average_wisdom;
+ *	zone_average_magic;
+ *	zone_average_resistance;
+ *
+ *	// Balance index : allies <<< - 0 + >>> enemies
+ *	balance_life;
+ *	balance_strenght;
+ *	balance_magic;
+ *	balance_wisdom;
  */
 global radar_tactic_map_by_cells;
 // -- ----------------
@@ -30,21 +46,34 @@ function myLeekRadarZones() {
 
 function refreshRadarTactic() {
 	radar_tactic_map_by_cells = [];
-	var leek, radar_zone, cellsInMap, cell, zone;
+	var leek, radar_zone, cellsInMap, cell, zone, ratio;
 	for (cell in full_path_map_cells) {
 		radar_tactic_map_by_cells[cell.cell_id] = new TacticMapCell(cell.cell_id);
 	}
+	//var offsetLifeMaxBlue = 0;
+	//var offsetLifeMaxRed = 0;
 	for (radar_zone in radar_zones_by_leek) {
 		leek = getLeekById(radar_zone.radar_leek_id);
-		for (zone = 0; zone < 2; zone++) {
+		ratio = 1 / leek.leek_mpMax;
+		for (zone = 0; zone <= leek.leek_mpMax; zone++) {
 			cellsInMap = convertBinaryMapToCellIdMap(
-				radar_zone.radar_zones[zone].map,
-				radar_zone.radar_zones[zone].coordinates_min,
-				radar_zone.radar_zones[zone].coordinates_max
+				radar_zone.leek_path_map.map[zone],
+				radar_zone.leek_path_map.coordinates_min,
+				radar_zone.leek_path_map.coordinates_max
 			);
 			for (cell in cellsInMap) {
-				radar_tactic_map_by_cells[cell.cell_id].addLeek(leek, 1 - (0.25 * zone));
+				radar_tactic_map_by_cells[cell.cell_id].addLeek(leek, 1 - (ratio * zone));
+				//offsetLifeMaxBlue = max(offsetLifeMaxBlue,radar_tactic_map_by_cells[cell.cell_id].allies_data.zone_sum_life);
+				//offsetLifeMaxRed = max(offsetLifeMaxRed, radar_tactic_map_by_cells[cell.cell_id].enemies_data.zone_sum_life);
 			}
 		}
 	}
+	//var blue, red;
+	//for (cell in full_path_map_cells) {
+		//blue = floor(((offsetLifeMaxBlue - radar_tactic_map_by_cells[cell.cell_id].allies_data.zone_sum_life) / offsetLifeMaxBlue) * 255);
+		//red = floor(((offsetLifeMaxRed - radar_tactic_map_by_cells[cell.cell_id].enemies_data.zone_sum_life) / offsetLifeMaxRed) * 255);
+		//if (blue < 255 || red < 255) {
+			//mark(cell.cell_id, getColor(blue, 255, red), 1);
+		//}
+	//}
 }

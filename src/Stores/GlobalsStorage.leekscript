@@ -36,7 +36,6 @@ global full_path_map_cells = convertBinaryMapToCellIdMap(soustraire(full_binary_
 	line: 34,
 	cell: 17
 });
-global tactical_map_area = resolveTacticalMapArea();
 // -- ---------------
 // -- ANALYTICS
 /**

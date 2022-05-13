@@ -4,3 +4,4 @@ include('Tool');
 include('ToolEffect');
 include('LaunchContract');
 include('TacticMapCell');
+include('LaunchItem');

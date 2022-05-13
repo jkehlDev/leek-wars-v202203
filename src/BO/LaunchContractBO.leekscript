@@ -449,7 +449,7 @@ function resolveLeeksTouchedByLaunch(tool_id, tool_isWeapon, isLineEffect, targe
  *	target_cell_id,
  *	tool_id,
  *	effects_value
- * }
+ * }[]
  * 
  * */
 function linearizeLaunchLst(launch_lst) {
@@ -487,18 +487,18 @@ function linearizeLaunchLst(launch_lst) {
 					effects_value[EFFECT_PUSH].value += resolvePushEffectValue(cast_cell_id, getLeekById(leek).leek_cell, launch.target_cell_id, launch.effect_area_cells);
 				}
 			}
-			push(launchs_linearized, {
-				touched_leeks: clone(launch.leeks, 2),
-				countLeeks: countLeeks,
-				caster_leek_id: launch.caster_leek_id,
-				cast_cell_id: cast_cell_id,
-				cast_cell_data: radar_tactic_map_by_cells[cast_cell_id],
-				cast_cell_distance: getPathLengthByPathCube(radar_zones_by_leek[launch.caster_leek_id].leek_path_map, cast_cell_id),
-				target_cell_id: launch.target_cell_id,
-				target_cell_data: radar_tactic_map_by_cells[launch.target_cell_id],
-				tool_id: launch.tool_id,
-				effects_value: clone(effects_value, 2)
-			});
+			push(launchs_linearized, new LaunchItem(
+				clone(launch.leeks, 2),
+				countLeeks,
+				launch.caster_leek_id,
+				cast_cell_id,
+				radar_tactic_map_by_cells[cast_cell_id],
+				getPathLengthByPathCube(radar_zones_by_leek[launch.caster_leek_id].leek_path_map, cast_cell_id),
+				launch.target_cell_id,
+				radar_tactic_map_by_cells[launch.target_cell_id],
+				launch.tool_id,
+				clone(effects_value, 2)
+			));
 		}
 	}
 	return launchs_linearized;
