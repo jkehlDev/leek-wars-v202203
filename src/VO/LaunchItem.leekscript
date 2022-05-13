@@ -1,0 +1,42 @@
+/*
+ * constructor(touched_leeks, countLeeks, caster_leek_id, cast_cell_id, cast_cell_data, cast_cell_distance, target_cell_id, target_cell_data, tool_id, effects_value)
+ * */
+class LaunchItem {
+	touched_leeks;
+	countLeeks;
+	caster_leek_id;
+	cast_cell_id;
+	cast_cell_data;
+	cast_cell_distance;
+	target_cell_id;
+	target_cell_data;
+	tool_id;
+	effects_value;
+
+	constructor(touched_leeks, countLeeks, caster_leek_id, cast_cell_id, cast_cell_data, cast_cell_distance, target_cell_id, target_cell_data, tool_id, effects_value) {
+		this.touched_leeks = touched_leeks;
+		this.countLeeks = countLeeks;
+		this.caster_leek_id = caster_leek_id;
+		this.cast_cell_id = cast_cell_id;
+		this.cast_cell_data = cast_cell_data;
+		this.cast_cell_distance = cast_cell_distance;
+		this.target_cell_id = target_cell_id;
+		this.target_cell_data = target_cell_data;
+		this.tool_id = tool_id;
+		this.effects_value = effects_value;
+	}
+
+	launch() {
+		var tool = getToolById(this.tool_id)
+		var caster = getLeekById(this.caster_leek_id);
+		if (tool.tool_isWeapon) {
+			if (caster.setWeaponById(this.tool_id)) {
+				useWeaponOnCell(this.cast_cell_id);	
+			}			
+		} else if (tool.tool_isSummon) {
+			summon(this.tool_id, this.cast_cell_id, _main_run);
+		} else {
+			useChipOnCell(this.tool_id, this.cast_cell_id);
+		}
+	}
+}

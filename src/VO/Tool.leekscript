@@ -3,6 +3,7 @@ class Tool {
 	tool_name;
 	tool_isWeapon;
 	tool_isChip;
+	tool_isSummon;
 	tool_launchType;
 	tool_effectAreaType;
 	tool_hasCooldown;
@@ -31,6 +32,7 @@ class Tool {
 			this.tool_rangeMin = getWeaponMinRange(this.tool_id);
 			this.tool_rangeMax = getWeaponMaxRange(this.tool_id);
 			this.tool_needLos = weaponNeedLos(this.tool_id);
+			this.tool_isSummon = false;
 		} else {
 			this.tool_name = getChipName(this.tool_id);
 			this.tool_launchType = getChipLaunchType(this.tool_id);
@@ -44,6 +46,22 @@ class Tool {
 			this.tool_rangeMin = getChipMinRange(this.tool_id);
 			this.tool_rangeMax = getChipMaxRange(this.tool_id);
 			this.tool_needLos = chipNeedLos(this.tool_id);
+			this.tool_isSummon  = isToolCastSummon(this.tool_id);
 		}
 	}
+}
+
+function isToolCastSummon(tool_id) {
+	return arrayInclude([
+		CHIP_TACTICIAN_BULB,
+		CHIP_LIGHTNING_BULB,
+		CHIP_WIZARD_BULB,
+		CHIP_FIRE_BULB,
+		CHIP_HEALER_BULB,
+		CHIP_ICED_BULB,
+		CHIP_ROCKY_BULB,
+		CHIP_PUNY_BULB
+	], function(chipSummonId) {
+		return tool_id === chipSummonId;
+	});
 }

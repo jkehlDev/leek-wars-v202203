@@ -1,0 +1,19 @@
+function refreshGlobals() {
+	var init_op = getOperations();
+	// -- FIGHT --
+	currentTurn = getTurn();
+	
+	// -- LEEKS -- 
+	myLeek_id = getEntity();
+	updateStorageLeeks();	
+	obstacles_map_binary_with_leek = filter_cells_all_obstacles();
+	
+	// -- ANALYTICS --	
+	myLeek_current_path = resolvePathMap(myLeek().leek_mp, myLeek().leek_mp, myLeek().leek_cell, obstacles_map_binary_with_leek.map, false);
+	myLeek_is_stick = isLeekStickByLeekId(myLeek());
+	refreshRadarZones();
+	refreshRadarTactic();
+	// -- -- 
+	console.warn('Globals refresh Ops : ' + (getOperations() - init_op));
+};
+refreshGlobals();

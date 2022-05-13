@@ -27,4 +27,4 @@
 			this.caster_tool_id = caster_tool_id;
 			this.caster_pathmap = radar_zones_by_leek[caster_leek_id].radar_zones[0];
 		}
-	}
+	}	

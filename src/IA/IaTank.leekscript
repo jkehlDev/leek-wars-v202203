@@ -24,5 +24,6 @@ function _IA_tank() {
 	var testLaunchs = new Launchs(contract_resistance);
 	// ---
 	console.info(testLaunchs.selected_launchs);
+	
 	moveTowardCell(target_position_cell.cell_id);
 }

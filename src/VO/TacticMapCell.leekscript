@@ -1,6 +1,27 @@
+/*
+ * cell_id;
+ *	enemies_data;
+ *	allies_data;
+ * => 
+ *  zone_sum_life;
+ *	zone_count_leeks;
+ *	zone_average_lifeRate;
+ *	zone_sum_tp;
+ *	zone_average_power;
+ *	zone_average_strength;
+ *	zone_average_wisdom;
+ *	zone_average_magic;
+ *	zone_average_resistance;
+ *
+ *	// Balance index : allies <<< - 0 + >>> enemies
+ *	balance_life;
+ *	balance_strenght;
+ *	balance_magic;
+ *	balance_wisdom;
+ */
+
 class TacticMapCell {
 	cell_id;
-	tactical_value;
 	enemies_data;
 	allies_data;
 
@@ -12,7 +33,6 @@ class TacticMapCell {
 
 	constructor(cell_id) {
 		this.cell_id = cell_id;
-		this.tactical_value = tactical_map_area[cell_id];
 		this.enemies_data = new TacticMapData();
 		this.allies_data = new TacticMapData();
 		this.balance_life = 0;
@@ -52,8 +72,7 @@ class TacticMapCell {
 	}
 
 	compareTo(to) {
-		return 
-		(this.balance_life < to.balance_life ? -1 :
+		return (this.balance_life < to.balance_life ? -1 :
 			(this.balance_life > to.balance_life ? 1 :
 				(this.balance_strenght < to.balance_strenght ? -1 :
 					(this.balance_strenght > to.balance_strenght ? 1 :
@@ -79,18 +98,18 @@ class TacticMapData {
 	constructor() {
 		this.zone_count_leeks = 0;
 		this.zone_sum_life = 0;
-		this.zone_average_lifeRate = null;
+		this.zone_average_lifeRate = 0;
 		this.zone_sum_tp = 0;
-		this.zone_average_power = null;
-		this.zone_average_strength = null;
-		this.zone_average_wisdom = null;
-		this.zone_average_magic = null;
-		this.zone_average_resistance = null;
+		this.zone_average_power = 0;
+		this.zone_average_strength = 0;
+		this.zone_average_wisdom = 0;
+		this.zone_average_magic = 0;
+		this.zone_average_resistance = 0;
 	}
 }
 
 function getAverageData(fromData, addData) {
-	if (fromData === null) {
+	if (fromData === 0) {
 		return addData;
 	}
 	return average([fromData, addData]);

@@ -1,0 +1,132 @@
+global LAUNCH_TYPE_SQUARE = 10;
+
+global launch_area_type_push_actions = [
+	LAUNCH_TYPE_DIAGONAL: function(AREA, X, Y, minDist, maxDist) {
+		var isOnDiag = abs(X) === abs(Y);
+		if (isOnDiag && ((abs(Y) + abs(X)) >= minDist && (abs(Y) + abs(X)) <= maxDist)) {
+			push(AREA, {
+				X: X,
+				Y: Y
+			});
+		}
+	},
+	LAUNCH_TYPE_LINE: function(AREA, X, Y, minDist, maxDist) {
+		var isOnLine = X === 0 || Y === 0;
+		if (isOnLine && ((abs(Y) + abs(X)) >= minDist && (abs(Y) + abs(X)) <= maxDist)) {
+			push(AREA, {
+				X: X,
+				Y: Y
+			});
+		}
+	},
+	LAUNCH_TYPE_STAR: function(AREA, X, Y, minDist, maxDist) {
+		var isOnLine, isOnDiag;
+		isOnDiag = abs(X) === abs(Y);
+		isOnLine = X === 0 || Y === 0;
+		if ((isOnDiag || isOnLine) && ((abs(Y) + abs(X)) >= minDist && (abs(Y) + abs(X)) <= maxDist)) {
+			push(AREA, {
+				X: X,
+				Y: Y
+			});
+		}
+	},
+	LAUNCH_TYPE_CIRCLE: function(AREA, X, Y, minDist, maxDist) {
+		if ((abs(Y) + abs(X)) >= minDist && (abs(Y) + abs(X)) <= maxDist) {
+			push(AREA, {
+				X: X,
+				Y: Y
+			});
+		}
+	},
+	LAUNCH_TYPE_SQUARE: function(AREA, X, Y, minDist, maxDist) {
+		if (abs(Y) >= minDist && abs(Y) <= maxDist && abs(X) >= minDist && abs(X) <= maxDist) {
+			push(AREA, {
+				X: X,
+				Y: Y
+			});
+		}
+	},
+];
+
+/**
+ * Get template cell offset XY map
+ * Return [{X: number, Y: number}] - Array of cell offset coordinates 
+ * */
+function generateLaunchAreaTemplateXY(minDist, maxDist, areaType) {
+	var offsetArea = [];
+	for (var Y = -maxDist; Y <= maxDist; Y++) {
+		for (var X = abs(Y) - maxDist; X <= maxDist - abs(Y); X++) {
+			launch_area_type_push_actions[areaType](offsetArea, X, Y, minDist, maxDist);
+		}
+	}
+	return offsetArea;
+}
+/**
+ * Get template cell offset XY map (square)
+ * Return [{X: number, Y: number}] - Array of cell offset coordinates 
+ * */
+function generateLaunchAreaTemplateXY_square(minDist, maxDist, areaType) {
+	var offsetArea = [];
+	for (var Y = -maxDist; Y <= maxDist; Y++) {
+		for (var X = -maxDist; X <= maxDist; X++) {
+			launch_area_type_push_actions[areaType](offsetArea, X, Y, minDist, maxDist);
+		}
+	}
+	return offsetArea;
+}
+
+/**
+ * Get X,Y coordinate of a cell by id
+ * @param cellId : number - Cell id
+ * @return {X:number, Y:number} : Cell coordinates
+ * */
+function getCellXYFromId(cellId) {
+	return {
+		X: getCellX(cellId),
+		Y: getCellY(cellId)
+	};
+}
+
+/**
+ * Apply template on cell and return calculated cellId
+ * @param fromCellId : number - Cell on wich apply template
+ * @param templateOffsetXY : {X : number, Y : number} - Calculated cellId
+ * @return number Calculated cellId
+ * */
+function applyTemplateOn(fromCellId, templateOffsetXY) {
+	return templateOffsetXY.X * OFFSET_X + templateOffsetXY.Y * OFFSET_Y + fromCellId;
+}
+
+/**
+ * Respond true if calculated cell by adding template on origin cell stay in played map
+ * @param cellXY1 - {X : number, Y : number} - Origine cell coordinates
+ * @param cellXY2 - {X : number, Y : number} - template offset coordinates
+ * @return boolean - true if calculated cell by adding template stay in played map, false otherwise.
+ * */
+function checkInnerPlayedMap(cellXY1, cellXY2) {
+	return (abs(cellXY1.X + cellXY2.X) + abs(cellXY1.Y + cellXY2.Y)) <= SIZE_MAX;
+}
+
+/**
+ * Respond true if cell distance between two tested cell less or egal to distance max.
+ * @param fromCellId : number - From cell
+ * @param toCellId : number - To cell
+ * @param distance_max : number - Distance maximum
+ * @return boolean - true if cell distance between two tested cell less or egal to distance max, false otherwise.
+ * */
+function checkDistanceMax(fromCellId, toCellId, distance_max) {
+	return getDistance(fromCellId, toCellId) <= distance_max;
+}
+
+/**
+ * Respond true if path distance between two tested cell less or egal to distance max.
+ * @param fromCellId : number - From cell
+ * @param toCellId : number - To cell
+ * @param distance_max : number - Distance maximum
+ * @return boolean - true if path distance between two tested cell less or egal to distance max, false otherwise.
+ * */
+function checkPathCountMax(fromCellId, toCellId, distance_max) {
+	var path = getPath(fromCellId, toCellId);
+	var pathCount = path !== null ? count(path) : 0;
+	return path !== null && pathCount <= distance_max;
+}

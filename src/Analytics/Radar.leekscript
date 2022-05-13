@@ -1,9 +1,11 @@
 /**
  * Resolver - Radar zone by leek  
  * {
- *		radar_leek_id : leek.leek_id,
- *		radar_zones : radar_zones
- *	}
+ * 	radar_leek_id: radarleek.leek_id,
+ * 	radar_zones: radar_zones,
+ * 	leek_path_map: radar_leek_path_map,
+ * 	all_leeks_in_zones: all_leeks_in_zones
+ * }
  * */
 function resolveZonesRadar(deep_factor, radarleek) {
 	var enemies = [];
@@ -21,9 +23,8 @@ function resolveZonesRadar(deep_factor, radarleek) {
 	];
 
 	for (zone = 0; zone < deep_factor; zone++) {
-		var map = radar_leek_path_map.mapZones[zone];
 		radar_zones[zone] = {
-			map: map !== null ? map : clone(empty_binary_map, 2),
+			map: radar_leek_path_map.mapZones[zone] !== null ? radar_leek_path_map.mapZones[zone] : clone(empty_binary_map, 2),
 			coordinates_min: radar_leek_path_map.coordinates_min,
 			coordinates_max: radar_leek_path_map.coordinates_max,
 			leeks: [
@@ -81,14 +82,14 @@ function resolveZonesRadar(deep_factor, radarleek) {
 			}
 		}
 		radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON], sortByPathLengthAsc);
-		pushAll(all_leeks_in_zones[LEEK_TYPE_ENEMY_SUMMON], clone(radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON], 2));		
+		pushAll(all_leeks_in_zones[LEEK_TYPE_ENEMY_SUMMON], clone(radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON], 2));
 	}
-		return {
-			radar_leek_id: radarleek.leek_id,
-			radar_zones: radar_zones,
-			leek_path_map: radar_leek_path_map,
-			all_leeks_in_zones: all_leeks_in_zones
-		};
+	return {
+		radar_leek_id: radarleek.leek_id,
+		radar_zones: radar_zones,
+		leek_path_map: radar_leek_path_map,
+		all_leeks_in_zones: all_leeks_in_zones
+	};
 }
 
 function isLeekStickByLeekId(leek) {
