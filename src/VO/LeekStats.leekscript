@@ -1,0 +1,5 @@
+class LeekStats{
+	constructor(leek_id){
+		var leek = getLeekById(leek_id);
+	}
+}

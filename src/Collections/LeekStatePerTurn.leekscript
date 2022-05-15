@@ -1,0 +1,17 @@
+global leekStatePerTurn = new Collection('leekStatePerTurn');
+
+function refreshLeekStatePerTurn() {
+	var myleek = myLeek();
+	leekStatePerTurn.create([
+		"leek_id": myleek.leek_id,
+		"turn": currentTurn,
+		"leek_life": myleek.leek_life
+	])
+}
+
+refreshLeekStatePerTurn();
+console.info(leekStatePerTurn.findMany(
+	[
+		"turn": [_gt: currentTurn - 5, _lt: currentTurn -1]
+	]
+));
