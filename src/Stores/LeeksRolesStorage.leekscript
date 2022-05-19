@@ -181,30 +181,30 @@ global sommon_roles_sorter = {
  * */
 function refreshLeeksRole() {
 	leeks_roles_sorter._resolve(getAliveLeeksByType(LEEK_TYPE_ALLY));
-	refreshCountLeekByTypeAndRole(LEEK_TYPE_ALLY);
+	_refreshCountLeekByTypeAndRole(LEEK_TYPE_ALLY);
 	leeks_roles_sorter._resolve(getAliveLeeksByType(LEEK_TYPE_ENEMY));
-	refreshCountLeekByTypeAndRole(LEEK_TYPE_ENEMY);
+	_refreshCountLeekByTypeAndRole(LEEK_TYPE_ENEMY);
 	sommon_roles_sorter._resolve(getAliveLeeksByType(LEEK_TYPE_ENEMY_SUMMON));
-	refreshCountLeekByTypeAndRole(LEEK_TYPE_ENEMY_SUMMON);
+	_refreshCountLeekByTypeAndRole(LEEK_TYPE_ENEMY_SUMMON);
 	sommon_roles_sorter._resolve(getAliveLeeksByType(LEEK_TYPE_ALLY_SUMMON));
-	refreshCountLeekByTypeAndRole(LEEK_TYPE_ALLY_SUMMON);
+	_refreshCountLeekByTypeAndRole(LEEK_TYPE_ALLY_SUMMON);
 
 }
 
-function refreshCountLeekByTypeAndRole(leek_type) {
+function _refreshCountLeekByTypeAndRole(leek_type) {
 	for (var leek_role = 0; leek_role < 6; leek_role++) {
-		StoredLeeks[leek_type].role_count[leek_role] = arrayCount(getAliveLeeksByType(leek_type), function(leek) {
+		GBL_StoredLeeks[leek_type].role_count[leek_role] = arrayCount(getAliveLeeksByType(leek_type), function(leek) {
 			return leek.leek_role === leek_role;
 		});
 	}
 }
 
 function getLeeksCountByTypeNdRole(leek_type, leek_role) {
-	return StoredLeeks[leek_type].role_count[leek_role];
+	return GBL_StoredLeeks[leek_type].role_count[leek_role];
 }
 
 function getLeeksByTypeNdRole(leek_type, leek_role) {
-	return arrayFilter(StoredLeeks[leek_type].leeks, function(leek) {
+	return arrayFilter(GBL_StoredLeeks[leek_type].leeks, function(leek) {
 		return leek.leek_role === leek_role;
 	});
 }

@@ -492,10 +492,10 @@ function linearizeLaunchLst(launch_lst) {
 				countLeeks,
 				launch.caster_leek_id,
 				cast_cell_id,
-				radar_tactic_map_by_cells[cast_cell_id],
-				getPathLengthByPathCube(radar_zones_by_leek[launch.caster_leek_id].leek_path_map, cast_cell_id),
+				GBL_radar_tactic_map_by_cells[cast_cell_id],
+				getPathLengthByPathCube(GBL_radar_zones_by_leek[launch.caster_leek_id].leek_path_map, cast_cell_id),
 				launch.target_cell_id,
-				radar_tactic_map_by_cells[launch.target_cell_id],
+				GBL_radar_tactic_map_by_cells[launch.target_cell_id],
 				launch.tool_id,
 				clone(effects_value, 2)
 			));
@@ -566,7 +566,7 @@ function resolvePushEffectValue(caster_cell_id, target_leek_cell, target_cell_id
 		if (effect_area_cell.cell_id === target_leek_cell) {
 			return effect_value;
 		}
-		if (obstacles_cells[effect_area_cell.cell_id] === null) {
+		if (GBL_obstacles_cells[effect_area_cell.cell_id] === null) {
 			effect_value = (effect_value === 0) ? getCellDistance(target_leek_cell, effect_area_cell.cell_id) : effect_value;
 		} else {
 			effect_value = 0;

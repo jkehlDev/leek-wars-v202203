@@ -1,5 +1,5 @@
 function intersection(map_binary1, map_binary2, line_min, line_max) {
-	var map_inter_binary = clone(empty_binary_map, 2);
+	var map_inter_binary = clone(GBL_empty_binary_map, 2);
 	for (var line = line_min; line <= line_max; line++) {
 		map_inter_binary[line] = map_binary1[line] & map_binary2[line];
 	}
@@ -15,14 +15,14 @@ function union(map_binary1, map_binary2, line_min, line_max) {
 }
 
 function soustraire(map_binary1, map_binary2, line_min, line_max) {
-	var map_sub_binary = clone(empty_binary_map, 2);
+	var map_sub_binary = clone(GBL_empty_binary_map, 2);
 	for (var line = line_min; line <= line_max; line++) {
 		map_sub_binary[line] = map_binary1[line] & ~map_binary2[line];
 	}
 	return map_sub_binary;
 }
 function inverser(map_binary) {
-	var map_invert_binary = clone(empty_binary_map, 2);
+	var map_invert_binary = clone(GBL_empty_binary_map, 2);
 	for (var line = 0; line <= 34; line++) {
 		map_invert_binary[line] |= ~map_binary[line];
 	}

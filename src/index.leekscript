@@ -4,3 +4,4 @@ include('BO/index');
 include('Stores/index');
 include('Analytics/index');
 include('IA/index');
+include('Collections/index');

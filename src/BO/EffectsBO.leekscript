@@ -175,11 +175,12 @@ function canApplyEffectOnLeek(caster_leek, target_leek, effect_tested) {
 }
 
 /**
- * Current sum value of an effect on target leek 
+ * Current sum value of an effect on target leek
+ * tips : target_leek as Leek  
  * */
 function getEffectSumValueOfLeek(target_leek, effect_tested) {
 	return arrayFoldLeft(arrayFilter(target_leek.leek_effects, function(effect) {
-		return effect.type === effect_tested.type
+		return effect.type === effect_tested
 	}), function(total, effect) {
 		return total + effect.value;
 	}, 0);

@@ -3,7 +3,6 @@ include('GlobalsStorage');
 include('ToolsStorage');
 include('RadarStorage');
 include('LeeksRolesStorage');
-include('TacticalPositionsStorage');
 // -- ---------------
 include('RefreshGlobals');
 // -- ---------------

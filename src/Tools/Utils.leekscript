@@ -5,7 +5,7 @@ function getEmptyBinaryMap() {
 }
 
 function getEmptyBinaryMapBordered() {
-	var map_binary = clone(full_binary_map, 2);
+	var map_binary = clone(GBL_full_binary_map, 2);
 	var cell_max, line, cell;
 	for (line = 0; line <= 34; line++) {
 		cell_max = (18 - line % 2);
@@ -109,6 +109,14 @@ function resolveCellsObstacles() {
 	return cellsObstacles;
 };
 
+function arraySameAs(array1, array2) {
+	return count(array1) === count(array2) && arrayFoldLeft(array1, function(_isSame, _value) {
+		return _isSame && arrayInclude(array2, function(_valueTmp) {
+			return _valueTmp === _value;
+		});
+	}, true);
+};
+
 function arrayInclude(array, f) {
 	var isInclude = false;
 	for (var elmt in array) {
@@ -120,12 +128,22 @@ function arrayInclude(array, f) {
 	return isInclude;
 }
 
+function arrayFind(array, f) {
+	for (var elmt in array) {
+		if (f(elmt)) {
+			return elmt;
+		}
+	}
+	return null;
+}
+
 function arrayCount(array, f) {
 	return count(arrayFilter(array, f));
 }
 
 function decimal(value, nb) {
-	return ceil(value * pow(10, nb)) / pow(10, nb);
+	var powFactor = pow(10, nb);
+	return round(value * powFactor) / powFactor;
 }
 
 /**
@@ -152,19 +170,13 @@ function forEachLineNdCell(line_min, line_max, f) {
 	}
 }
 
-function ArrayAccumulate(arrays){
-	return arrayFoldLeft(arrays, function(v0, vx){
-		if(typeOf(vx) === TYPE_ARRAY){
+function ArrayAccumulate(arrays) {
+	return arrayFoldLeft(arrays, function(v0, vx) {
+		if (typeOf(vx) === TYPE_ARRAY) {
 			pushAll(v0, vx);
-		}else{
+		} else {
 			push(v0, vx);
 		}
 		return v0;
-	}, []);	
+	}, []);
 }
-
-
-
-
-
-

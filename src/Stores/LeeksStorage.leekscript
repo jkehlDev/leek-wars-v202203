@@ -2,48 +2,48 @@ global LEEK_TYPE_ALLY = 1;
 global LEEK_TYPE_ENEMY = 2;
 global LEEK_TYPE_ALLY_SUMMON = 3;
 global LEEK_TYPE_ENEMY_SUMMON = 4;
-global StoredLeeks = [
+global GBL_StoredLeeks = [
 	LEEK_TYPE_ALLY: {
-		role_count:[],
+		role_count: [],
 		leeks: []
 	},
 	LEEK_TYPE_ALLY_SUMMON: {
-		role_count:[],
+		role_count: [],
 		leeks: []
 	},
 	LEEK_TYPE_ENEMY: {
-		role_count:[],
+		role_count: [],
 		leeks: []
 	},
 	LEEK_TYPE_ENEMY_SUMMON: {
-		role_count:[],
+		role_count: [],
 		leeks: []
 	},
 ];
 
-function updateStorageLeeks() {
+function _updateStorageLeeks() {
 	var leek_id, leek_type;
 	for (leek_id in getAllies()) {
 		leek_type = getLeekTypeById(leek_id);
-		upsertLeekById(leek_id, leek_type);
+		_upsertLeekById(leek_id, leek_type);
 	}
 	for (leek_id in getEnemies()) {
 		leek_type = getLeekTypeById(leek_id);
-		upsertLeekById(leek_id, leek_type);
+		_upsertLeekById(leek_id, leek_type);
 	}
-	if (is_fight_type[FIGHT_TYPE_TEAM]) {
+	if (GBL_is_fight_type[FIGHT_TYPE_TEAM]) {
 		leek_id = getAlliedTurret()
-		upsertLeekById(leek_id, LEEK_TYPE_ALLY);
-		turret_ally = getLeekById(leek_id);
+		_upsertLeekById(leek_id, LEEK_TYPE_ALLY);
+		GBL_turret_ally = getLeekById(leek_id);
 		leek_id = getEnemyTurret()
-		upsertLeekById(leek_id, LEEK_TYPE_ENEMY);
-		turret_enemy = getLeekById(leek_id);
+		_upsertLeekById(leek_id, LEEK_TYPE_ENEMY);
+		GBL_turret_enemy = getLeekById(leek_id);
 	}
-	refreshLeeksRole();	
+	refreshLeeksRole();
 }
 
 function myLeek() {
-	return getLeekById(myLeek_id);
+	return getLeekById(GBL_myLeek_id);
 };
 
 function getLeekTypeById(leek_id) {
@@ -59,7 +59,7 @@ function getLeekTypeById(leek_id) {
  * LEEK_TYPE_ENEMY_SUMMON
  * */
 function getAliveLeeksByType(leek_type) {
-	return arrayFilter(StoredLeeks[leek_type].leeks, function(leek) {
+	return arrayFilter(GBL_StoredLeeks[leek_type].leeks, function(leek) {
 		return leek.leek_isAlive;
 	});
 }
@@ -72,6 +72,18 @@ function getAllAliveLeeks() {
 	return leeks;
 }
 
+function getAllAlliesAliveLeeks() {
+	var leeks = getAliveLeeksByType(LEEK_TYPE_ALLY);
+	pushAll(leeks, getAliveLeeksByType(LEEK_TYPE_ALLY_SUMMON));
+	return leeks;
+}
+
+function getAllEnemiesAliveLeeks() {
+	var leeks = getAliveLeeksByType(LEEK_TYPE_ENEMY);
+	pushAll(leeks, getAliveLeeksByType(LEEK_TYPE_ENEMY_SUMMON));
+	return leeks;
+}
+
 /**
  * LEEK_TYPE_ALLY
  * LEEK_TYPE_ENEMY
@@ -79,30 +91,30 @@ function getAllAliveLeeks() {
  * LEEK_TYPE_ENEMY_SUMMON
  * */
 function getDeadLeeksByType(leek_type) {
-	return arrayFilter(StoredLeeks[leek_type].leeks, function(leek) {
+	return arrayFilter(GBL_StoredLeeks[leek_type].leeks, function(leek) {
 		return !leek.leek_isAlive;
 	});
 }
 
 function getLeekById(leek_id) {
 	var leek_type = getLeekTypeById(leek_id);
-	return selectLeek(leek_id, leek_type);
+	return _selectLeek(leek_id, leek_type);
 }
 
 function refreshLeekById(leek_id) {
 	var leek_type = getLeekTypeById(leek_id);
-	return upsertLeekById(leek_id, leek_type);
+	return _upsertLeekById(leek_id, leek_type);
 }
 
-function upsertLeekById(leek_id, leek_type) {
-	StoredLeeks[leek_type].leeks[leek_id] = new Leek(leek_id);
-	return StoredLeeks[leek_type].leeks[leek_id];
+function _upsertLeekById(leek_id, leek_type) {
+	GBL_StoredLeeks[leek_type].leeks[leek_id] = new Leek(leek_id);
+	return GBL_StoredLeeks[leek_type].leeks[leek_id];
 }
 
-function removeLeekById(leek_id, leek_type) {
-	StoredLeeks[leek_type].leeks[leek_id] = null;
+function _removeLeekById(leek_id, leek_type) {
+	GBL_StoredLeeks[leek_type].leeks[leek_id] = null;
 }
 
-function selectLeek(leek_id, leek_type) {
-	return StoredLeeks[leek_type].leeks[leek_id] !== null ? StoredLeeks[leek_type].leeks[leek_id] : upsertLeekById(leek_id, leek_type);
+function _selectLeek(leek_id, leek_type) {
+	return GBL_StoredLeeks[leek_type].leeks[leek_id] !== null ? GBL_StoredLeeks[leek_type].leeks[leek_id] : _upsertLeekById(leek_id, leek_type);
 }

@@ -62,7 +62,7 @@ function convertBinaryMapToCellIdMap(map_binary, coordinates_min, coordinates_ma
  * Convert cellId Array into binary full map
  * */
 function convertCellIdMapToBinaryMap(map_boolean, withBorder) {
-	var map_binary = withBorder ? clone(empty_binary_map_bordored, 2) : clone(empty_binary_map, 2);
+	var map_binary = withBorder ? clone(GBL_empty_binary_map_bordored, 2) : clone(GBL_empty_binary_map, 2);
 	var binary_coordinate;
 	for (var map_cell in map_boolean) {
 		binary_coordinate = convertCellIdToLineNdCell(map_cell.cell_id);

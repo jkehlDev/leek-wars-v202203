@@ -1,23 +1,36 @@
+/**
+ * {
+ *		map: path_map_between,
+ *		coordinates_min: {
+ *			line: border_lines.line_min,
+ *			cell: 0
+ *		},
+ *		coordinates_max: {
+ *			line: border_lines.line_max,
+ *			cell: 17
+ *		}
+ *	}
+ **/
 function resolvePathBetween(cell_from_id, cell_to_id) {
-	var maxSteps = getPathLength(cell_from_id, cell_to_id);
+	var maxSteps = getPathLength(cell_from_id, cell_to_id) + 2;
 	maxSteps = maxSteps !== null ? maxSteps : 45;
-	
+
 	// - --INIT FROM PATH MAP--
 	var cell_from_coord = convertCellIdToLineNdCell(cell_from_id);
 	var path_from_map_by_step = [];
-	path_from_map_by_step[0] = clone(empty_binary_map, 2);
+	path_from_map_by_step[0] = clone(GBL_empty_binary_map, 2);
 	path_from_map_by_step[0][cell_from_coord.line] |= (1 << cell_from_coord.cell);
 	var path_from_map_all = clone(path_from_map_by_step[0], 2);
 
 	// - --INIT TO PATH MAP--
 	var cell_to_coord = convertCellIdToLineNdCell(cell_to_id);
 	var path_to_map_by_step = [];
-	path_to_map_by_step[0] = clone(empty_binary_map, 2);
+	path_to_map_by_step[0] = clone(GBL_empty_binary_map, 2);
 	path_to_map_by_step[0][cell_to_coord.line] |= (1 << cell_to_coord.cell);
 	var path_to_map_all = clone(path_to_map_by_step[0], 2);
 
 	// - --INIT OBSTACLES--
-	var obstacles_from_map_tmp = clone(obstacles_map_binary_with_leek.map, 2);
+	var obstacles_from_map_tmp = clone(GBL_obstacles_map_binary_with_leek.map, 2);
 	obstacles_from_map_tmp[cell_from_coord.line] &= ~(1 << cell_from_coord.cell);
 	obstacles_from_map_tmp[cell_to_coord.line] &= ~(1 << cell_to_coord.cell);
 	// - -- Resolve path map
@@ -30,19 +43,19 @@ function resolvePathBetween(cell_from_id, cell_to_id) {
 		border_lines = resolveBinaryMapLineBorders(path_from_map_by_step[step - 1], 1);
 		path_from_map_by_step[step] = pathStep(
 			path_from_map_by_step[step - 1],
-			path_from_map_all, 
-			obstacles_from_map_tmp, 
-			border_lines.line_min, 
+			path_from_map_all,
+			obstacles_from_map_tmp,
+			border_lines.line_min,
 			border_lines.line_max
 		);
 		path_from_map_all = union(path_from_map_all, path_from_map_by_step[step], border_lines.line_min, border_lines.line_max);
 		// - --TO PATH MAP--
 		border_lines = resolveBinaryMapLineBorders(path_to_map_by_step[step - 1], 1);
 		path_to_map_by_step[step] = pathStep(
-			path_to_map_by_step[step - 1], 
-			path_to_map_all, 
-			obstacles_map_binary, 
-			border_lines.line_min, 
+			path_to_map_by_step[step - 1],
+			path_to_map_all,
+			GBL_obstacles_map_binary,
+			border_lines.line_min,
 			border_lines.line_max
 		);
 		path_to_map_all = union(path_to_map_all, path_to_map_by_step[step], border_lines.line_min, border_lines.line_max);
@@ -96,7 +109,7 @@ function resolvePathMap(pathRange, pathRangeZone, cell_origin, map_cellOff_binar
 	pathRangeZone = max(1, pathRangeZone);
 	pathRange = pathRange >= pathRangeZone ? pathRange : pathRangeZone;
 	var coord = convertCellIdToLineNdCell(cell_origin);
-	pathCube_binary[0] = clone(empty_binary_map, 2)
+	pathCube_binary[0] = clone(GBL_empty_binary_map, 2)
 	pathCube_binary[0][coord.line] |= (1 << coord.cell);
 	pathRange = pathRange > 0 ? pathRange : 0;
 
@@ -151,7 +164,7 @@ function resolvePathMap(pathRange, pathRangeZone, cell_origin, map_cellOff_binar
 
 // ----------------
 function pathStep(map_From_binary, map_mask_binary, map_cellOff_binary, line_min, line_max) {
-	var map_path_binary = clone(empty_binary_map, 2);
+	var map_path_binary = clone(GBL_empty_binary_map, 2);
 	var line_before, line_after, line;
 	for (line = line_min; line <= line_max; line++) {
 		line_before = ((line - 1) < line_min) ? 0 : map_From_binary[line - 1];

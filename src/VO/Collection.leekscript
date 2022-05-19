@@ -4,9 +4,11 @@
  * 
  * 	@Request an instance of a Collection :
  * 	- create(new_document) : return the document if created, null otherwise
+ *  - read(id) : return targeted document  by id
  * 	- update(document): return the document if updated, null otherwise
  * 	- delete(id): return return the document if deleted, null otherwise
  * 	- count(selector) : return a document if exist, null otherwise
+ *  - findAll() : return all document
  * 	- findOne(selector) : return a document if exist, null otherwise 
  * 	- findMany(filter) : return a document if exist, null otherwise
  * 	- exists(selector) : return true if exist, false otherwise
@@ -14,7 +16,7 @@
  * 	#Tips : id = document[__id]
  * 
  * 	#Operators : _and, _or
- * 	#Functions : _eq, _gt, _lt, _has
+ * 	#Functions : _eq, _gt, _lt, _has, _in
  * 
  * 	- Ex_1 : [ $field : [ _eq : $value ] ]
  * 	equivalent to : document[$field] === $value ?
@@ -56,6 +58,9 @@ class Collection {
 			return clone(_document, 2);
 		}
 		return null;
+	}
+	read(_id) {
+		return this._collection[_id] !== null ? clone(this._collection[_id], 2) : null;
 	}
 	update(_document) {
 		var _id = _document[__id];
@@ -108,36 +113,46 @@ global _eq = 1;
 global _gt = 2;
 global _lt = 3;
 global _has = 4;
+global _in = 7;
 // ---
 global _and = 5;
 global _or = 6;
 // ---
 global _CollectionFcts = [
-	_eq: function(_ref) {
+	_eq: function(_eval) {
 		return function(_field) {
 			return function(_document) {
-				return _ref === _document[_field];
+				return _eval === _document[_field];
 			};
 		};
 	},
-	_gt: function(_ref) {
+	_in: function(_eval) {
 		return function(_field) {
 			return function(_document) {
-				return _ref < _document[_field];
+				return arrayInclude(_eval, function(_evalIn) {
+					return _evalIn === _document[_field];
+				});
 			};
 		};
 	},
-	_lt: function(_ref) {
+	_gt: function(_eval) {
 		return function(_field) {
 			return function(_document) {
-				return _ref > _document[_field];
+				return _eval < _document[_field];
 			};
 		};
 	},
-	_has: function(_ref) {
+	_lt: function(_eval) {
 		return function(_field) {
 			return function(_document) {
-				return contains(_document[_field], _ref);
+				return _eval > _document[_field];
+			};
+		};
+	},
+	_has: function(_eval) {
+		return function(_field) {
+			return function(_document) {
+				return contains(_document[_field], _eval);
 			};
 		};
 	},

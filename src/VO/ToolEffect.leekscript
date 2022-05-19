@@ -38,4 +38,11 @@ class ToolEffect {
 		this.isNotReplaceable = (this.modifiers & EFFECT_MODIFIER_NOT_REPLACEABLE) !== 0;
 		this.isOnCaster = (this.modifiers & EFFECT_MODIFIER_ON_CASTER) !== 0;
 	}
+	
+	aggregate(sumEffect){
+		this.value_min += sumEffect.value_min;
+		this.value_max += sumEffect.value_max;
+		this.value += sumEffect.value;
+		this.nbTurns = min(this.nbTurns, sumEffect.nbTurns);
+	}
 }
