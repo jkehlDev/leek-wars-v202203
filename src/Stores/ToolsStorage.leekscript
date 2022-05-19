@@ -1,16 +1,16 @@
 // --------------------------
 function getToolById(tool_id) {
-	if (tool_by_id[tool_id] === null) {
-		tool_by_id[tool_id] = new Tool(tool_id);
+	if (_tool_by_id[tool_id] === null) {
+		_tool_by_id[tool_id] = new Tool(tool_id);
 	}
-	return tool_by_id[tool_id];
+	return _tool_by_id[tool_id];
 }
 
 function getLaunchAreaTemplateByToolId(tool_id) {
-	if (launch_area_template_by_ToolId[tool_id] === null) {
-		launch_area_template_by_ToolId[tool_id] = resolveLaunchAreaTemplateByToolId(tool_id);
+	if (GBL_launch_area_template_by_ToolId[tool_id] === null) {
+		GBL_launch_area_template_by_ToolId[tool_id] = resolveLaunchAreaTemplateByToolId(tool_id);
 	}
-	return launch_area_template_by_ToolId[tool_id];
+	return GBL_launch_area_template_by_ToolId[tool_id];
 }
 /**
  * Obtain effect area by tool id
@@ -18,25 +18,31 @@ function getLaunchAreaTemplateByToolId(tool_id) {
  * */
 function getEffectAreaTemplateByToolId(tool_id) {
 	var tool = getToolById(tool_id);
-	return effect_area_template_by_area_type_id[tool.tool_effectAreaType];
+	return GBL_effect_area_template_by_area_type_id[tool.tool_effectAreaType];
 }
 // --------------------------
-global tool_by_id = []; // Tool object
-global launch_area_template_by_ToolId = []; // Binary template maps
-global effect_area_template_by_ToolId = []; // Binary template maps
-global effect_area_template_by_area_type_id = [
+global _tool_by_id = []; // Tool object
+global GBL_launch_area_template_by_ToolId = []; // Binary template maps
+global GBL_effect_area_template_by_ToolId = []; // Binary template maps
+global AREA_X_2_4 = 100;
+global AREA_CIRCLE_2_4 = 101;
+global AREA_SQUARE_2_4 = 102;
+global GBL_effect_area_template_by_area_type_id = [
 	AREA_POINT: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 0, LAUNCH_TYPE_CIRCLE)),
 	AREA_CIRCLE_1: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 1, LAUNCH_TYPE_CIRCLE)),
 	AREA_CIRCLE_2: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 2, LAUNCH_TYPE_CIRCLE)),
 	AREA_CIRCLE_3: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 3, LAUNCH_TYPE_CIRCLE)),
+	AREA_CIRCLE_2_4: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(2, 4, LAUNCH_TYPE_CIRCLE)),
 	AREA_SQUARE_1: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 1, LAUNCH_TYPE_SQUARE)),
 	AREA_SQUARE_2: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 2, LAUNCH_TYPE_SQUARE)),
+	AREA_SQUARE_2_4: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(2, 6, LAUNCH_TYPE_SQUARE)),
 	AREA_PLUS_1: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 1, LAUNCH_TYPE_LINE)),
 	AREA_PLUS_2: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 2, LAUNCH_TYPE_LINE)),
 	AREA_PLUS_3: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 3, LAUNCH_TYPE_LINE)),
 	AREA_X_1: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 2, LAUNCH_TYPE_DIAGONAL)),
-	AREA_X_2: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 3, LAUNCH_TYPE_DIAGONAL)),
-	AREA_X_3: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 4, LAUNCH_TYPE_DIAGONAL)),
+	AREA_X_2: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 4, LAUNCH_TYPE_DIAGONAL)),
+	AREA_X_3: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 6, LAUNCH_TYPE_DIAGONAL)),
+	AREA_X_2_4: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(4, 6, LAUNCH_TYPE_DIAGONAL)),
 	AREA_FIRST_INLINE: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 0, LAUNCH_TYPE_CIRCLE)),
 	AREA_LASER_LINE: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 0, LAUNCH_TYPE_CIRCLE)),
 ]; // Binary template maps

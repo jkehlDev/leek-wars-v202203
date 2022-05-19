@@ -1,0 +1,129 @@
+class ToolCard {
+	_mandatories; // mandatory tools sorted by cast order (first to last)
+	_optionnals; // optionnals tools sorted by cast order (first to last)
+	_options; // ordered by total cost dsc, list of tool used in one turn : mandatory + partial optionnals sorted by cast order;
+
+	constructor(mandatory_tools, optionnal_tools, max_cost) {
+		this._mandatories = clone(mandatory_tools, 2);
+		this._optionnals = clone(optionnal_tools, 2);
+		this._options = _resolveOptions(mandatory_tools, optionnal_tools, max_cost);
+	}
+}
+
+class Option {
+	_cast_array;
+	_effects_reduced;
+	_total_cost;
+	_cooldown;
+
+	constructor(mandatory_tools) {
+		this._cast_array = clone(mandatory_tools, 2);
+		var agregate = arrayFoldLeft(mandatory_tools, function(agregated, tool_id) {
+			var tool = getToolById(tool_id);
+			var tool_effect;
+			if (agregated._effects === null) {
+				agregated._effects = arrayIndex(clone(tool.tool_effects, 2), function(tool_effect) {
+					return tool_effect.type;
+				});
+			} else {
+				for (tool_effect in tool.tool_effects) {
+					if (agregated._effects[tool_effect.type] !== null) {
+						agregated._effects[tool_effect.type] = tool_effect.aggregate(agregated._effects[tool_effect.type]);
+					} else {
+						agregated._effects[tool_effect.type] = tool_effect;
+					}
+				};
+			}
+			agregated._cost += tool.tool_cost;
+			agregated._cooldown = max(tool.tool_cooldown, agregated._cooldown);
+			return agregated;
+		}, {
+			_effects: null,
+			_cost: 0,
+			_cooldown: 0
+		});
+		this._effects_reduced = agregate._effects;
+		this._total_cost = agregate._cost;
+		this._cooldown = agregate._cooldown;
+	}
+
+	add(tool) {
+		push(this._cast_array, tool.tool_id);
+		if (this._effects_reduced === null) {
+			this._effects_reduced = arrayIndex(clone(tool.tool_effects, 2), function(_tool_effect) {
+				return _tool_effect.type;
+			});
+		} else {
+			var tool_effect;
+			for (tool_effect in tool.tool_effects) {
+				if (this._effects_reduced[tool_effect.type] !== null) {
+					this._effects_reduced[tool_effect.type] = tool_effect.aggregate(this._effects_reduced[tool_effect.type]);
+				} else {
+					this._effects_reduced[tool_effect.type] = tool_effect;
+				}
+			};
+		}
+		this._total_cost += tool.tool_cost;
+		this._cooldown = max(tool.tool_cooldown, this._cooldown);
+	}
+}
+
+
+function _resolveOptions(mandatory_tools, optionnal_tools, max_cost) {
+	var allOptions = [];
+	var optionSeed = new Option(mandatory_tools);
+
+	if (optionSeed._total_cost <= max_cost) {
+		push(allOptions, clone(optionSeed, 2));
+		var tool_id, currentOption, tool, tools_left;
+		for (tool_id in optionnal_tools) {
+			currentOption = clone(optionSeed, 2);
+			tool = getToolById(tool_id);
+			if ((tool.tool_cost + currentOption._total_cost) <= max_cost) {
+				tools_left = clone(optionnal_tools, 2);
+				if (tool.tool_hasCooldown) {
+					tools_left = arrayFilter(tools_left, function(_tool_id) {
+						return _tool_id !== tool.tool_id;
+					});
+				}
+				currentOption.add(tool);
+				push(allOptions, clone(currentOption, 2));
+				allOptions = _resolveOptionsStepper(allOptions, currentOption, tools_left, max_cost);
+			}
+		}
+	}
+	return arraySort(allOptions, function(option1, option2) {
+		return option1._total_cost < option2._total_cost ? -1 : option1._total_cost > option2._total_cost ? 1 : 0
+	});
+}
+
+
+function _resolveOptionsStepper(allOptions, currentOption, tools_left, max_cost) {
+	if (count(tools_left) === 0) {
+		return allOptions;
+	}
+
+	var tool_id, tool, tools_left_tmp, currentOption_tmp;
+	for (tool_id in tools_left) {
+		currentOption_tmp = clone(currentOption, 2);
+		tool = getToolById(tool_id);
+		if ((tool.tool_cost + currentOption_tmp._total_cost) <= max_cost) {
+			tools_left_tmp = clone(tools_left, 2);
+			if (tool.tool_hasCooldown) {
+				tools_left_tmp = arrayFilter(tools_left_tmp, function(_tool_id) {
+					return _tool_id !== tool.tool_id;
+				});
+			}
+			currentOption_tmp.add(tool);
+			if (!arrayInclude(allOptions, function(_option) {
+					return arraySameAs(_option._cast_array, currentOption_tmp._cast_array);
+				})) {
+				push(allOptions, clone(currentOption_tmp, 2));
+			}
+
+			allOptions = _resolveOptionsStepper(allOptions, currentOption_tmp, tools_left_tmp, max_cost);
+		}
+	}
+
+	return allOptions;
+}

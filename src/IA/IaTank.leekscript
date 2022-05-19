@@ -1,5 +1,19 @@
+global _IA_tank_init = false;
+global _IA_tank_cards = [];
+
 function _IA_tank() {
 	console.info('ROLE_TANK');
+	// - ---
+	if (!_IA_tank_init) {
+		_IA_tank_init = true;
+		_IA_tank_cards = [
+			'ABSOLUTE_SHIELD': new ToolCard([CHIP_SOLIDIFICATION], [CHIP_ARMOR, CHIP_SHIELD, CHIP_HELMET], 20),
+			'RELATIVE_SHIELD': new ToolCard([CHIP_SOLIDIFICATION], [CHIP_WALL, CHIP_RAMPART, CHIP_DOME], 20),
+//			'WEAPON_J_LASER': new ToolCard([], [WEAPON_J_LASER], 20),
+//			'WEAPON_BROADSWORD': new ToolCard([], [WEAPON_BROADSWORD], 20),
+		];
+	}
+	
 	// - ---
 	var target_position_cell = resolveTacticalPositionByTargetsLeeksNdTacticalArea(
 		ArrayAccumulate([
@@ -8,22 +22,34 @@ function _IA_tank() {
 			getLeeksByTypeNdRole(LEEK_TYPE_ENEMY, LEEK_ROLE_DD_SCIENCE),
 		]),
 		_sortLeekByLevelDSC,
-		tactical_areas.TACTICAL_TANK,
-		_sortPositionsNearestTarget
+		GBL_effect_area_template_by_area_type_id[AREA_CIRCLE_1],
+		_sortPositionsSafest
 	);
-	var currentLeek = myLeek();
-	var pathing_binary_map = resolvePathBetween(currentLeek.leek_cell, target_position_cell.cell_id);
-	// ----
-	var leek_armury = getLeekArmury(currentLeek);
-	var contract_resistance = new LaunchContract(
-		launch_resolvers.CAST_AROUND,
-		launch_filters.TARGET_ONLY_CASTER,
-		[launch_sorters.SORT_MAX_EFFECT_VALUE],
-		myLeek_id,
-		CHIP_SOLIDIFICATION);
-	var testLaunchs = new Launchs(contract_resistance);
-	// ---
-	console.info(testLaunchs.selected_launchs);
 	
+	var currentLeek = myLeek();
+	//var pathing_binary_map = resolvePathBetween(currentLeek.leek_cell, target_position_cell.cell_id);
+	// ----
+	var leek_radar = GBL_radar_zones_by_leek[GBL_myLeek_id];
+	var leek_armury = getLeekArmury(currentLeek);
+	var leeksState_allies = getLeeksStateWithRadarSelect(leek_radar.all_leeks_in_zones[LEEK_TYPE_ALLY]);
+	var leeksState_ennemies = getLeeksStateWithRadarSelect(leek_radar.all_leeks_in_zones[LEEK_TYPE_ENEMY]);
+
+	//console.info(leeksState_ennemies);
+
+	//var contract_resistance = new LaunchContract(
+	//launch_resolvers.CAST_AROUND,
+	//launch_filters.TARGET_ONLY_CASTER,
+	//[launch_sorters.SORT_MAX_EFFECT_VALUE],
+	//GBL_myLeek_id,
+	//CHIP_SOLIDIFICATION);
+	//var testLaunchs = new Launchs(contract_resistance);
+
+	//if (count(testLaunchs.selected_launchs) > 0) {
+	//testLaunchs.selected_launchs[0].launch();
+	//}
+
+	// ---
+	//console.info(testLaunchs.selected_launchs);
+
 	moveTowardCell(target_position_cell.cell_id);
 }

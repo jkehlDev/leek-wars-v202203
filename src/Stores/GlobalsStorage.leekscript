@@ -1,35 +1,35 @@
 // -- ---------------
 // -- Others section
-global currentTurn = getTurn();
+global GBL_currentTurn = getTurn();
 // -- ---------------
 // -- Fight type section
-global fight_type = getFightType();
-global is_fight_type = [
-	FIGHT_TYPE_TEAM: (fight_type === FIGHT_TYPE_TEAM),
-	FIGHT_TYPE_FARMER: (fight_type === FIGHT_TYPE_FARMER),
-	FIGHT_TYPE_BATTLE_ROYALE: (fight_type === FIGHT_TYPE_BATTLE_ROYALE),
-	FIGHT_TYPE_SOLO: (fight_type === FIGHT_TYPE_SOLO)
+global GBL_fight_type = getFightType();
+global GBL_is_fight_type = [
+	FIGHT_TYPE_TEAM: (GBL_fight_type === FIGHT_TYPE_TEAM),
+	FIGHT_TYPE_FARMER: (GBL_fight_type === FIGHT_TYPE_FARMER),
+	FIGHT_TYPE_BATTLE_ROYALE: (GBL_fight_type === FIGHT_TYPE_BATTLE_ROYALE),
+	FIGHT_TYPE_SOLO: (GBL_fight_type === FIGHT_TYPE_SOLO)
 ];
 // - Only for FIGHT TYPE TEAM
-global turret_ally;
-global turret_enemy;
+global GBL_turret_ally;
+global GBL_turret_enemy;
 // -- ---------------
 // -- Maps section
-global OFFSET_X = 18;
-global OFFSET_Y = 17;
-global SIZE_MAX = 17;
-global myLeek_id = getEntity();
-global empty_binary_map = getEmptyBinaryMap();
-global full_binary_map = getFullBinaryMap();
-global obstacles_cells = resolveCellsObstacles();
-global empty_binary_map_bordored = getEmptyBinaryMapBordered();
-global obstacles_map_binary = convertCellIdMapToBinaryMap(obstacles_cells, false);
-global obstacles_map_binary_bordered = convertCellIdMapToBinaryMap(obstacles_cells, true);
-global obstacles_map_binary_with_leek;
-global foreigns_cells_map_binary = filter_cells_hide();
-global foreigns_cells_map = convertBinaryMapToCellIdMap(
-	foreigns_cells_map_binary.map, foreigns_cells_map_binary.coordinates_min, foreigns_cells_map_binary.coordinates_max);
-global full_path_map_cells = convertBinaryMapToCellIdMap(soustraire(full_binary_map, obstacles_map_binary, 0, 34), {
+global GBL_OFFSET_X = 18;
+global GBL_OFFSET_Y = 17;
+global GBL_SIZE_MAX = 17;
+global GBL_myLeek_id = getEntity();
+global GBL_empty_binary_map = getEmptyBinaryMap();
+global GBL_full_binary_map = getFullBinaryMap();
+global GBL_obstacles_cells = resolveCellsObstacles();
+global GBL_empty_binary_map_bordored = getEmptyBinaryMapBordered();
+global GBL_obstacles_map_binary = convertCellIdMapToBinaryMap(GBL_obstacles_cells, false);
+global GBL_obstacles_map_binary_bordered = convertCellIdMapToBinaryMap(GBL_obstacles_cells, true);
+global GBL_obstacles_map_binary_with_leek;
+global GBL_foreigns_cells_map_binary = filter_cells_hide();
+global GBL_foreigns_cells_map = convertBinaryMapToCellIdMap(
+	GBL_foreigns_cells_map_binary.map, GBL_foreigns_cells_map_binary.coordinates_min, GBL_foreigns_cells_map_binary.coordinates_max);
+global GBL_full_path_map_cells = convertBinaryMapToCellIdMap(soustraire(GBL_full_binary_map, GBL_obstacles_map_binary, 0, 34), {
 	line: 0,
 	cell: 0
 }, {
@@ -54,5 +54,5 @@ global full_path_map_cells = convertBinaryMapToCellIdMap(soustraire(full_binary_
  * pathRange,
  * cell_origin: cell_origin
  * */
-global myLeek_current_path;
-global myLeek_is_stick = false;
+global GBL_myLeek_current_path;
+global GBL_myLeek_is_stick = false;

@@ -19,12 +19,15 @@
 		constructor(resolver, filters, sorters, caster_leek_id, caster_tool_id) {
 			this.cast_type = resolver;
 			this.targets_rules = filters;
-			this.target_leeks_ids = radar_zones_by_leek[caster_leek_id].all_leeks_in_zones;
+			this.target_leeks_ids = GBL_radar_zones_by_leek[caster_leek_id].all_leeks_in_zones;
 			this.priorities = arrayFoldRight(sorters, function(priority, next) {
 				return launch_sorters._sort_options[priority](next);
 			}, launch_sorters._isEqual);
 			this.caster_leek_id = caster_leek_id;
 			this.caster_tool_id = caster_tool_id;
-			this.caster_pathmap = radar_zones_by_leek[caster_leek_id].radar_zones[0];
+			this.caster_pathmap = GBL_radar_zones_by_leek[caster_leek_id].radar_zones[0];
 		}
-	}	
+	}
+
+
+	

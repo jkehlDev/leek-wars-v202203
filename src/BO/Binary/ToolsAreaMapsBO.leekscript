@@ -14,7 +14,7 @@ function resolveLaunchAreaTemplateByToolId(tool_id) {
 function resolveAreaTemplate(launch_area_templateXY) {
 	var resolve = function(launch_area_templateXY, cell_origin) {
 		var origin_cellXY = getCellXYFromId(cell_origin);
-		var map_template_binary = clone(empty_binary_map, 2);
+		var map_template_binary = clone(GBL_empty_binary_map, 2);
 		var coord = convertCellIdToLineNdCell(cell_origin);
 		var line_min = coord.line;
 		var line_max = coord.line;
@@ -81,7 +81,7 @@ function resolveAreaTemplateOnCell(selected_area_templates_binary, cell_center_i
 	var cell_max = selected_area_template_binary.coordinates_max.cell - translate_coordinates.cell;
 	cell_max > 17 ? 17 : cell_max;	
 	
-	var map_binary = clone(empty_binary_map, 2);
+	var map_binary = clone(GBL_empty_binary_map, 2);
 	if (translate_coordinates.cell > 0) {
 		for (var line = line_min; line <= line_max; line++) {
 			map_binary[line] |= (selected_area_template_binary.map[line + translate_coordinates.line] >> (translate_coordinates.cell));
@@ -92,7 +92,7 @@ function resolveAreaTemplateOnCell(selected_area_templates_binary, cell_center_i
 		}
 	}
 	if(hasObstacles){
-		map_binary = soustraire(map_binary, obstacles_map_binary, line_min, line_max);
+		map_binary = soustraire(map_binary, GBL_obstacles_map_binary, line_min, line_max);
 	}	
 	
 	return {

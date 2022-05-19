@@ -1,0 +1,43 @@
+//var op_init = getOperations();
+global GBL_leekStatePerTurnCol = new Collection('leekStatePerTurn');
+
+function _refreshLeekStatePerTurn() {
+	var allLeek = getAllAliveLeeks();
+	var leek, currentLeekState, previousLeekStateDocument;
+	for (leek in allLeek) {
+		currentLeekState = new LeekState(leek.leek_id);
+		previousLeekStateDocument = GBL_leekStatePerTurnCol.findOne(
+			[_and: [
+				["turn": [_eq: GBL_currentTurn - 1]],
+				["leek_id": [_eq: leek.leek_id]]
+			]]
+		)
+		if (previousLeekStateDocument !== null) {
+			currentLeekState.updateStateWithPrevious(previousLeekStateDocument);
+		}
+		GBL_leekStatePerTurnCol.create(currentLeekState.toDocument());
+	}
+}
+_refreshLeekStatePerTurn();
+// -----
+function _getLeeksState(filter_leekIds) {
+	return arrayMap(GBL_leekStatePerTurnCol.findMany(
+		[
+			_and: [
+				["turn": [_eq: GBL_currentTurn]],
+				["leek_id": [_in: filter_leekIds]]
+			]
+		]
+	), function(document) {
+		return new LeekState(document);
+	})
+}
+
+function getLeeksStateWithRadarSelect(leeksRadarSelect) {
+	var filter_leekIds = arrayMap(leeksRadarSelect, function(leek) {
+		return leek.leek_id;
+	});
+	return _getLeeksState(filter_leekIds);
+}
+
+//console.warn('LeekStates ops : ' + (getOperations() - op_init));

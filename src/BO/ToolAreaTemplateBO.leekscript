@@ -94,7 +94,7 @@ function getCellXYFromId(cellId) {
  * @return number Calculated cellId
  * */
 function applyTemplateOn(fromCellId, templateOffsetXY) {
-	return templateOffsetXY.X * OFFSET_X + templateOffsetXY.Y * OFFSET_Y + fromCellId;
+	return templateOffsetXY.X * GBL_OFFSET_X + templateOffsetXY.Y * GBL_OFFSET_Y + fromCellId;
 }
 
 /**
@@ -104,7 +104,7 @@ function applyTemplateOn(fromCellId, templateOffsetXY) {
  * @return boolean - true if calculated cell by adding template stay in played map, false otherwise.
  * */
 function checkInnerPlayedMap(cellXY1, cellXY2) {
-	return (abs(cellXY1.X + cellXY2.X) + abs(cellXY1.Y + cellXY2.Y)) <= SIZE_MAX;
+	return (abs(cellXY1.X + cellXY2.X) + abs(cellXY1.Y + cellXY2.Y)) <= GBL_SIZE_MAX;
 }
 
 /**

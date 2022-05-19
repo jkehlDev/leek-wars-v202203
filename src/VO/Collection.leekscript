@@ -1,0 +1,194 @@
+/**
+ * 	A Collection of Documents.
+ * 	Document is an indexed array of values and sub-Documents.
+ * 
+ * 	@Request an instance of a Collection :
+ * 	- create(new_document) : return the document if created, null otherwise
+ *  - read(id) : return targeted document  by id
+ * 	- update(document): return the document if updated, null otherwise
+ * 	- delete(id): return return the document if deleted, null otherwise
+ * 	- count(selector) : return a document if exist, null otherwise
+ *  - findAll() : return all document
+ * 	- findOne(selector) : return a document if exist, null otherwise 
+ * 	- findMany(filter) : return a document if exist, null otherwise
+ * 	- exists(selector) : return true if exist, false otherwise
+ * 	
+ * 	#Tips : id = document[__id]
+ * 
+ * 	#Operators : _and, _or
+ * 	#Functions : _eq, _gt, _lt, _has, _in
+ * 
+ * 	- Ex_1 : [ $field : [ _eq : $value ] ]
+ * 	equivalent to : document[$field] === $value ?
+ * 	
+ * 	- Ex_2 : 
+ * 		[ 
+ * 			_or : [ 
+ * 				$field : [ _eq : $value ] , 
+ * 				_and : [ 
+ * 					[$field : [ _gt : $value1 ]] , 
+ * 					[$field : [ _lt : $value2 ]] 
+ * 				] 
+ * 			] 
+ * 		]
+ * 	equivalent to : (document[$field] === $value) || ((document[$field] > $value1) && (document[$field] < $value2)) ?
+ * 
+ * 	- Ex_3 : [ $field : [ _has : $value ] ]
+ * 	equivalent to : contains(document[$field], $value) ? 
+ * 
+ *  - Ex_4 : [ "turn": [_gt: $currentTurn - 5, _lt: $currentTurn -1] ] 
+ *  equivalent to : document['turn'] < ($currentTurn -1) && document['turn'] > ($currentTurn - 5) ?
+ * */
+class Collection {
+	_name;
+	_collection;
+	_size;
+
+	constructor(name) {
+		this._name = name;
+		this._collection = [];
+		this._size = 0;
+	}
+
+	create(_document) {
+		if (typeOf(_document) === TYPE_ARRAY) {
+			this._size++;
+			_document[__id] = this._size;
+			this._collection[this._size] = _document;
+			return clone(_document, 2);
+		}
+		return null;
+	}
+	read(_id) {
+		return this._collection[_id] !== null ? clone(this._collection[_id], 2) : null;
+	}
+	update(_document) {
+		var _id = _document[__id];
+		if (_id !== null && this._collection[_id] !== null) {
+			this._collection[_id] = _document;
+			return clone(_document, 2);
+		}
+		return null;
+	}
+	delete(_id) {
+		if (this._collection[_id] !== null) {
+			var _document = clone(this._collection[_id], 2);
+			this._collection[_id] = null;
+			return clone(_document, 2);
+		}
+		return null;
+	}
+	count(_selector) {
+		var execOn = shift(_proceedCollectionSelector(_selector));
+		return arrayCount(this._collection, function(_document) {
+			return execOn(_document);
+		});
+	}
+	findAll() {
+		return clone(this._collection, 2);
+	}
+	findOne(_selector) {
+		var execOn = shift(_proceedCollectionSelector(_selector));
+		return clone(arrayFind(this._collection, function(_document) {
+			return execOn(_document);
+		}), 2);
+	}
+	findMany(_filter) {
+		var execOn = shift(_proceedCollectionSelector(_filter));
+		return clone(arrayFilter(this._collection, function(_document) {
+			return execOn(_document);
+		}), 2);
+	}
+	exists(_selector) {
+		var execOn = shift(_proceedCollectionSelector(_selector));
+		return arrayInclude(this._collection, function(_document) {
+			return execOn(_document);
+		});
+	}
+}
+// ---
+global __id = "__id"; // Default field key '__id' 
+// ---
+global _eq = 1;
+global _gt = 2;
+global _lt = 3;
+global _has = 4;
+global _in = 7;
+// ---
+global _and = 5;
+global _or = 6;
+// ---
+global _CollectionFcts = [
+	_eq: function(_eval) {
+		return function(_field) {
+			return function(_document) {
+				return _eval === _document[_field];
+			};
+		};
+	},
+	_in: function(_eval) {
+		return function(_field) {
+			return function(_document) {
+				return arrayInclude(_eval, function(_evalIn) {
+					return _evalIn === _document[_field];
+				});
+			};
+		};
+	},
+	_gt: function(_eval) {
+		return function(_field) {
+			return function(_document) {
+				return _eval < _document[_field];
+			};
+		};
+	},
+	_lt: function(_eval) {
+		return function(_field) {
+			return function(_document) {
+				return _eval > _document[_field];
+			};
+		};
+	},
+	_has: function(_eval) {
+		return function(_field) {
+			return function(_document) {
+				return contains(_document[_field], _eval);
+			};
+		};
+	},
+];
+// ---
+global _CollectionOps = [
+	_and: function(operators) {
+		return function(_document) {
+			return arrayFoldLeft(operators, function(result, operator) {
+				return result && operator(_document);
+			}, true);
+		}
+	},
+	_or: function(operators) {
+		return function(_document) {
+			return arrayFoldLeft(operators, function(result, operator) {
+				return result || operator(_document);
+			}, false);
+		}
+	}
+];
+// ---
+function _proceedCollectionSelector(_selector) {
+	return arrayMap(_selector, function(key, value) {
+		if (_CollectionOps[key] !== null) {
+			return _CollectionOps[key](arrayMap(value, function(operand) {
+				return shift(_proceedCollectionSelector(operand));
+			}));
+		} else if (_CollectionFcts[key] !== null) {
+			return _CollectionFcts[key](value);
+		} else {
+			return _CollectionOps[_and](
+				arrayMap(_proceedCollectionSelector(value),
+					function(operand) {
+						return operand(key);
+					}));
+		}
+	});
+}

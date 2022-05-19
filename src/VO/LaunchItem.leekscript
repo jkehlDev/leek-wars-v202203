@@ -29,14 +29,26 @@ class LaunchItem {
 	launch() {
 		var tool = getToolById(this.tool_id)
 		var caster = getLeekById(this.caster_leek_id);
+		var used = false;
 		if (tool.tool_isWeapon) {
 			if (caster.setWeaponById(this.tool_id)) {
-				useWeaponOnCell(this.cast_cell_id);	
-			}			
+				useWeaponOnCell(this.cast_cell_id);
+				used = true;
+			}
 		} else if (tool.tool_isSummon) {
 			summon(this.tool_id, this.cast_cell_id, _main_run);
+			used = true;
 		} else {
 			useChipOnCell(this.tool_id, this.cast_cell_id);
+			used = true;
+		}
+		if (used) {
+			var leek_id, leek_type;
+			for (leek_id in this.touched_leeks) {
+				leek_type = getLeekTypeById(leek_id);
+				_upsertLeekById(leek_id, leek_type);
+			}
+			refreshLeeksRole();
 		}
 	}
 }

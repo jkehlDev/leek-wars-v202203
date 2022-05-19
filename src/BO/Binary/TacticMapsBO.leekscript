@@ -53,7 +53,7 @@ function filter_cells_Los(map_binary, cell_From, coordinates_min, coordinates_ma
  * */
 function filter_cells_hide() {
 	return {
-		map: soustraire(inverser(resolvePathMap(40, myLeek().leek_cell, 40, obstacles_map_binary_bordered, false).mapAll), obstacles_map_binary, 0, 34),
+		map: soustraire(inverser(resolvePathMap(40, myLeek().leek_cell, 40, GBL_obstacles_map_binary_bordered, false).mapAll), GBL_obstacles_map_binary, 0, 34),
 		coordinates_min: {
 			line: 0,
 			cell: 0
@@ -70,10 +70,10 @@ function filter_cells_hide() {
  * { map, coordinates_min: { line: 0, cell: 0 }, coordinates_max: { line: 34, cell: 17 } }
  * */
 function filter_cells_all_obstacles() {
-	var result = clone(obstacles_map_binary, 2);
+	var result = clone(GBL_obstacles_map_binary, 2);
 	var leek_id, coord;
 	for (leek_id in getAllies()) {
-		if (isAlive(leek_id) && leek_id !== myLeek_id) {
+		if (isAlive(leek_id) && leek_id !== GBL_myLeek_id) {
 			coord = convertCellIdToLineNdCell(getCell(leek_id));
 			result[coord.line] |= 1 << coord.cell;
 		}
@@ -96,4 +96,3 @@ function filter_cells_all_obstacles() {
 		}
 	};
 }
-
