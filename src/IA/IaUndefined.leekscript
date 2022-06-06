@@ -1,12 +1,12 @@
-function _IA_summoners() {
-	out.info('ROLE_SUMMONERS');
+function _IA_Undefined() {
+	out.info('ROLE UNDEFINED');
 	// - ---
 	var target_position_cell = resolveTacticalPositionByTargetsLeeksNdTacticalArea(
 		ArrayAccumulate([
-			getLeeksByTypeNdRole(LEEK_TYPE_ALLY, LEEK_ROLE_DD_STRENGTH),
-			getLeeksByTypeNdRole(LEEK_TYPE_ALLY, LEEK_ROLE_DD_MAGIC),
-			getLeeksByTypeNdRole(LEEK_TYPE_ALLY, LEEK_ROLE_DD_SCIENCE),
 			getLeeksByTypeNdRole(LEEK_TYPE_ALLY, LEEK_ROLE_TANK),
+			getLeeksByTypeNdRole(LEEK_TYPE_ENEMY, LEEK_ROLE_DD_STRENGTH),
+			getLeeksByTypeNdRole(LEEK_TYPE_ENEMY, LEEK_ROLE_DD_MAGIC),
+			getLeeksByTypeNdRole(LEEK_TYPE_ENEMY, LEEK_ROLE_DD_SCIENCE),
 		]),
 		_sortLeekByLevelASC,
 		GBL_effect_area_template_by_area_type_id[AREA_CIRCLE_2_4],

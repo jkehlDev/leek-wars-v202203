@@ -38,7 +38,7 @@ class Tool {
 			this.tool_launchType = getChipLaunchType(this.tool_id);
 			this.tool_effectAreaType = getChipArea(this.tool_id);
 			this.tool_cooldown = getChipCooldown(this.tool_id);
-			this.tool_hasCooldown = this.tool_cooldown > 0;
+			this.tool_hasCooldown = this.tool_cooldown !== 0;
 			this.tool_effects = arrayMap(getChipEffects(this.tool_id), function(effect) {
 				return new ToolEffect(effect);
 			});
@@ -46,7 +46,7 @@ class Tool {
 			this.tool_rangeMin = getChipMinRange(this.tool_id);
 			this.tool_rangeMax = getChipMaxRange(this.tool_id);
 			this.tool_needLos = chipNeedLos(this.tool_id);
-			this.tool_isSummon  = isToolCastSummon(this.tool_id);
+			this.tool_isSummon = isToolCastSummon(this.tool_id);
 		}
 	}
 }

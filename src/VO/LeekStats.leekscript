@@ -3,9 +3,11 @@ class LeekState {
 	turn;
 	leek_id;
 	leek_cell;
+	leek_role;
 	leek_life;
 	leek_lifeMax;
 	leek_lifeRate;
+	leek_lifeNext;
 	leek_poison;
 	leek_absolute_shield;
 	leek_relative_shield;
@@ -15,6 +17,9 @@ class LeekState {
 	leek_varLife;
 	leek_varLifeMax;
 	leek_varLifeRate;
+	leek_lifeEmergency;
+	leek_lifePop;
+	leek_lifeWarn;
 
 	constructor(idOrDocument) {
 		if (typeOf(idOrDocument) === TYPE_NUMBER) {
@@ -23,9 +28,10 @@ class LeekState {
 			this.turn = GBL_currentTurn;
 			this.leek_id = idOrDocument;
 			this.leek_cell = leek.leek_cell;
+			this.leek_role = getLeekById(this.leek_id).leek_role;
 			this.leek_life = leek.leek_life;
 			this.leek_lifeMax = leek.leek_lifeMax;
-			this.leek_lifeRate = decimal(this.leek_life / this.leek_lifeMax, 2);
+			this.leek_lifeRate = leek.leek_lifeRate;
 			// ---
 			this.leek_poison = getEffectSumValueOfLeek(leek, EFFECT_POISON);
 			this.leek_absolute_shield = getEffectSumValueOfLeek(leek, EFFECT_ABSOLUTE_SHIELD);
@@ -37,11 +43,17 @@ class LeekState {
 			this.leek_varLifeMax = 0;
 			this.leek_varLife = 0;
 			this.leek_varLifeRate = 0;
+			// ---
+			this.leek_lifeNext = this.leek_life - this.leek_poison;
+			this.leek_lifeEmergency = this.leek_lifeNext <= (GBL_life_threshold_emergency * this.leek_lifeMax);
+			this.leek_lifePop = this.leek_lifeNext <= (GBL_life_threshold_pop * this.leek_lifeMax);
+			this.leek_lifeWarn = this.leek_lifeNext <= (GBL_life_threshold_warn * this.leek_lifeMax);
 		} else {
 			this.__id = idOrDocument[__id];
 			this.turn = idOrDocument['turn'];
 			this.leek_id = idOrDocument['leek_id'];
 			this.leek_cell = idOrDocument['leek_cell'];
+			this.leek_role = idOrDocument['leek_role'];
 			this.leek_life = idOrDocument['leek_life'];
 			this.leek_lifeMax = idOrDocument['leek_lifeMax'];
 			this.leek_lifeRate = idOrDocument['leek_lifeRate'];
@@ -56,6 +68,11 @@ class LeekState {
 			this.leek_varLife = idOrDocument['leek_varLife'];
 			this.leek_varLifeMax = idOrDocument['leek_varLifeMax'];
 			this.leek_varLifeRate = idOrDocument['leek_varLifeRate'];
+			// --- 
+			this.leek_lifeNext = idOrDocument['leek_lifeNext'];
+			this.leek_lifeEmergency = idOrDocument['leek_lifeEmergency'];
+			this.leek_lifePop = idOrDocument['leek_lifePop'];
+			this.leek_lifeWarn = idOrDocument['leek_lifeWarn'];
 		}
 	}
 
@@ -65,9 +82,11 @@ class LeekState {
 			'turn': this.turn,
 			'leek_id': this.leek_id,
 			'leek_cell': this.leek_cell,
+			'leek_role': this.leek_role,
 			'leek_life': this.leek_life,
 			'leek_lifeMax': this.leek_lifeMax,
 			'leek_lifeRate': this.leek_lifeRate,
+			'leek_lifeNext': this.leek_lifeNext,
 			'leek_poison': this.leek_poison,
 			'leek_absolute_shield': this.leek_absolute_shield,
 			'leek_absolute_shield': this.leek_absolute_shield,
@@ -78,12 +97,17 @@ class LeekState {
 			'leek_varLife': this.leek_varLife,
 			'leek_varLifeMax': this.leek_varLifeMax,
 			'leek_varLifeRate': this.leek_varLifeRate,
+			'leek_lifeEmergency': this.leek_lifeEmergency,
+			'leek_lifePop': this.leek_lifePop,
+			'leek_lifeWarn': this.leek_lifeWarn,
 		]
 	}
 
 	updateStateWithPrevious(previous_document) {
 		this.leek_varLifeMax = this.leek_lifeMax - previous_document['leek_lifeMax'];
-		this.leek_varLife = (this.leek_life - previous_document['leek_life']);
+		this.leek_varLife = this.leek_life - previous_document['leek_life'];
 		this.leek_varLifeRate = decimal(this.leek_lifeRate - previous_document['leek_lifeRate'], 2);
+		this.leek_lifeNext = max(this.leek_life + min(this.leek_varLife, -this.leek_poison), 0);
+		this.leek_lifeWarn = this.leek_lifeNext <= (GBL_life_threshold_warn * this.leek_lifeMax);
 	}
 }

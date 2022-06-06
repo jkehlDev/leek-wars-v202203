@@ -4,7 +4,6 @@
  *	isLineEffect;
  *	tool_isWeapon;
  *	needLos;
- *	all_launchs;
  *	selected_launchs;
  * */
 class Launchs {
@@ -13,7 +12,6 @@ class Launchs {
 	isLineEffect;
 	tool_isWeapon;
 	needLos;
-	all_launchs;
 	selected_launchs;
 
 	constructor(launch_contract) {
@@ -23,24 +21,24 @@ class Launchs {
 		this.tool_isWeapon = tool.tool_isWeapon;
 		this.isLineEffect = tool.tool_effectAreaType === AREA_FIRST_INLINE || tool.tool_effectAreaType === AREA_LASER_LINE;
 		this.needLos = getToolById(this.tool_id).tool_needLos;
-		this.all_launchs = launch_resolvers._resolve[this.launch_contract.cast_type](
+		
+		var all_launchs = launch_resolvers._resolve[this.launch_contract.cast_type](
 			this.launch_contract,
 			this.tool_id,
 			this.needLos,
 			this.tool_isWeapon,
 			this.isLineEffect);
-		//console.info(['this.all_launchs', this.all_launchs]);
-		this.selected_launchs = launch_filters._filterBeforeLinearize(
-			this.all_launchs,
-			this.launch_contract.targets_rules);
-		
+
+		this.selected_launchs = GBL_launch_filters_before_linearize._resolve_filters(this.launch_contract.filtersBeforeLinearize, all_launchs);
+		//out.info(['filter result before linearize', this.selected_launchs]);
+
 		//console.info(['this.selected_launchs filtered', this.selected_launchs]);
 		this.selected_launchs = linearizeLaunchLst(this.selected_launchs);
-		//console.info(['this.selected_launchs linearized', this.selected_launchs]);
-		this.selected_launchs = launch_filters._filterAfterLinearize(
-			this.selected_launchs,
-			this.launch_contract.targets_rules);
-		//console.info(['this.selected_launchs filtered After Linearized', this.selected_launchs]);
+		
+		
+		this.selected_launchs = GBL_launch_filters_after_linearize._resolve_filters(this.launch_contract.filtersAfterLinearize, this.selected_launchs);
+		//out.info(['filter result after linearize', this.selected_launchs]);
+		
 		this.selected_launchs = launch_sorters._sort(this.selected_launchs, this.launch_contract.priorities);
 		//console.info(['this.selected_launchs sorted', this.selected_launchs]);
 	}

@@ -1,100 +1,302 @@
+/**
+ * ToolCard Class - Provide list of cast options 
+ * _mandatories : mandatory tools sorted by cast order (first to last)
+ * _optionnals : optionnals tools sorted by cast order (first to last)
+ * _options : ordered by total cost dsc, list of tool used in one turn : mandatory + partial optionnals sorted by cast order; 
+ *
+ * @see Option Class : 
+ *
+ * constructor(mandatory_tools, optionnal_tools, max_cost)
+ * 
+ * */
 class ToolCard {
-	_mandatories; // mandatory tools sorted by cast order (first to last)
+	_prerequis; // mandatory tools sorted by cast order (first to last)
 	_optionnals; // optionnals tools sorted by cast order (first to last)
 	_options; // ordered by total cost dsc, list of tool used in one turn : mandatory + partial optionnals sorted by cast order;
 
-	constructor(mandatory_tools, optionnal_tools, max_cost) {
-		this._mandatories = clone(mandatory_tools, 2);
-		this._optionnals = clone(optionnal_tools, 2);
-		this._options = _resolveOptions(mandatory_tools, optionnal_tools, max_cost);
+	constructor(prerequis_tools, optionnal_tools, max_cost) {
+		var currentLeek = myLeek();
+		this._prerequis = prerequis_tools;
+		this._optionnals = arrayFilter(optionnal_tools, function(_tool_id) {
+			return arrayInclude(currentLeek.leek_tools, function(_my_tool_id) {
+				return _my_tool_id === _tool_id;
+			});
+		});
+		this._options = _resolveOptions(this._prerequis, this._optionnals, max_cost);
+	}
+
+	getOptionsBy(_filterOptionBy, _sortOptionBy, _excludeTools) {
+		var currentLeek = myLeek();
+
+		var prerequisDesabled = arrayFilter(this._prerequis, function(_tool_id) {
+			return isEffectToolExistOn(currentLeek, _tool_id);
+		});
+
+		var _resolvedOptions = arrayMap(this._options, function(_option) {
+			var resolvedOption = clone(_option, 2);
+			resolvedOption._cast_array = arrayFilter(resolvedOption._cast_array, function(_tool_id) {
+				return !arrayInclude(prerequisDesabled, function(_prerequis_id) {
+					return _prerequis_id === _tool_id;
+				});
+			});
+			resolvedOption._cast_array = arrayFilter(resolvedOption._cast_array, function(_tool_id) {
+				return !arrayInclude(_excludeTools, function(_prerequis_id) {
+					return _prerequis_id === _tool_id;
+				});
+			});
+			var firstWeapon = arrayFind(resolvedOption._cast_array, function(_tool_id) {
+				return getToolById(_tool_id).tool_isWeapon;
+			});
+			var isfirstWeaponEquiped = false;
+			if (firstWeapon !== null) {
+				isfirstWeaponEquiped = currentLeek.leek_weapon === firstWeapon;
+			}
+			resolvedOption._total_cost -= arrayFoldLeft(prerequisDesabled, function(_total_cost, _tool_id) {
+				return _total_cost + getToolById(_tool_id).tool_cost;
+			}, 0);
+			resolvedOption._total_cost -= isfirstWeaponEquiped ? 1 : 0;
+			return resolvedOption;
+		});
+
+		var filterAgregate;
+		if (typeOf(_filterOptionBy) === TYPE_ARRAY) {
+			filterAgregate = arrayFoldRight(_filterOptionBy, function(_filter, _agregate) {
+				return _filter(_agregate);
+			}, _filter_true);
+		} else {
+			filterAgregate = _filterOptionBy(_filter_true);
+		}
+		var filtered_options = arrayFilter(_resolvedOptions, function(_option) {
+			var isAllToolAvailable = function() {
+				var _tools = arrayMap(_option._cast_array, function(_tool_id) {
+					return getToolById(_tool_id);
+				});
+				return !arrayInclude(_tools, function(_tool) {
+					return !_isToolAvailableForLeek(_tool, currentLeek);
+				});
+			};
+			return filterAgregate(_option) && isAllToolAvailable();
+		});
+
+		if (typeOf(_sortOptionBy) === TYPE_ARRAY) {
+			var sortAgregate = arrayFoldRight(_sortOptionBy, function(_sorter, _agregate) {
+				return _sorter(_agregate);
+			}, _sort_zero);
+			return arraySort(filtered_options, sortAgregate);
+		} else {
+			return arraySort(filtered_options, _sortOptionBy(_sort_zero));
+		}
+	}
+}
+global _filter_true = function(_option) {
+	return true;
+};
+global _filter_false = function(_option) {
+	return false;
+};
+
+global GBL_filter_toolCardOption_by_cost = function(_cost_max) {
+	return function(_next) {
+		return function(_option) {
+			return _option._total_cost <= _cost_max && _next(_option);
+		};
+	}
+
+
+}
+
+global GBL_filter_toolCardOption_by_effects = function(_effectType) {
+	return function(_next) {
+		return function(_option) {
+			return arrayInclude(_option._effects_reduced, function(_optionEffect) {
+				return _optionEffect.type === _effectType;
+			}) && _next(_option);
+		};
 	}
 }
 
+global _sort_zero = function(_option1, _option2) {
+	return 0;
+}
+
+/**
+ * Sorter - GBL_sort_toolCardOption_by_cost
+ * Sort by total cost value ascending
+ **/
+global GBL_sort_toolCardOption_by_cost_asc = function(_next) {
+	return function(_option1, _option2) {
+		return _option1._total_cost < _option2._total_cost ? -1 : (_option1._total_cost > _option2._total_cost ? 1 : _next(_option1, _option2));
+	}
+}
+
+/**
+ * Sorter - GBL_sort_toolCardOption_by_cost
+ * Sort by total cost value ascending
+ **/
+global GBL_sort_toolCardOption_by_cost_dsc = function(_next) {
+	return function(_option1, _option2) {
+		return _option1._total_cost < _option2._total_cost ? 1 : (_option1._total_cost > _option2._total_cost ? -1 : _next(_option1, _option2));
+	}
+}
+
+
+/**
+ * Sorter - GBL_sort_toolCardOption_by_effect_asc
+ * Sort by effect type value ascending
+ * @param effect_type : target effect type  
+ **/
+global GBL_sort_toolCardOption_by_effect_asc = function(_effect_type) {
+	return function(_next) {
+		return function(_option1, _option2) {
+			var _option1_effect_value = arrayFind(_option1._effects_reduced, function(_effect) {
+				return _effect_type === _effect.type;
+			});
+			_option1_effect_value = _option1_effect_value === null ? 0 : _option1_effect_value.value;
+			var _option2_effect_value = arrayFind(_option2._effects_reduced, function(_effect) {
+				return _effect_type === _effect.type;
+			});
+			_option2_effect_value = _option2_effect_value === null ? 0 : _option2_effect_value.value;
+			return _option1_effect_value < _option2_effect_value ? -1 : (_option1_effect_value > _option2_effect_value ? 1 : _next(_option1, _option2));
+		}
+	};
+}
+
+/**
+ * Sorter - GBL_sort_toolCardOption_by_effect_dsc
+ * Sort by effect type value descending
+ * @param effect_type : target effect type  
+ **/
+global GBL_sort_toolCardOption_by_effect_dsc = function(_effect_type) {
+	return function(_next) {
+		return function(_option1, _option2) {
+			var _option1_effect_value = arrayFind(_option1._effects_reduced, function(_effect) {
+				return _effect_type === _effect.type;
+			});
+			_option1_effect_value = _option1_effect_value === null ? 0 : _option1_effect_value.value;
+			var _option2_effect_value = arrayFind(_option2._effects_reduced, function(_effect) {
+				return _effect_type === _effect.type;
+			});
+			_option2_effect_value = _option2_effect_value === null ? 0 : _option2_effect_value.value;
+			return _option1_effect_value > _option2_effect_value ? -1 : (_option1_effect_value < _option2_effect_value ? 1 : _next(_option1, _option2));
+		}
+	};
+}
+
+
+/**
+ * _cast_array : Option tools (ids) array sorted by cast order (first to last)
+ * _cast_array_size : Option tools array size
+ * _effects_reduced :  Agregated option effects value
+ * _total_cost : Sum of option cast cost
+ * _cooldown : Option cooldown (max cooldown of used tool)
+ * */
 class Option {
 	_cast_array;
+	_cast_array_size;
 	_effects_reduced;
 	_total_cost;
 	_cooldown;
+	_isFirst;
 
 	constructor(mandatory_tools) {
 		this._cast_array = clone(mandatory_tools, 2);
+		this._cast_array_size = count(this._cast_array);
 		var agregate = arrayFoldLeft(mandatory_tools, function(agregated, tool_id) {
 			var tool = getToolById(tool_id);
-			var tool_effect;
-			if (agregated._effects === null) {
-				agregated._effects = arrayIndex(clone(tool.tool_effects, 2), function(tool_effect) {
-					return tool_effect.type;
+			var tool_effect, cloned_tool_effect;
+			if (agregated._isFirst) {
+				agregated._isFirst = false;
+				agregated._effects = arrayIndex(clone(tool.tool_effects, 2), function(_tool_effect) {
+					return _tool_effect.type;
 				});
 			} else {
 				for (tool_effect in tool.tool_effects) {
-					if (agregated._effects[tool_effect.type] !== null) {
-						agregated._effects[tool_effect.type] = tool_effect.aggregate(agregated._effects[tool_effect.type]);
-					} else {
-						agregated._effects[tool_effect.type] = tool_effect;
+					cloned_tool_effect = clone(tool_effect, 2);
+					if (agregated._effects[cloned_tool_effect.type] !== null) {
+						cloned_tool_effect.aggregate(agregated._effects[cloned_tool_effect.type]);
 					}
+					agregated._effects[cloned_tool_effect.type] = cloned_tool_effect;
 				};
 			}
 			agregated._cost += tool.tool_cost;
 			agregated._cooldown = max(tool.tool_cooldown, agregated._cooldown);
 			return agregated;
 		}, {
-			_effects: null,
+			_effects: [],
+			_isFirst: true,
 			_cost: 0,
 			_cooldown: 0
 		});
 		this._effects_reduced = agregate._effects;
 		this._total_cost = agregate._cost;
 		this._cooldown = agregate._cooldown;
+		this._isFirst = agregate._isFirst;
 	}
 
 	add(tool) {
+		var lastWeaponIdUsed = this._getLastWeaponIdUsed();
 		push(this._cast_array, tool.tool_id);
-		if (this._effects_reduced === null) {
+		this._cast_array_size++;
+		if (this._isFirst) {
+			this._isFirst = false;
 			this._effects_reduced = arrayIndex(clone(tool.tool_effects, 2), function(_tool_effect) {
 				return _tool_effect.type;
 			});
 		} else {
-			var tool_effect;
+			var tool_effect, cloned_tool_effect;
 			for (tool_effect in tool.tool_effects) {
-				if (this._effects_reduced[tool_effect.type] !== null) {
-					this._effects_reduced[tool_effect.type] = tool_effect.aggregate(this._effects_reduced[tool_effect.type]);
-				} else {
-					this._effects_reduced[tool_effect.type] = tool_effect;
+				cloned_tool_effect = clone(tool_effect, 2);
+				if (this._effects_reduced[cloned_tool_effect.type] !== null) {
+					cloned_tool_effect.aggregate(this._effects_reduced[cloned_tool_effect.type]);
 				}
+				this._effects_reduced[cloned_tool_effect.type] = cloned_tool_effect;
 			};
 		}
-		this._total_cost += tool.tool_cost;
+		if (tool.tool_isWeapon) {
+			this._total_cost += (tool.tool_cost + ((lastWeaponIdUsed === null || lastWeaponIdUsed !== tool.tool_id) ? 1 : 0));
+		} else {
+			this._total_cost += tool.tool_cost;
+		}
 		this._cooldown = max(tool.tool_cooldown, this._cooldown);
+	}
+
+	_getLastWeaponIdUsed() {
+		for (var i = this._cast_array_size - 1; i > -1; i--) {
+			if (getToolById(this._cast_array[i]).tool_isWeapon) {
+				return this._cast_array[i];
+			}
+		}
+		return null;
 	}
 }
 
 
-function _resolveOptions(mandatory_tools, optionnal_tools, max_cost) {
+function _resolveOptions(prerequis_tools, optionnal_tools, max_cost) {
 	var allOptions = [];
-	var optionSeed = new Option(mandatory_tools);
+	var optionSeed = new Option(prerequis_tools);
 
 	if (optionSeed._total_cost <= max_cost) {
-		push(allOptions, clone(optionSeed, 2));
+		if (count(prerequis_tools) > 0) {
+			push(allOptions, clone(optionSeed, 2));
+		}
 		var tool_id, currentOption, tool, tools_left;
 		for (tool_id in optionnal_tools) {
-			currentOption = clone(optionSeed, 2);
 			tool = getToolById(tool_id);
-			if ((tool.tool_cost + currentOption._total_cost) <= max_cost) {
+			currentOption = clone(optionSeed, 2);
+			currentOption.add(tool);
+			if (currentOption._total_cost <= max_cost) {
+				push(allOptions, clone(currentOption, 2));
 				tools_left = clone(optionnal_tools, 2);
 				if (tool.tool_hasCooldown) {
 					tools_left = arrayFilter(tools_left, function(_tool_id) {
 						return _tool_id !== tool.tool_id;
 					});
 				}
-				currentOption.add(tool);
-				push(allOptions, clone(currentOption, 2));
 				allOptions = _resolveOptionsStepper(allOptions, currentOption, tools_left, max_cost);
 			}
 		}
 	}
-	return arraySort(allOptions, function(option1, option2) {
-		return option1._total_cost < option2._total_cost ? -1 : option1._total_cost > option2._total_cost ? 1 : 0
-	});
+	return allOptions;
 }
 
 
@@ -105,22 +307,21 @@ function _resolveOptionsStepper(allOptions, currentOption, tools_left, max_cost)
 
 	var tool_id, tool, tools_left_tmp, currentOption_tmp;
 	for (tool_id in tools_left) {
-		currentOption_tmp = clone(currentOption, 2);
 		tool = getToolById(tool_id);
-		if ((tool.tool_cost + currentOption_tmp._total_cost) <= max_cost) {
+		currentOption_tmp = clone(currentOption, 2);
+		currentOption_tmp.add(tool);
+		//console.info(['currentOption_tmp._cast_array : ' + currentOption_tmp._cast_array, 'currentOption_tmp._total_cost : ' + currentOption_tmp._total_cost]);
+		if (currentOption_tmp._total_cost <= max_cost && !arrayInclude(allOptions, function(_option) {
+				return arraySameAs(_option._cast_array, currentOption_tmp._cast_array);
+			})) {
+			push(allOptions, clone(currentOption_tmp, 2));
+			//console.info(['PUSHED','currentOption_tmp._cast_array : ' + currentOption_tmp._cast_array, 'currentOption_tmp._total_cost : ' + currentOption_tmp._total_cost]);
 			tools_left_tmp = clone(tools_left, 2);
 			if (tool.tool_hasCooldown) {
 				tools_left_tmp = arrayFilter(tools_left_tmp, function(_tool_id) {
 					return _tool_id !== tool.tool_id;
 				});
 			}
-			currentOption_tmp.add(tool);
-			if (!arrayInclude(allOptions, function(_option) {
-					return arraySameAs(_option._cast_array, currentOption_tmp._cast_array);
-				})) {
-				push(allOptions, clone(currentOption_tmp, 2));
-			}
-
 			allOptions = _resolveOptionsStepper(allOptions, currentOption_tmp, tools_left_tmp, max_cost);
 		}
 	}

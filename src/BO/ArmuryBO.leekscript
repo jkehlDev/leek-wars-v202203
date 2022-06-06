@@ -21,7 +21,7 @@ function _filterIsToolHaveEffectOf(tool_effectOf, targets) {
 }
 
 function _isToolAvailableForLeek(tool, currentLeek) {
-	return (tool.tool_isWeapon || !_isToolHaveCooldownForLeek(tool, currentLeek)) && (currentLeek.leek_tp >= tool.tool_cost);
+	return (currentLeek.leekHaveToolById(tool.tool_id)) && (tool.tool_isWeapon || !_isToolHaveCooldownForLeek(tool, currentLeek)) && (currentLeek.leek_tp >= tool.tool_cost);
 }
 
 function _isToolHaveCooldownForLeek(tool, currentLeek) {
@@ -239,6 +239,15 @@ function getScienceSet(currentLeek) {
 		)
 	};
 }
+
+global ARMURY_SHIELD_SET = 0;
+global ARMURY_HEAL_SET = 1;
+global ARMURY_BUFF_SET = 2;
+global ARMURY_STRENGTH_SET = 3;
+global ARMURY_MAGIC_SET = 4;
+global ARMURY_SUMMON_SET = 5;
+global ARMURY_SCIENCE_SET = 6;
+
 /**
  * shieldSet: 
  * - absoluteShieldTools
@@ -262,13 +271,13 @@ function getScienceSet(currentLeek) {
  * scienceSet: 
  * */
 function getLeekArmury(currentLeek) {
-	return {
-		shieldSet: getShieldSet(currentLeek),
-		healSet: getHealSet(currentLeek),
-		buffSet: getBuffSet(currentLeek),
-		strengthSet: getStrengthSet(currentLeek),
-		magicSet: getMagicSet(currentLeek),
-		summonSet: getSummonSet(currentLeek),
-		scienceSet: getScienceSet(currentLeek),
-	};
+	return [
+		ARMURY_SHIELD_SET: getShieldSet(currentLeek),
+		ARMURY_HEAL_SET: getHealSet(currentLeek),
+		ARMURY_BUFF_SET: getBuffSet(currentLeek),
+		ARMURY_STRENGTH_SET: getStrengthSet(currentLeek),
+		ARMURY_MAGIC_SET: getMagicSet(currentLeek),
+		ARMURY_SUMMON_SET: getSummonSet(currentLeek),
+		ARMURY_SCIENCE_SET: getScienceSet(currentLeek),
+	];
 }

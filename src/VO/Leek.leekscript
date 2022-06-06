@@ -4,6 +4,7 @@ class Leek {
 	leek_name;
 	leek_life;
 	leek_lifeMax;
+	leek_lifeRate;
 	leek_tp;
 	leek_tpMax;
 	leek_mp;
@@ -40,8 +41,14 @@ class Leek {
 			this.leek_id = idOrLeek;
 			this.leek_level = getLevel(this.leek_id);
 			this.leek_name = getName(this.leek_id);
+			this.leek_weapons = getWeapons(this.leek_id);
+			this.leek_chips = getChips(this.leek_id);
+			this.leek_tools = clone(this.leek_weapons, 2);
+			pushAll(this.leek_tools, clone(this.leek_chips, 2));
+			this.leek_chipsCooldown = [];
 			this.leek_life = getLife(this.leek_id);
-			this.leek_lifeMax = getTotalLife(this.leek_id);
+			this.leek_lifeMax = max(getTotalLife(this.leek_id), 1);
+			this.leek_lifeRate = decimal(this.leek_life / this.leek_lifeMax, 2);
 			this.leek_tp = getTP(this.leek_id);
 			this.leek_tp = this.leek_tp > 0 ? this.leek_tp : 0;
 			this.leek_tpMax = getTotalTP(this.leek_id);
@@ -56,26 +63,23 @@ class Leek {
 			this.leek_magic = getMagic(this.leek_id);
 			this.leek_resistance = getResistance(this.leek_id);
 			this.leek_agility = getAgility(this.leek_id);
-			this.leek_weapons = getWeapons(this.leek_id);
 			this.leek_weapon = getWeapon(this.leek_id);
-			this.leek_chips = getChips(this.leek_id);
 			this.leek_cell = getCell(this.leek_id);
 			this.leek_coordinates = convertCellIdToLineNdCell(this.leek_cell);
-			this.leek_isAlly = isAlly(this.leek_id);
-			this.leek_isEnemy = !this.leek_isAlly;
-			this.leek_isSummon = isSummon(this.leek_id);
-			this.leek_isCaster = this.leek_id === getEntity()
-			this.leek_kind = (this.leek_isEnemy ? EFFECT_TARGET_ENEMIES : 0) ||
-				(this.leek_isAlly ? EFFECT_TARGET_ALLIES : 0) ||
-				(this.leek_isSummon ? EFFECT_TARGET_SUMMONS : EFFECT_TARGET_NON_SUMMONS) ||
-				(this.leek_isCaster ? EFFECT_TARGET_CASTER : 0);
 			this.leek_effects = arrayMap(getEffects(this.leek_id), function(effect) {
 				return new LeekEffect(effect);
 			});
 			this.updateChipsCooldown();
-			this.leek_tools = this.leek_weapons;
-			pushAll(this.leek_tools, this.leek_chips);
+			this.leek_isAlly = isAlly(this.leek_id);
+			this.leek_isEnemy = !this.leek_isAlly;
+			this.leek_isSummon = isSummon(this.leek_id);
+			this.leek_isCaster = this.leek_id === getEntity()
+			this.leek_kind = (this.leek_isEnemy ? EFFECT_TARGET_ENEMIES : 0) |
+				(this.leek_isAlly ? EFFECT_TARGET_ALLIES : 0) |
+				(this.leek_isSummon ? EFFECT_TARGET_SUMMONS : EFFECT_TARGET_NON_SUMMONS) |
+				(this.leek_isCaster ? EFFECT_TARGET_CASTER : 0);
 			this.leek_role = LEEK_ROLE_UNDEFINED;
+			this.updateRole();
 		} else {
 			this.clone(idOrLeek);
 		}
@@ -87,6 +91,7 @@ class Leek {
 		this.leek_name = leek.leek_name;
 		this.leek_life = leek.leek_life;
 		this.leek_lifeMax = leek.leek_lifeMax;
+		this.leek_lifeRate = leek.leek_lifeRate;
 		this.leek_tp = leek.leek_tp;
 		this.leek_tpMax = leek.leek_tpMax;
 		this.leek_mp = leek.leek_mp;
@@ -115,8 +120,100 @@ class Leek {
 		this.leek_role = clone(leek.leek_role, 2);
 	}
 
+	update() {
+		this.leek_isAlive = isAlive(this.leek_id);
+		this.leek_life = this.leek_isAlive ? getLife(this.leek_id) : 0;
+		this.leek_lifeMax = max(getTotalLife(this.leek_id), 1);
+		this.leek_lifeRate = decimal(this.leek_life / this.leek_lifeMax, 2);
+		this.leek_tp = getTP(this.leek_id);
+		this.leek_tp = this.leek_tp > 0 ? this.leek_tp : 0;
+		this.leek_tpMax = getTotalTP(this.leek_id);
+		this.leek_mp = getMP(this.leek_id);
+		this.leek_mp = this.leek_mp > 0 ? this.leek_mp : 0;
+		this.leek_mpMax = getTotalMP(this.leek_id);
+		this.leek_power = getPower(this.leek_id);
+		this.leek_strength = getStrength(this.leek_id);
+		this.leek_wisdom = getWisdom(this.leek_id);
+		this.leek_science = getScience(this.leek_id);
+		this.leek_magic = getMagic(this.leek_id);
+		this.leek_resistance = getResistance(this.leek_id);
+		this.leek_agility = getAgility(this.leek_id);
+		this.leek_weapon = getWeapon(this.leek_id);
+		this.leek_cell = getCell(this.leek_id);
+		this.leek_coordinates = convertCellIdToLineNdCell(this.leek_cell);
+		this.leek_effects = arrayMap(getEffects(this.leek_id), function(effect) {
+			return new LeekEffect(effect);
+		});
+		this.updateChipsCooldown();
+		updateLeekState(this.leek_id);
+	}
+
+	updateRole() {
+		if (this.leek_isSummon) {
+			if (this.leek_name === 'tactician_bulb') {
+				//CHIP_TACTICIAN_BULB
+				this.leek_role = LEEK_ROLE_DD_STRENGTH; // A améliorer
+			} else
+			if (this.leek_name === 'lighting_bulb') {
+				// CHIP_LIGHTNING_BULB
+				this.leek_role = LEEK_ROLE_DD_STRENGTH;
+			} else
+			if (this.leek_name === 'wizard_bulb') {
+				// CHIP_WIZARD_BULB
+				this.leek_role = LEEK_ROLE_DD_STRENGTH;
+			} else
+			if (this.leek_name === 'fire_bulb') {
+				// CHIP_FIRE_BULB
+				this.leek_role = LEEK_ROLE_DD_STRENGTH;
+			} else
+			if (this.leek_name === 'healer_bulb') {
+				// CHIP_HEALER_BULB
+				this.leek_role = LEEK_ROLE_HEALER;
+			} else
+			if (this.leek_name === 'iced_bulb') {
+				// CHIP_ICED_BULB
+				this.leek_role = LEEK_ROLE_DD_STRENGTH;
+			} else
+			if (this.leek_name === 'rocky_bulb') {
+				// CHIP_ROCKY_BULB
+				this.leek_role = LEEK_ROLE_TANK;
+			} else
+			if (this.leek_name === 'puny_bulb') {
+				// CHIP_PUNY_BULB
+				this.leek_role = LEEK_ROLE_HEALER;
+			}
+		} else {
+			if (_countSummonsChips(this) >= 2) {
+				this.leek_role = LEEK_ROLE_SUMMONERS;
+			} else {
+				this.leek_role = shift(arraySort([{
+						role: LEEK_ROLE_TANK,
+						value: this.leek_resistance
+					},
+					{
+						role: LEEK_ROLE_HEALER,
+						value: this.leek_wisdom
+					},
+					{
+						role: LEEK_ROLE_DD_SCIENCE,
+						value: this.leek_science
+					},
+					{
+						role: LEEK_ROLE_DD_MAGIC,
+						value: this.leek_magic
+					},
+					{
+						role: LEEK_ROLE_DD_STRENGTH,
+						value: this.leek_strength
+					}
+				], function(_state1, _state2) {
+					return _state1.value > _state2.value ? -1 : (_state1.value < _state2.value ? 1 : 0);
+				})).role;
+			}
+		}
+	}
+
 	updateChipsCooldown() {
-		this.leek_chipsCooldown = [];
 		for (var chipId in this.leek_chips) {
 			this.leek_chipsCooldown[chipId] = {
 				chip: chipId,
@@ -149,10 +246,5 @@ class Leek {
 		return arrayInclude(this.leek_tools, function(tmpTool_id) {
 			return tool_id === tmpTool_id;
 		});
-	}
-
-	leek_lifeRate() {
-		this.leek_life = getLife(this.leek_id);
-		return max(0, floor((this.leek_life / this.leek_lifeMax) * 100) / 100);
 	}
 }

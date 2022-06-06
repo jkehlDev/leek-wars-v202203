@@ -1,7 +1,12 @@
-global LEEK_TYPE_ALLY = 1;
-global LEEK_TYPE_ENEMY = 2;
-global LEEK_TYPE_ALLY_SUMMON = 3;
-global LEEK_TYPE_ENEMY_SUMMON = 4;
+global GBL_leekStatePerTurnCol = new Collection('leekStatePerTurn');
+
+global LEEK_TYPE_ALLY = 1 << 1;
+global LEEK_TYPE_ALLY_CASTER = (1 << 1) | (1 << 5);
+global LEEK_TYPE_ENEMY = 1 << 2;
+global LEEK_TYPE_ALLY_SUMMON = 1 << 3;
+global LEEK_TYPE_ENEMY_SUMMON = 1 << 4;
+
+
 global GBL_StoredLeeks = [
 	LEEK_TYPE_ALLY: {
 		role_count: [],
@@ -16,6 +21,10 @@ global GBL_StoredLeeks = [
 		leeks: []
 	},
 	LEEK_TYPE_ENEMY_SUMMON: {
+		role_count: [],
+		leeks: []
+	},
+	LEEK_TYPE_ALLY_CASTER: {
 		role_count: [],
 		leeks: []
 	},
@@ -46,10 +55,18 @@ function myLeek() {
 	return getLeekById(GBL_myLeek_id);
 };
 
+/**
+ * Return combine Binary type : 
+ * LEEK_TYPE_ALLY
+ * LEEK_TYPE_ENEMY
+ * LEEK_TYPE_ALLY_SUMMON
+ * LEEK_TYPE_ENEMY_SUMMON 
+ * */
 function getLeekTypeById(leek_id) {
-	return isAlly(leek_id) ?
-		(isSummon(leek_id) ? LEEK_TYPE_ALLY_SUMMON : LEEK_TYPE_ALLY) :
-		(isSummon(leek_id) ? LEEK_TYPE_ENEMY_SUMMON : LEEK_TYPE_ENEMY);
+	return getEntity() === leek_id ? LEEK_TYPE_ALLY_CASTER :
+		(isAlly(leek_id) ?
+			(isSummon(leek_id) ? LEEK_TYPE_ALLY_SUMMON : LEEK_TYPE_ALLY) :
+			(isSummon(leek_id) ? LEEK_TYPE_ENEMY_SUMMON : LEEK_TYPE_ENEMY));
 }
 
 /**
@@ -69,12 +86,14 @@ function getAllAliveLeeks() {
 	pushAll(leeks, getAliveLeeksByType(LEEK_TYPE_ENEMY));
 	pushAll(leeks, getAliveLeeksByType(LEEK_TYPE_ALLY_SUMMON));
 	pushAll(leeks, getAliveLeeksByType(LEEK_TYPE_ENEMY_SUMMON));
+	push(leeks, myLeek());
 	return leeks;
 }
 
 function getAllAlliesAliveLeeks() {
 	var leeks = getAliveLeeksByType(LEEK_TYPE_ALLY);
 	pushAll(leeks, getAliveLeeksByType(LEEK_TYPE_ALLY_SUMMON));
+	push(leeks, myLeek());
 	return leeks;
 }
 
@@ -107,7 +126,11 @@ function refreshLeekById(leek_id) {
 }
 
 function _upsertLeekById(leek_id, leek_type) {
-	GBL_StoredLeeks[leek_type].leeks[leek_id] = new Leek(leek_id);
+	if (GBL_StoredLeeks[leek_type].leeks[leek_id] !== null) {
+		GBL_StoredLeeks[leek_type].leeks[leek_id].update();
+	} else {
+		GBL_StoredLeeks[leek_type].leeks[leek_id] = new Leek(leek_id);
+	}
 	return GBL_StoredLeeks[leek_type].leeks[leek_id];
 }
 
@@ -116,5 +139,5 @@ function _removeLeekById(leek_id, leek_type) {
 }
 
 function _selectLeek(leek_id, leek_type) {
-	return GBL_StoredLeeks[leek_type].leeks[leek_id] !== null ? GBL_StoredLeeks[leek_type].leeks[leek_id] : _upsertLeekById(leek_id, leek_type);
+	return GBL_StoredLeeks[leek_type].leeks[leek_id] === null ? _upsertLeekById(leek_id, leek_type) : GBL_StoredLeeks[leek_type].leeks[leek_id];
 }

@@ -3,13 +3,15 @@ include('index');
 /**
  * Main runner - for leeks and summons
  * */
-function _main_run(){
-	resolve_IA_by_role._resolver[myLeek().leek_role]();
+function _main_run() {
+	refreshGlobals();
+	resolve_IA_by_role[myLeek().leek_role]();
 }
 // -- -----
 var init_op = getOperations();
 // -- -----
 _main_run();
 // -- -----
-console.warn('Main Ops : ' + (getOperations() - init_op));
+//console.warn('Main Ops : ' + (getOperations() - init_op));
 // -- -----
+

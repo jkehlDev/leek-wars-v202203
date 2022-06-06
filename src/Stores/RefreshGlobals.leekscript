@@ -7,13 +7,14 @@ function refreshGlobals() {
 	GBL_myLeek_id = getEntity();
 	_updateStorageLeeks();
 	GBL_obstacles_map_binary_with_leek = filter_cells_all_obstacles();
-
+	GBL_obstacles_map_binary_with_leek_area = filter_cells_all_obstacles_nd_leek_allies_area();
 	// -- ANALYTICS --	
-	GBL_myLeek_current_path = resolvePathMap(myLeek().leek_mp, myLeek().leek_mp, myLeek().leek_cell, GBL_obstacles_map_binary_with_leek.map, false);
-	GBL_myLeek_is_stick = isLeekStickByLeekId(myLeek());
+	var _myLeek_tmp = clone(myLeek());
+	GBL_myLeek_current_path = resolvePathMap(_myLeek_tmp.leek_mp,_myLeek_tmp.leek_mp, _myLeek_tmp.leek_cell, GBL_obstacles_map_binary_with_leek_area.map, false);
+	GBL_myLeek_is_stick = isLeekStickByLeekId(_myLeek_tmp);
 	_refreshRadarZones();
 	_refreshRadarTactic();
+	_refreshLeekStatePerTurn();
 	// -- -- 
-	console.warn('Globals refresh Ops : ' + (getOperations() - init_op));
+	//console.warn('Globals refresh Ops : ' + (getOperations() - init_op));
 };
-refreshGlobals();

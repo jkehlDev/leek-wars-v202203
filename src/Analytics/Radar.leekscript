@@ -93,10 +93,10 @@ function resolveZonesRadar(deep_factor, radarleek) {
 }
 
 function isLeekStickByLeekId(leek) {
-	var myPathCube = resolvePathMap(1, 1, leek.leek_cell, GBL_obstacles_map_binary_with_leek.map, false);
+	var myPathCube = resolvePathMap(1, 1, leek.leek_cell, GBL_obstacles_map_binary_with_leek_area.map, false);
 	var move_options = convertBinaryMapToCellIdMap(myPathCube.map[1], myPathCube.coordinates_min, myPathCube.coordinates_max);
 	if (count(move_options) === 0) {
-		console.warn('Stick position detected at ' + leek.leek_cell);
+		out.warn('Stick position detected at ' + leek.leek_cell);
 		return true;
 	}
 	return false;

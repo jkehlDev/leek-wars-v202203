@@ -1,46 +1,3 @@
-function _sortDDStrength(leek1, leek2) {
-	return ((leek1.leek_strength > leek2.leek_strength) ? -1 :
-		((leek1.leek_strength < leek2.leek_strength) ? 1 :
-			((leek1.leek_mpMax > leek2.leek_mpMax) ? -1 :
-				((leek1.leek_mpMax < leek2.leek_mpMax) ? 1 : 0))));
-}
-
-function _sortDDMagic(leek1, leek2) {
-	return ((leek1.leek_magic > leek2.leek_magic) ? -1 :
-		((leek1.leek_magic < leek2.leek_magic) ? 1 :
-			((leek1.leek_mpMax > leek2.leek_mpMax) ? -1 :
-				((leek1.leek_mpMax < leek2.leek_mpMax) ? 1 : 0))));
-}
-
-function _sortDDScience(leek1, leek2) {
-	return ((leek1.leek_science > leek2.leek_science) ? -1 :
-		((leek1.leek_science < leek2.leek_science) ? 1 :
-			((leek1.leek_mpMax > leek2.leek_mpMax) ? -1 :
-				((leek1.leek_mpMax < leek2.leek_mpMax) ? 1 : 0))));
-}
-
-
-function _sortHealer(leek1, leek2) {
-	return ((leek1.leek_wisdom > leek2.leek_wisdom) ? -1 :
-		((leek1.leek_wisdom < leek2.leek_wisdom) ? 1 :
-			((leek1.leek_mpMax > leek2.leek_mpMax) ? -1 :
-				((leek1.leek_mpMax < leek2.leek_mpMax) ? 1 : 0))));
-}
-
-function _sortTANK(leek1, leek2) {
-	return ((leek1.leek_resistance > leek2.leek_resistance) ? -1 :
-		((leek1.leek_resistance < leek2.leek_resistance) ? 1 :
-			((leek1.leek_lifeMax > leek2.leek_lifeMax) ? -1 :
-				((leek1.leek_lifeMax < leek2.leek_lifeMax) ? 1 : 0))));
-}
-
-function _sortSummoners(leek1, leek2) {
-	var count_bulb_chips_1 = _countSummonsChips(leek1);
-	var count_bulb_chips_2 = _countSummonsChips(leek2);
-	return ((count_bulb_chips_1 > count_bulb_chips_2) ? -1 :
-		((count_bulb_chips_1 < count_bulb_chips_2) ? 1 : 0));
-}
-
 function _countSummonsChips(leek) {
 	var chips = leek.leek_chips;
 	var count_bulb_chips = 0;
@@ -70,125 +27,12 @@ function _countSummonsChips(leek) {
 	}) ? 1 : 0;
 	return count_bulb_chips;
 }
-// - ------------
-global LEEK_ROLE_UNDEFINED = -1;
-global LEEK_ROLE_DD_STRENGTH = 0;
-global LEEK_ROLE_SUMMONERS = 1;
-global LEEK_ROLE_TANK = 2;
-global LEEK_ROLE_HEALER = 3;
-global LEEK_ROLE_DD_MAGIC = 4;
-global LEEK_ROLE_DD_SCIENCE = 5;
-/**
- * ROLE_DD_STRENGTH (all other leeks)
- * ROLE_DD_MAGIC (300 magic min)
- * ROLE_DD_SCIENCE (300 science min)
- * ROLE_HEALER (300 wisdom min)
- * ROLE_TANK (300 resitance min)
- * ROLE_SUMMONERS (2 bulb chips min)
- * */
-global leeks_roles_sorter = {
-	_sorters: [
-		_sortDDStrength,
-		_sortSummoners,
-		_sortTANK,
-		_sortHealer,
-		_sortDDMagic,
-		_sortDDScience,
-	],
-	_resolve: function(leeks) {
-		var tested_leeks = arrayMap(leeks, function(leek) {
-			return new Leek(leek);
-		});
-		var tested_leek, resolved_role;
-		var index = 6;
-		while (count(tested_leeks)) {
-			resolved_role = index % 6;
-			tested_leeks = arraySort(tested_leeks, leeks_roles_sorter._sorters[resolved_role]);
-			tested_leek = shift(tested_leeks);
-			if (resolved_role === LEEK_ROLE_SUMMONERS && (_countSummonsChips(tested_leek) < 2)) {
-				push(tested_leeks, tested_leek);
-			} else
-			if (resolved_role === LEEK_ROLE_TANK && (tested_leek.leek_resistance < 300)) {
-				push(tested_leeks, tested_leek);
-			} else
-			if (resolved_role === LEEK_ROLE_HEALER && (tested_leek.leek_wisdom < 300)) {
-				push(tested_leeks, tested_leek);
-			} else
-			if (resolved_role === LEEK_ROLE_DD_SCIENCE && (tested_leek.leek_science < 300)) {
-				push(tested_leeks, tested_leek);
-			} else
-			if (resolved_role === LEEK_ROLE_DD_MAGIC && (tested_leek.leek_magic < 300)) {
-				push(tested_leeks, tested_leek);
-			}
-			getLeekById(tested_leek.leek_id).leek_role = resolved_role;
-			index++;
-		}
-	}
-}
 
-global sommon_roles_sorter = {
-	ROLE_TANK: 1,
-	ROLE_HEALER: 2,
-	ROLE_DD_MAGIC: 3,
-	ROLE_DD_SCIENCE: 4,
-	ROLE_DD_STRENGTH: 5,
-	_resolve: function(summons) {
-		for (var summon in summons) {
-			if (summon.leek_name === 'tactician_bulb') {
-				//CHIP_TACTICIAN_BULB
-				summon.leek_role = 1; // A améliorer
-			} else
-			if (summon.leek_name === 'lighting_bulb') {
-				// CHIP_LIGHTNING_BULB
-				summon.leek_role = 3;
-			} else
-			if (summon.leek_name === 'wizard_bulb') {
-				// CHIP_WIZARD_BULB
-				summon.leek_role = 3;
-			} else
-			if (summon.leek_name === 'fire_bulb') {
-				// CHIP_FIRE_BULB
-				summon.leek_role = 5;
-			} else
-			if (summon.leek_name === 'healer_bulb') {
-				// CHIP_HEALER_BULB
-				summon.leek_role = 2;
-			} else
-			if (summon.leek_name === 'iced_bulb') {
-				// CHIP_ICED_BULB
-				summon.leek_role = 5;
-			} else
-			if (summon.leek_name === 'rocky_bulb') {
-				// CHIP_ROCKY_BULB
-				summon.leek_role = 5;
-			} else
-			if (summon.leek_name === 'puny_bulb') {
-				// CHIP_PUNY_BULB
-				summon.leek_role = 2;
-			}
-		}
-	}
-}
-
-/**
- * Affect role on leeks from one of : 
- * ROLE_DD_STRENGTH (all other leeks)
- * ROLE_DD_MAGIC (300 magic min)
- * ROLE_DD_SCIENCE (300 science min)
- * ROLE_HEALER (300 wisdom min)
- * ROLE_TANK (300 resitance min)
- * ROLE_SUMMONERS (2 bulb chips min)
- * */
 function refreshLeeksRole() {
-	leeks_roles_sorter._resolve(getAliveLeeksByType(LEEK_TYPE_ALLY));
 	_refreshCountLeekByTypeAndRole(LEEK_TYPE_ALLY);
-	leeks_roles_sorter._resolve(getAliveLeeksByType(LEEK_TYPE_ENEMY));
 	_refreshCountLeekByTypeAndRole(LEEK_TYPE_ENEMY);
-	sommon_roles_sorter._resolve(getAliveLeeksByType(LEEK_TYPE_ENEMY_SUMMON));
 	_refreshCountLeekByTypeAndRole(LEEK_TYPE_ENEMY_SUMMON);
-	sommon_roles_sorter._resolve(getAliveLeeksByType(LEEK_TYPE_ALLY_SUMMON));
 	_refreshCountLeekByTypeAndRole(LEEK_TYPE_ALLY_SUMMON);
-
 }
 
 function _refreshCountLeekByTypeAndRole(leek_type) {
@@ -204,7 +48,7 @@ function getLeeksCountByTypeNdRole(leek_type, leek_role) {
 }
 
 function getLeeksByTypeNdRole(leek_type, leek_role) {
-	return arrayFilter(GBL_StoredLeeks[leek_type].leeks, function(leek) {
+	return arrayFilter(getAliveLeeksByType(leek_type), function(leek) {
 		return leek.leek_role === leek_role;
 	});
 }

@@ -1,5 +1,4 @@
-// -- ---------------
-// -- Others section
+global GBL_MARK_ENABLE = false;
 global GBL_currentTurn = getTurn();
 // -- ---------------
 // -- Fight type section
@@ -10,11 +9,24 @@ global GBL_is_fight_type = [
 	FIGHT_TYPE_BATTLE_ROYALE: (GBL_fight_type === FIGHT_TYPE_BATTLE_ROYALE),
 	FIGHT_TYPE_SOLO: (GBL_fight_type === FIGHT_TYPE_SOLO)
 ];
+// - Globals tactic parameters
+global GBL_LEEK_AREA = AREA_SQUARE_1;
+global GBL_RADAR_DEPTH = 3;
+global GBL_life_threshold_emergency = 0.35;
+global GBL_life_threshold_pop = 0.55;
+global GBL_life_threshold_warn = 0.70;
 // - Only for FIGHT TYPE TEAM
 global GBL_turret_ally;
 global GBL_turret_enemy;
 // -- ---------------
 // -- Maps section
+global LEEK_ROLE_UNDEFINED = 'undefined';
+global LEEK_ROLE_TANK = 'tank';
+global LEEK_ROLE_HEALER = 'healer';
+global LEEK_ROLE_SUMMONERS = 'sommoner';
+global LEEK_ROLE_DD_MAGIC = 'dd-magic';
+global LEEK_ROLE_DD_SCIENCE = 'dd-science';
+global LEEK_ROLE_DD_STRENGTH = 'dd-strength';
 global GBL_OFFSET_X = 18;
 global GBL_OFFSET_Y = 17;
 global GBL_SIZE_MAX = 17;
@@ -26,6 +38,7 @@ global GBL_empty_binary_map_bordored = getEmptyBinaryMapBordered();
 global GBL_obstacles_map_binary = convertCellIdMapToBinaryMap(GBL_obstacles_cells, false);
 global GBL_obstacles_map_binary_bordered = convertCellIdMapToBinaryMap(GBL_obstacles_cells, true);
 global GBL_obstacles_map_binary_with_leek;
+global GBL_obstacles_map_binary_with_leek_area;
 global GBL_foreigns_cells_map_binary = filter_cells_hide();
 global GBL_foreigns_cells_map = convertBinaryMapToCellIdMap(
 	GBL_foreigns_cells_map_binary.map, GBL_foreigns_cells_map_binary.coordinates_min, GBL_foreigns_cells_map_binary.coordinates_max);
