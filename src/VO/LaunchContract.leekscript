@@ -9,25 +9,28 @@
 	 * */
 	class LaunchContract {
 		cast_type;
-		targets_rules;
+		filtersBeforeLinearize;
+		filtersAfterLinearize;
 		target_leeks_ids;
 		priorities;
 		caster_leek_id;
 		caster_tool_id;
 		caster_pathmap;
 
-		constructor(resolver, filters, sorters, caster_leek_id, caster_tool_id) {
+		constructor(resolver, filtersBeforeLinearize, filtersAfterLinearize, sorters, caster_tool_id) {
 			this.cast_type = resolver;
-			this.targets_rules = filters;
-			this.target_leeks_ids = GBL_radar_zones_by_leek[caster_leek_id].all_leeks_in_zones;
+			this.filtersBeforeLinearize = filtersBeforeLinearize;
+			this.filtersAfterLinearize = filtersAfterLinearize;
+			this.target_leeks_ids = arrayMap(getAllAliveLeeks(), function(_leek) {
+				return {
+					leek_id: _leek.leek_id
+				};
+			});
 			this.priorities = arrayFoldRight(sorters, function(priority, next) {
-				return launch_sorters._sort_options[priority](next);
+				return priority(next);
 			}, launch_sorters._isEqual);
-			this.caster_leek_id = caster_leek_id;
+			this.caster_leek_id = GBL_myLeek_id;
 			this.caster_tool_id = caster_tool_id;
-			this.caster_pathmap = GBL_radar_zones_by_leek[caster_leek_id].radar_zones[0];
+			this.caster_pathmap = GBL_myLeek_current_path;
 		}
 	}
-
-
-	

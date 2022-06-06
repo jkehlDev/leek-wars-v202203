@@ -109,12 +109,24 @@ function resolveCellsObstacles() {
 	return cellsObstacles;
 };
 
+function _compareValues(val1, val2) {
+	return val1 < val2 ? -1 : (val1 > val2 ? 1 : 0)
+};
+
 function arraySameAs(array1, array2) {
-	return count(array1) === count(array2) && arrayFoldLeft(array1, function(_isSame, _value) {
-		return _isSame && arrayInclude(array2, function(_valueTmp) {
-			return _valueTmp === _value;
-		});
-	}, true);
+	var countMax = count(array1);
+	if (countMax === count(array2)) {
+		var array1Sorted = arraySort(array1, _compareValues);
+		var array2Sorted = arraySort(array2, _compareValues);
+
+		for (var i = 0; i < countMax; i++) {
+			if (array1Sorted[i] !== array2Sorted[i]) {
+				return false;
+			}
+		}
+		return true;
+	};
+	return false;
 };
 
 function arrayInclude(array, f) {

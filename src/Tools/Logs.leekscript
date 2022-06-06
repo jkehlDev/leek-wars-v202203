@@ -1,29 +1,32 @@
-global console = {
-	info: function(values) {
-		if (typeOf(values) === TYPE_ARRAY) {
-			debug(arrayFoldLeft(values, function(val1, val2) {
-				return val1 + " | \n | " + val2
-			}, ''));
-		} else {
-			debug(' | ' + values + ' | ');
-		}
+global _LOG_DEBUG = 0;
+global _LOG_WARN = 1;
+global _LOG_ERROR = 2;
+// =================================
+global GBL_LOG_LEVEL = _LOG_DEBUG;
+// =================================
+
+/**
+ * info, warn, error
+ * */
+global out = {
+	info: function(_values) {
+		GBL_LOG_LEVEL <= _LOG_DEBUG && debug(_prepareConsoleLog(_values));
 	},
-	warn: function(values) {
-		if (typeOf(values) === TYPE_ARRAY) {
-			debugW(arrayFoldLeft(values, function(val1, val2) {
-				return val1 + " | \n | " + val2
-			}, ''));
-		} else {
-			debugW(' | ' + values + ' | ');
-		}
+	warn: function(_values) {
+		GBL_LOG_LEVEL <= _LOG_WARN && debugW(_prepareConsoleLog(_values));
 	},
-	error: function(values) {
-		if (typeOf(values) === TYPE_ARRAY) {
-			debugE(arrayFoldLeft(values, function(val1, val2) {
-				return val1 + " | \n | " + val2
-			}, ''));
-		} else {
-			debugE(' | ' + values + ' | ');
-		}
+	error: function(_values) {
+		GBL_LOG_LEVEL <= _LOG_ERROR && debugE(_prepareConsoleLog(_values));
 	}
+}
+
+function _prepareConsoleLog(_values) {
+	return '[ Turn ' + getTurn() + ' ] ' +
+		(
+			typeOf(_values) === TYPE_ARRAY ?
+			arrayFoldLeft(_values, function(_aggregate, _elmt) {
+				return _aggregate + ' | ' + _elmt
+			}, '| ') :
+			_values
+		) + ' | ';
 }

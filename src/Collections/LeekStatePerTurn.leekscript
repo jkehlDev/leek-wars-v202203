@@ -1,6 +1,4 @@
 //var op_init = getOperations();
-global GBL_leekStatePerTurnCol = new Collection('leekStatePerTurn');
-
 function _refreshLeekStatePerTurn() {
 	var allLeek = getAllAliveLeeks();
 	var leek, currentLeekState, previousLeekStateDocument;
@@ -18,7 +16,7 @@ function _refreshLeekStatePerTurn() {
 		GBL_leekStatePerTurnCol.create(currentLeekState.toDocument());
 	}
 }
-_refreshLeekStatePerTurn();
+
 // -----
 function _getLeeksState(filter_leekIds) {
 	return arrayMap(GBL_leekStatePerTurnCol.findMany(
@@ -33,11 +31,36 @@ function _getLeeksState(filter_leekIds) {
 	})
 }
 
+function getLeekStateById(_leek_id){
+	return shift(_getLeeksState([_leek_id]));
+}
+
 function getLeeksStateWithRadarSelect(leeksRadarSelect) {
 	var filter_leekIds = arrayMap(leeksRadarSelect, function(leek) {
 		return leek.leek_id;
 	});
 	return _getLeeksState(filter_leekIds);
+}
+
+function updateLeekState(_leek_id){
+	var currentLeekState, previousLeekStateDocument;
+		currentLeekState = GBL_leekStatePerTurnCol.findOne(
+			[_and: [
+				["turn": [_eq: GBL_currentTurn]],
+				["leek_id": [_eq: _leek_id]]
+			]]
+		)
+		currentLeekState = currentLeekState === null ? new LeekState(_leek_id): new LeekState(currentLeekState);
+		previousLeekStateDocument = GBL_leekStatePerTurnCol.findOne(
+			[_and: [
+				["turn": [_eq: GBL_currentTurn - 1]],
+				["leek_id": [_eq: _leek_id]]
+			]]
+		)
+		if (previousLeekStateDocument !== null) {
+			currentLeekState.updateStateWithPrevious(previousLeekStateDocument);
+		}
+		GBL_leekStatePerTurnCol.upsert(currentLeekState.toDocument());
 }
 
 //console.warn('LeekStates ops : ' + (getOperations() - op_init));

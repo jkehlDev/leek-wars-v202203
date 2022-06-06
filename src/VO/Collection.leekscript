@@ -70,6 +70,15 @@ class Collection {
 		}
 		return null;
 	}
+	upsert(_document) {
+		var _id = _document[__id];
+		if (_id !== null && this._collection[_id] !== null) {
+			this._collection[_id] = _document;
+			return clone(_document, 2);
+		} else {
+			return this.create(_document);
+		}
+	}
 	delete(_id) {
 		if (this._collection[_id] !== null) {
 			var _document = clone(this._collection[_id], 2);

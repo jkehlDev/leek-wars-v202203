@@ -49,7 +49,7 @@ class TacticMapCell {
 		if (leek.leek_isEnemy) {
 			this.enemies_data.zone_count_leeks += 1;
 			this.enemies_data.zone_sum_life += decimal(leek.leek_life * factor, 2);
-			this.enemies_data.zone_average_lifeRate = getAverageData(this.enemies_data.zone_average_lifeRate, leek.leek_lifeRate());
+			this.enemies_data.zone_average_lifeRate = getAverageData(this.enemies_data.zone_average_lifeRate, leek.leek_lifeRate);
 			this.enemies_data.zone_sum_tp += leek.leek_tp;
 			this.enemies_data.zone_average_power = getAverageData(this.enemies_data.zone_average_power, leek.leek_power * factor);
 			this.enemies_data.zone_average_strength = getAverageData(this.enemies_data.zone_average_strength, leek.leek_strength * factor);
@@ -59,7 +59,7 @@ class TacticMapCell {
 		} else {
 			this.allies_data.zone_count_leeks += 1;
 			this.allies_data.zone_sum_life += decimal(leek.leek_life * factor, 2);
-			this.allies_data.zone_average_lifeRate = getAverageData(this.allies_data.zone_average_lifeRate, leek.leek_lifeRate());
+			this.allies_data.zone_average_lifeRate = getAverageData(this.allies_data.zone_average_lifeRate, leek.leek_lifeRate);
 			this.allies_data.zone_sum_tp += leek.leek_tp;
 			this.allies_data.zone_average_power = getAverageData(this.allies_data.zone_average_power, leek.leek_power * factor);
 			this.allies_data.zone_average_strength = getAverageData(this.allies_data.zone_average_strength, leek.leek_strength * factor);
@@ -75,16 +75,12 @@ class TacticMapCell {
 		this.balance_wisdom = decimal(((this.enemies_data.zone_average_wisdom * this.enemies_data.zone_sum_tp) - (this.allies_data.zone_average_wisdom * this.allies_data.zone_sum_tp)) / sumTp, 2);
 	}
 
-	compareTo(to) {
-		return (this.balance_life < to.balance_life ? -1 :
-			(this.balance_life > to.balance_life ? 1 :
-				(this.balance_strenght < to.balance_strenght ? -1 :
-					(this.balance_strenght > to.balance_strenght ? 1 :
-						(this.balance_magic < to.balance_magic ? -1 :
-							(this.balance_magic > to.balance_magic ? 1 :
-								(this.balance_wisdom < to.balance_wisdom ? -1 :
-									(this.balance_wisdom > to.balance_wisdom ? 1 :
-										0))))))));
+	compareRateSumLife(to) {
+		return this.balance_zone_sum_life_rate < to.balance_zone_sum_life_rate ? -1 : (this.balance_zone_sum_life_rate > to.balance_zone_sum_life_rate ? 1 : 0);
+	}
+
+	compareEnemiesSumLife(to) {
+		return this.enemies_data.zone_sum_life < to.enemies_data.zone_sum_life ? -1 : (this.enemies_data.zone_sum_life > to.enemies_data.zone_sum_life ? 1 : 0);
 	}
 }
 

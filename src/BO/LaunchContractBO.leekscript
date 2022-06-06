@@ -8,13 +8,6 @@
  * SORT_UNSAFER_TARGET_CELL
  * */
 global launch_sorters = {
-	SORT_MAX_TARGETS: "SORT_MAX_TARGETS",
-	SORT_MAX_EFFECT_VALUE: "SORT_MAX_EFFECT_VALUE",
-	SORT_MIN_CAST_DISTANCE: "SORT_MIN_CAST_DISTANCE",
-	SORT_SAFER_CAST_CELL: "SORT_SAFER_CAST_CELL",
-	SORT_SAFER_TARGET_CELL: "SORT_SAFER_TARGET_CELL",
-	SORT_UNSAFER_CAST_CELL: "SORT_UNSAFER_CAST_CELL",
-	SORT_UNSAFER_TARGET_CELL: "SORT_UNSAFER_TARGET_CELL",
 	_isEqual: function(launch1, launch2) {
 		return 0;
 	},
@@ -23,52 +16,65 @@ global launch_sorters = {
 			return priorities(launch1, launch2)
 		});
 	},
-	_sort_options: [
-		"SORT_MAX_TARGETS": function(next) {
+	SORT_MAX_TARGETS: function(next) {
+		return function(launch1, launch2) {
+			return (launch1.countLeeks > launch2.countLeeks ? -1 :
+				(launch1.countLeeks < launch2.countLeeks ? 1 :
+					next(launch1, launch2)));
+		}
+	},
+	SORT_MIN_CAST_DISTANCE: function(next) {
+		return function(launch1, launch2) {
+			return (launch1.cast_cell_distance > launch2.cast_cell_distance ? 1 :
+				(launch1.cast_cell_distance < launch2.cast_cell_distance ? -1 :
+					next(launch1, launch2)));
+		}
+	},
+	SORT_MAX_EFFECT_VALUE: function(next) {
+		return function(launch1, launch2) {
+			var compare = compareToolEffectsValueByEffectType(launch1.effects_value, launch2.effects_value);
+			return compare !== 0 ? compare : next(launch1, launch2);
+		}
+	},
+	SORT_SAFER_CAST_CELL: function(next) {
+		return function(launch1, launch2) {
+			var compare = launch1.cast_cell_data.compareEnemiesSumLife(launch2.cast_cell_data);
+			return compare !== 0 ? compare : next(launch1, launch2);
+		}
+	},
+	SORT_SAFER_TARGET_CELL: function(next) {
+		return function(launch1, launch2) {
+			var compare = launch1.target_cell_data.compareEnemiesSumLife(launch2.target_cell_data);
+			return compare !== 0 ? compare : next(launch1, launch2);
+		}
+	}
+	SORT_UNSAFER_CAST_CELL: function(next) {
+		return function(launch1, launch2) {
+			var compare = launch1.cast_cell_data.compareEnemiesSumLife(launch2.cast_cell_data);
+			return compare !== 0 ? -compare : next(launch1, launch2);
+		}
+	},
+	SORT_UNSAFER_TARGET_CELL: function(next) {
+		return function(launch1, launch2) {
+			var compare = launch1.target_cell_data.compareEnemiesSumLife(launch2.target_cell_data);
+			return compare !== 0 ? -compare : next(launch1, launch2);
+		}
+	}
+	SORT_MIN_TARGET_DISTANCE_TO: function(_target_cell) {
+		return function(next) {
 			return function(launch1, launch2) {
-				return (launch1.countLeeks > launch2.countLeeks ? -1 :
-					(launch1.countLeeks < launch2.countLeeks ? 1 :
-						next(launch1, launch2)));
-			}
-		},
-		"SORT_MIN_CAST_DISTANCE": function(next) {
-			return function(launch1, launch2) {
-				return (launch1.cast_cell_distance > launch2.cast_cell_distance ? 1 :
-					(launch1.cast_cell_distance < launch2.cast_cell_distance ? -1 :
-						next(launch1, launch2)));
-			}
-		},
-		"SORT_MAX_EFFECT_VALUE": function(next) {
-			return function(launch1, launch2) {
-				var compare = compareToolEffectsValueByEffectType(launch1.effects_value, launch2.effects_value);
-				return compare !== 0 ? compare : next(launch1, launch2);
-			}
-		},
-		"SORT_SAFER_CAST_CELL": function(next) {
-			return function(launch1, launch2) {
-				var compare = launch1.target_cell_data.compareTo(launch2.target_cell_data);
-				return compare !== 0 ? compare : next(launch1, launch2);
-			}
-		},
-		"SORT_SAFER_TARGET_CELL": function(next) {
-			return function(launch1, launch2) {
-				var compare = launch1.target_cell_data.compareTo(launch2.target_cell_data);
-				return compare !== 0 ? compare : next(launch1, launch2);
+				var dist_1 = getPathLength(_target_cell, launch1.target_cell_id);
+				dist_1 = dist_1 === null ? getCellDistance(_target_cell, launch1.target_cell_id) : dist_1;
+				var dist_2 = getPathLength(_target_cell, launch2.target_cell_id);
+				dist_2 = dist_2 === null ? getCellDistance(_target_cell, launch2.target_cell_id) : dist_2;
+				var _compareRateSumLife = GBL_radar_tactic_map_by_cells[launch1.target_cell_id].compareRateSumLife(GBL_radar_tactic_map_by_cells[launch2.target_cell_id]);
+				return ((dist_1 > dist_2) ? 1 :
+					((dist_1 < dist_2) ? -1 :
+						(_compareRateSumLife !== 0 ? _compareRateSumLife :
+							next(launch1, launch2))));
 			}
 		}
-		"SORT_UNSAFER_CAST_CELL": function(next) {
-			return function(launch1, launch2) {
-				var compare = launch1.target_cell_data.compareTo(launch2.target_cell_data);
-				return compare !== 0 ? -compare : next(launch1, launch2);
-			}
-		},
-		"SORT_UNSAFER_TARGET_CELL": function(next) {
-			return function(launch1, launch2) {
-				var compare = launch1.target_cell_data.compareTo(launch2.target_cell_data);
-				return compare !== 0 ? -compare : next(launch1, launch2);
-			}
-		}
-	]
+	},
 };
 
 /**
@@ -84,30 +90,37 @@ global launch_resolvers = {
 		"CAST_PUSH": function(launch_contract, tool_id, needLos, tool_isWeapon, isLineEffect) {
 			var launch_lst = [];
 			var leek, resolved_cast_map, caster_cells_ids, caster_cell_id, launch_area_map, touch_map, target_leek_cell_id, select_target_area_map;
+			var caster = getLeekById(launch_contract.caster_leek_id);
 			for (leek in launch_contract.target_leeks_ids) {
-				target_leek_cell_id = getLeekById(leek.leek_id).leek_cell;
-				resolved_cast_map = intersection(resolveAreaTemplateOnCell(AREA_PUNCH.select_cast_area, target_leek_cell_id, true).map,
-					launch_contract.caster_pathmap.map,
-					launch_contract.caster_pathmap.coordinates_min.line,
-					launch_contract.caster_pathmap.coordinates_max.line);
-				caster_cells_ids = convertBinaryMapToCellIdMap(resolved_cast_map,
-					launch_contract.caster_pathmap.coordinates_min,
-					launch_contract.caster_pathmap.coordinates_max);
-				for (caster_cell_id in caster_cells_ids) {
-					// resolve intersection between launch area and target area 
-					launch_area_map = resolveAreaTemplateOnCell(AREA_PUNCH.select_target_area, caster_cell_id.cell_id, true);
-					select_target_area_map = resolveAreaTemplateOnCell(AREA_PUNCH.select_target_area, target_leek_cell_id, true);
-					touch_map = {
-						map: intersection(
-							select_target_area_map.map,
-							launch_area_map.map,
-							select_target_area_map.coordinates_min.line,
-							select_target_area_map.coordinates_max.line),
-						coordinates_min: select_target_area_map.coordinates_min,
-						coordinates_max: select_target_area_map.coordinates_max
-					};
-					markBinaryMap(touch_map, COLOR_RED);
-					launch_lst = addLaunchForLineEffect(launch_lst, tool_id, needLos, tool_isWeapon, isLineEffect, touch_map, caster_cell_id.cell_id, launch_contract.caster_leek_id);
+				if (leek.leek_id !== launch_contract.caster_leek_id) {
+					target_leek_cell_id = getLeekById(leek.leek_id).leek_cell;
+					resolved_cast_map = intersection(resolveAreaTemplateOnCell(AREA_PUNCH.select_cast_area, target_leek_cell_id, true).map,
+						launch_contract.caster_pathmap.mapAll,
+						launch_contract.caster_pathmap.coordinates_min.line,
+						launch_contract.caster_pathmap.coordinates_max.line);
+					caster_cells_ids = convertBinaryMapToCellIdMap(resolved_cast_map,
+						launch_contract.caster_pathmap.coordinates_min,
+						launch_contract.caster_pathmap.coordinates_max);
+					caster_cells_ids = arrayFilter(caster_cells_ids, function(_cell) {
+						return getPathLength(caster.leek_cell, _cell.cell_id) <= caster.leek_mp;
+					});
+
+					for (caster_cell_id in caster_cells_ids) {
+						// resolve intersection between launch area and target area 
+						launch_area_map = resolveAreaTemplateOnCell(AREA_PUNCH.select_target_area, caster_cell_id.cell_id, true);
+						select_target_area_map = resolveAreaTemplateOnCell(AREA_PUNCH.select_target_area, target_leek_cell_id, true);
+						touch_map = {
+							map: intersection(
+								select_target_area_map.map,
+								launch_area_map.map,
+								select_target_area_map.coordinates_min.line,
+								select_target_area_map.coordinates_max.line),
+							coordinates_min: select_target_area_map.coordinates_min,
+							coordinates_max: select_target_area_map.coordinates_max
+						};
+						//markBinaryMap(touch_map, COLOR_RED);
+						launch_lst = addLaunchForLineEffect(launch_lst, tool_id, needLos, tool_isWeapon, isLineEffect, touch_map, caster_cell_id.cell_id, launch_contract.caster_leek_id);
+					}
 				}
 			}
 			return launch_lst;
@@ -116,6 +129,14 @@ global launch_resolvers = {
 			var launch_lst = [];
 			var caster_cell_id = getLeekById(launch_contract.caster_leek_id).leek_cell;
 			var target_area_map = resolveToolLaunchAreaTemplateOnCell(tool_id, caster_cell_id, true);
+			if (tool_id === CHIP_JUMP) {
+				target_area_map.map = soustraire(
+					target_area_map.map,
+					GBL_obstacles_map_binary_with_leek.map,
+					target_area_map.coordinates_min.line,
+					target_area_map.coordinates_max.line
+				);
+			}
 			if (isLineEffect) {
 				launch_lst = addLaunchForLineEffect(
 					launch_lst,
@@ -147,10 +168,22 @@ global launch_resolvers = {
 			var target_area_by_leek_id = [];
 			for (leek in launch_contract.target_leeks_ids) {
 				target_area_by_leek_id[leek.leek_id] = resolveToolEffectAreaTemplateOnCell(tool_id, getLeekById(leek.leek_id).leek_cell, true);
+				if (tool_id === CHIP_JUMP) {
+					target_area_by_leek_id[leek.leek_id].map = soustraire(
+						target_area_by_leek_id[leek.leek_id].map,
+						GBL_obstacles_map_binary_with_leek.map,
+						target_area_by_leek_id[leek.leek_id].coordinates_min.line,
+						target_area_by_leek_id[leek.leek_id].coordinates_max.line
+					);
+				}
 			}
-			var caster_cells_ids = convertBinaryMapToCellIdMap(launch_contract.caster_pathmap.map,
+			var caster_cells_ids = convertBinaryMapToCellIdMap(launch_contract.caster_pathmap.mapAll,
 				launch_contract.caster_pathmap.coordinates_min,
 				launch_contract.caster_pathmap.coordinates_max);
+			var caster = getLeekById(launch_contract.caster_leek_id);
+			caster_cells_ids = arrayFilter(caster_cells_ids, function(_cell) {
+				return getPathLength(caster.leek_cell, _cell.cell_id) <= caster.leek_mp;
+			});
 			var caster_cell_id, launch_area_map, touch_map, leeks_in_effect_area_by_target_id;
 			for (caster_cell_id in caster_cells_ids) {
 				launch_area_map = resolveToolLaunchAreaTemplateOnCell(tool_id, caster_cell_id.cell_id, true);
@@ -194,83 +227,239 @@ global launch_resolvers = {
 		}
 	]
 };
-
+//leeks
+//caster_cells_ids
+//target_cell_id
+//tool_id
+//caster_leek_id
+//effect_area_cells
 /**
- * 	TARGET_ONLY_ALLIES, 
- *  TARGET_ONLY_ENEMIES, 
- *  TARGET_ONLY_CASTER, 
- *  TARGET_NOT_CASTER,
- *  TARGET_ONLY_SUMMONS,
- *  TARGET_NOT_SUMMONS,
- *  TARGET_NO_ONE,
- * 	NO_NULL_EFFECT
+ * NO_EFFECT_LESS_ON : function(effect_type, leek_type, value)
+ * NO_NULL_EFFECT_OF : function(effects) - effect : [ type, ... ]
+ * NO_LESS_EFFECT_OF : function(effects) - effect : [ { type, value }, ... ]
+ * _resolve_filters  : function(_filters, _launchs)
  * */
-global launch_filters = {
-	TARGET_ONLY_ALLIES: 1 << 1,
-	TARGET_ONLY_ENEMIES: 1 << 2,
-	TARGET_ONLY_CASTER: 1 << 3,
-	TARGET_NOT_CASTER: 1 << 4,
-	TARGET_ONLY_SUMMONS: 1 << 5,
-	TARGET_NOT_SUMMONS: 1 << 6,
-	TARGET_NO_ONE: 1 << 7,
-	NO_NULL_EFFECT: 1 << 8,
-	_filterBeforeLinearize: function(launch_lst, target_rules) {
-		return arrayFilter(launch_lst, function(launch) {
-			// TARGET_NO_ONE
-			if (count(launch.leeks) === 0) {
-				if ((target_rules & (1 << 7)) !== 0) {
-					return true;
-				} else {
-					// console.warn('TARGET_NO_ONE FILTER');
-					return false;
-				}
+global GBL_launch_filters_after_linearize = {
+	// effect : [ effect_type, ... ]
+	NO_LESS_EFFECT_OF: function(effects) {
+		var _filterEffect = arrayFoldRight(effects, function(_effect, _agregate) {
+			return function(_launch) {
+				var launch_effect = arrayFind(_launch.effects_value, function(_launch_effect) {
+					return _launch_effect.effect_type === _effect.type;
+				});
+
+				return _agregate(_launch) || (launch_effect !== null && launch_effect.value > _effect.value);
 			}
-			return !arrayInclude(launch.leeks, function(leek_id) {
-				var leek = getLeekById(leek_id);
-				// TARGET_ONLY_CASTER
-				if ((target_rules & (1 << 3)) !== 0 && !leek.leek_isCaster) {
-					// console.warn('TARGET_ONLY_CASTER FILTER');
-					return true;
-				}
-				// TARGET_NOT_CASTER
-				if ((target_rules & (1 << 4)) !== 0 && leek.leek_isCaster) {
-					// console.warn('TARGET_NOT_CASTER FILTER');
-					return true;
-				}
-				// TARGET_ONLY_ALLIES
-				if ((target_rules & (1 << 1)) !== 0 && leek.leek_isEnemy) {
-					// console.warn('TARGET_ONLY_ALLIES FILTER');
-					return true;
-				}
-				// TARGET_ONLY_ENEMIES
-				if ((target_rules & (1 << 2)) !== 0 && leek.leek_isAlly) {
-					// console.warn('TARGET_ONLY_ENEMIES FILTER');
-					return true;
-				}
-				// TARGET_ONLY_SUMMONS
-				if ((target_rules & (1 << 5)) !== 0 && !leek.leek_isSummon) {
-					// console.warn('TARGET_ONLY_SUMMONS FILTER');
-					return true;
-				}
-				// TARGET_NOT_SUMMONS
-				if ((target_rules & (1 << 6)) !== 0 && leek.leek_isSummon) {
-					// console.warn('TARGET_NOT_SUMMONS FILTER');
-					return true;
-				}
-				return false;
-			});
-		})
+		}, _filter_false);
+		return function(_next) {
+			return function(_launch) {
+				return _next(_launch) && _filterEffect(_launch);
+			}
+		}
 	},
-	_filterAfterLinearize: function(launch_lst, target_rules) {
-		if ((target_rules & (1 << 8)) !== 0) {
-			return arrayFilter(launch_lst, function(launch) {
-				var effect_sum = arrayFoldLeft(launch.effects_value, function(sumValue, effect_value) {
-					return sumValue + effect_value.value;
-				}, 0)
-				return effect_sum > 0;
+	// effect : [ effect_type, ... ]
+	NO_NULL_EFFECT_OF: function(effects) {
+		var _filterEffect = arrayFoldRight(effects, function(_effect, _agregate) {
+			return function(_launch) {
+				var launch_effect = arrayFind(_launch.effects_value, function(_launch_effect) {
+					return _launch_effect.effect_type === _effect;
+				});
+
+				return _agregate(_launch) || (launch_effect !== null && launch_effect.value > 0);
+			}
+		}, _filter_false);
+		return function(_next) {
+			return function(_launch) {
+				return _next(_launch) && _filterEffect(_launch);
+			}
+		}
+	},
+	NO_EFFECT_LESS_ON: function(effect_type, leek_type, valueMin) {
+		var _filterEffect = function(_launch) {
+			var _target_leek_ids = arrayFilter(_launch.touched_leeks, function(_leek_id) {
+				return (leek_type & getLeekTypeById(_leek_id)) !== 0;
+			});
+			var _caster = getLeekById(_launch.caster_leek_id);
+			var _effect = arrayFind(getToolById(_launch.tool_id).tool_effects, function(_tool_effect) {
+				return _tool_effect.type === effect_type;
+			});
+
+			return _effect === null ? false : (arrayFoldLeft(_target_leek_ids, function(_sum, target_leek_id) {
+				return _sum + evaluateEffect(_caster, getLeekById(target_leek_id), _effect, _launch.tool_id, _launch.countLeeks);
+			}, 0) > valueMin);
+		}
+		return function(_next) {
+			return function(_launch) {
+				return _next(_launch) && _filterEffect(_launch);
+			}
+		}
+	},
+	NO_EFFECTS_LESS_ON: function(_params) {
+		var _filterEffect = arrayFoldLeft(_params, function(_agregate, _filter) {
+			var _filterTmp = function(_launch) {
+				var _target_leek_ids = arrayFilter(_launch.touched_leeks, function(_leek_id) {
+					return (_filter.leek_type & getLeekTypeById(_leek_id)) !== 0;
+				});
+				var _caster = getLeekById(_launch.caster_leek_id);
+				var _effect = arrayFind(getToolById(_launch.tool_id).tool_effects, function(_tool_effect) {
+					return _tool_effect.type === _filter.effect_type;
+				});
+
+				return _effect === null ? false : (arrayFoldLeft(_target_leek_ids, function(_sum, target_leek_id) {
+					return _sum + evaluateEffect(_caster, getLeekById(target_leek_id), _effect, _launch.tool_id, _launch.countLeeks);
+				}, 0) > _filter.valueMin);
+			}
+			return function(_launch) {
+				return _agregate(_launch) || _filterTmp(_launch);
+			}
+		}, _filter_false);
+
+		return function(_next) {
+			return function(_launch) {
+				return _next(_launch) && _filterEffect(_launch);
+			}
+		}
+	},
+	PRIORITY_TARGET: function(_leeks_states, _filter) {
+		var _priorityTargets = arrayFilter(_leeks_states, _filter);
+		var _filterLaunchs;
+		if (count(_priorityTargets) > 0) {
+			_filterLaunchs = function(_launch) {
+				return arrayInclude(_launch.touched_leeks, function(_touched_leek_id) {
+					return arrayInclude(_priorityTargets, function(_priority_leek) {
+						return _touched_leek_id === _priority_leek.leek_id
+					});
+				});
+			}
+		} else {
+			_filterLaunchs = function(_launch) {
+				return false;
+			}
+		}
+		return function(_next) {
+			return function(_launch) {
+				return _next(_launch) && _filterLaunchs(_launch);
+			}
+		};
+	}
+	_resolve_filters: function(_filters, _launchs) {
+		var resolvedFilters = arrayFoldRight(_filters, function(_filter, _agregate) {
+			return _filter(_agregate);
+		}, _filter_true);
+		return arrayFilter(_launchs, resolvedFilters);
+	}
+}
+/**
+ * TARGET_ONLY_ALLIES
+ * TARGET_ONLY_ENEMIES
+ * TARGET_ONLY_CASTER
+ * TARGET_NOT_CASTER
+ * TARGET_ONLY_SUMMONS
+ * TARGET_NOT_SUMMONS
+ * TARGET_CASTER_AND_ENEMIES
+ * TARGET_NO_ONE
+ * TARGET_HAS_ONE_OF_EFFECTS: function(effects, minLeftTurn) - effects : [effect, ...] - minLeftTurn : min (strict) turns left for effect on target
+ * TARGET_AT_LEAST_X_TYPE_OF_LEEKS : function(params) - params : [ { typesOf : binary compose of leek type, count : number at least }, .. ]
+ * TARGET_ONLY_TYPE_OF_LEEKS : function(typesOf) - typesOf : binary compose of leek type
+ * _resolve_filters : function(_filters, _launchs)
+ * */
+global GBL_launch_filters_before_linearize = {
+	TARGET_ONLY_ALLIES: function(_next) {
+		return function(launch) {
+			return _next(launch) && !arrayInclude(launch.leeks, function(leek_id) {
+				return getLeekById(leek_id).leek_isEnemy;
 			});
 		}
-		return launch_lst;
+	},
+	TARGET_ONLY_ENEMIES: function(_next) {
+		return function(launch) {
+			return _next(launch) && !arrayInclude(launch.leeks, function(leek_id) {
+				return getLeekById(leek_id).leek_isAlly;
+			});
+		}
+	},
+	TARGET_ONLY_CASTER: function(_next) {
+		return function(launch) {
+			return _next(launch) && !arrayInclude(launch.leeks, function(leek_id) {
+				return !getLeekById(leek_id).leek_isCaster;
+			});
+		}
+	},
+	TARGET_NOT_CASTER: function(_next) {
+		return function(launch) {
+			return _next(launch) && !arrayInclude(launch.leeks, function(leek_id) {
+				return getLeekById(leek_id).leek_isCaster;
+			});
+		}
+	},
+	TARGET_ONLY_SUMMONS: function(_next) {
+		return function(launch) {
+			return _next(launch) && !arrayInclude(launch.leeks, function(leek_id) {
+				return !getLeekById(leek_id).leek_isSummon;
+			});
+		}
+	},
+	TARGET_NOT_SUMMONS: function(_next) {
+		return function(launch) {
+			return _next(launch) && !arrayInclude(launch.leeks, function(leek_id) {
+				return getLeekById(leek_id).leek_isSummon;
+			});
+		}
+	},
+	TARGET_CASTER_AND_ENEMIES: function(_next) {
+		return function(launch) {
+			return _next(launch) && !arrayInclude(launch.leeks, function(leek_id) {
+				return !getLeekById(leek_id).leek_isCaster && !getLeekById(leek_id).leek_isEnemy;
+			});
+		}
+	},
+	TARGET_NO_ONE: function(_next) {
+		return function(launch) {
+			return _next(launch) && count(launch.leeks) === 0;
+		}
+	},
+	TARGET_NOT_EMPTY: function(_next) {
+		return function(launch) {
+			return _next(launch) && count(launch.leeks) > 0;
+		}
+	},
+	TARGET_HAS_ONE_OF_EFFECTS: function(effects, minLeftTurn) {
+		return function(_next) {
+			return function(launch) {
+				return _next(launch) && arrayInclude(launch.leeks, function(_leek_id) {
+					return leekHasOneOfEffects(effects, getLeekById(_leek_id), minLeftTurn);
+				});
+			}
+		}
+	},
+	TARGET_AT_LEAST_X_TYPE_OF_LEEKS: function(params) {
+		var _filterByLeek = arrayFoldRight(params, function(_param, _agregate) {
+			return function(_launch) {
+				return _agregate(_launch) && count(arrayFilter(_launch.leeks, function(leek_id) {
+					return (getLeekTypeById(leek_id) & _param.typesOf) !== 0;
+				})) >= _param.count;
+			}
+		}, _filter_true);
+		return function(_next) {
+			return function(launch) {
+				return _next(launch) && _filterByLeek(launch);
+			}
+		}
+	},
+	TARGET_ONLY_TYPE_OF_LEEKS: function(typesOf) {
+		return function(_next) {
+			return function(launch) {
+				return _next(launch) && !arrayInclude(launch.leeks, function(leek_id) {
+					return (getLeekTypeById(leek_id) & typesOf) === 0;
+				});
+			}
+		}
+	},
+	_resolve_filters: function(_filters, _launchs) {
+		var resolvedFilters = arrayFoldRight(_filters, function(_filter, _agregate) {
+			return _filter(_agregate);
+		}, _filter_true);
+		return arrayFilter(_launchs, resolvedFilters);
 	}
 }
 
@@ -362,26 +551,24 @@ function addLaunchForLineEffect(launch_lst, tool_id, needLos, tool_isWeapon, isL
  * Resolver - resolver wich leek are affected by a launch
  * */
 function resolveLeeksTouchedByLaunch(tool_id, tool_isWeapon, isLineEffect, target_cell_id, caster_cell_id, caster_leek_id) {
-	var effect_tool_cells = tool_isWeapon ? getWeaponEffectiveArea(tool_id,
-			target_cell_id,
-			caster_cell_id) :
-		getChipEffectiveArea(tool_id, target_cell_id, caster_cell_id);
-
 	var leeks_in_effect_area = [];
 	var tool_effects = getToolById(tool_id).tool_effects;
 	var caster_leek = getLeekById(caster_leek_id);
 	var isEnableEffectOnLeek, effect;
+	//console.info(["isLineEffect", isLineEffect, "effect_tool_cells", effect_tool_cells]);
+	//console.info(["tool_id : " + tool_id, "target_cell_id : " + target_cell_id, "caster_cell_id : " + caster_cell_id]);
 	if (isLineEffect) {
-		// console.info(["isLineEffect", isLineEffect, "effect_tool_cells", effect_tool_cells]);
-		// console.info(["tool_id : " + tool_id, "target_cell_id : " + target_cell_id, "caster_cell_id : " + caster_cell_id]);
-
+		var effect_tool_cells = tool_isWeapon ? getWeaponEffectiveArea(tool_id,
+				target_cell_id,
+				caster_cell_id) :
+			getChipEffectiveArea(tool_id, target_cell_id, caster_cell_id);
 		for (var leek in getAllAliveLeeks()) {
 			if (arrayInclude(effect_tool_cells, function(cell_id) {
 					return cell_id === leek.leek_cell;
 				})) {
 				isEnableEffectOnLeek = false;
 				for (effect in tool_effects) {
-					if (canApplyEffectOnLeek(caster_leek, leek, effect)) {
+					if (canApplyEffectOnLeek(caster_leek, leek, effect, tool_id)) {
 						isEnableEffectOnLeek = true;
 						break;
 					}
@@ -396,7 +583,7 @@ function resolveLeeksTouchedByLaunch(tool_id, tool_isWeapon, isLineEffect, targe
 			})) {
 			isEnableEffectOnLeek = false;
 			for (effect in tool_effects) {
-				if (canApplyEffectOnLeek(caster_leek, caster_leek, effect)) {
+				if (canApplyEffectOnLeek(caster_leek, caster_leek, effect, tool_id)) {
 					isEnableEffectOnLeek = true;
 					break;
 				}
@@ -411,11 +598,10 @@ function resolveLeeksTouchedByLaunch(tool_id, tool_isWeapon, isLineEffect, targe
 			if (binaryMapHasCell(effect_tool_map.map, leek.leek_cell)) {
 				isEnableEffectOnLeek = false;
 				for (effect in tool_effects) {
-					if (canApplyEffectOnLeek(caster_leek, leek, effect)) {
+					if (canApplyEffectOnLeek(caster_leek, leek, effect, tool_id)) {
 						isEnableEffectOnLeek = true;
 						break;
 					}
-
 				}
 				if (isEnableEffectOnLeek) {
 					leeks_in_effect_area[leek.leek_id] = leek.leek_id;
@@ -425,7 +611,7 @@ function resolveLeeksTouchedByLaunch(tool_id, tool_isWeapon, isLineEffect, targe
 		if (binaryMapHasCell(effect_tool_map.map, caster_cell_id)) {
 			isEnableEffectOnLeek = false;
 			for (effect in tool_effects) {
-				if (canApplyEffectOnLeek(caster_leek, caster_leek, effect)) {
+				if (canApplyEffectOnLeek(caster_leek, caster_leek, effect, tool_id)) {
 					isEnableEffectOnLeek = true;
 					break;
 				}
@@ -493,7 +679,7 @@ function linearizeLaunchLst(launch_lst) {
 				launch.caster_leek_id,
 				cast_cell_id,
 				GBL_radar_tactic_map_by_cells[cast_cell_id],
-				getPathLengthByPathCube(GBL_radar_zones_by_leek[launch.caster_leek_id].leek_path_map, cast_cell_id),
+				getPathLength(caster_leek.leek_cell, cast_cell_id),
 				launch.target_cell_id,
 				GBL_radar_tactic_map_by_cells[launch.target_cell_id],
 				launch.tool_id,
@@ -507,6 +693,9 @@ function linearizeLaunchLst(launch_lst) {
 function compareToolEffectsValueByEffectType(tool_effects_value__1, tool_effects_value__2) {
 	var effects_type = arrayMap(tool_effects_value__1, function(tool_effect_value) {
 		return tool_effect_value.effect_type;
+	});
+	effects_type = arraySort(effects_type, function(type1, type2) {
+		return type1 < type2 ? -1 : (type1 > type2 ? 1 : 0)
 	});
 	var value1, value2;
 	for (var effect_type in effects_type) {
@@ -530,12 +719,12 @@ function compareToolEffectsValueByEffectType(tool_effects_value__1, tool_effects
 function resolveToolEffectsValueByEffectType(caster, target, tool_id, targets_count) {
 	var effects_value = [];
 	var tool = getToolById(tool_id);
-	var tool_effect;
+	var tool_effect, tool_effect_agregated, countSameEffect, i;
 	for (tool_effect in tool.tool_effects) {
 		if (EvalEffectValue[tool_effect.type] !== null) {
 			effects_value[tool_effect.type] = {
 				effect_type: tool_effect.type,
-				value: EvalEffectValue[tool_effect.type](caster, target, tool_effect, tool.tool_id, targets_count),
+				value: evaluateEffect(caster, target, tool_effect, tool.tool_id, targets_count),
 			};
 		}
 	}
@@ -559,8 +748,6 @@ function resolvePushEffectValue(caster_cell_id, target_leek_cell, target_cell_id
 		var dist2 = getDistance(caster_cell_id, effect_area_cell2.cell_id);
 		return dist1 < dist2 ? 1 : dist1 > dist2 ? -1 : 0;
 	});
-	//console.info(effect_area_cells);
-	//markBooleanMap(effect_area_cells, COLOR_GREEN);
 	var effect_value = 0;
 	for (var effect_area_cell in effect_area_cells) {
 		if (effect_area_cell.cell_id === target_leek_cell) {
