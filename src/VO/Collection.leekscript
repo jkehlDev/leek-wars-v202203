@@ -81,11 +81,11 @@ class Collection {
 	}
 	delete(_id) {
 		if (this._collection[_id] !== null) {
-			var _document = clone(this._collection[_id], 2);
 			this._collection[_id] = null;
-			return clone(_document, 2);
+			this._collection = arrayFilter(this._collection, function(_document) {
+			return _document !== null;
+		});
 		}
-		return null;
 	}
 	count(_selector) {
 		var execOn = shift(_proceedCollectionSelector(_selector));
@@ -107,6 +107,17 @@ class Collection {
 		return clone(arrayFilter(this._collection, function(_document) {
 			return execOn(_document);
 		}), 2);
+	}
+	removeMany(_filter) {
+		var execOn = shift(_proceedCollectionSelector(_filter));
+		arrayIter(arrayFilter(this._collection, function(_document) {
+			return execOn(_document);
+		}), function(_document) {
+			this._collection[_document[__id]] = null;
+		});
+		this._collection = arrayFilter(this._collection, function(_document) {
+			return _document !== null;
+		});
 	}
 	exists(_selector) {
 		var execOn = shift(_proceedCollectionSelector(_selector));

@@ -3,12 +3,12 @@ global GBL_currentTurn = getTurn();
 // -- ---------------
 // -- Fight type section
 global GBL_fight_type = getFightType();
-global GBL_is_fight_type = [
+global GBL_is_fight_type = { 
 	FIGHT_TYPE_TEAM: (GBL_fight_type === FIGHT_TYPE_TEAM),
 	FIGHT_TYPE_FARMER: (GBL_fight_type === FIGHT_TYPE_FARMER),
 	FIGHT_TYPE_BATTLE_ROYALE: (GBL_fight_type === FIGHT_TYPE_BATTLE_ROYALE),
 	FIGHT_TYPE_SOLO: (GBL_fight_type === FIGHT_TYPE_SOLO)
-];
+};
 // - Globals tactic parameters
 global GBL_LEEK_AREA = AREA_SQUARE_1;
 global GBL_RADAR_DEPTH = 3;
@@ -39,9 +39,9 @@ global GBL_obstacles_map_binary = convertCellIdMapToBinaryMap(GBL_obstacles_cell
 global GBL_obstacles_map_binary_bordered = convertCellIdMapToBinaryMap(GBL_obstacles_cells, true);
 global GBL_obstacles_map_binary_with_leek;
 global GBL_obstacles_map_binary_with_leek_area;
-global GBL_foreigns_cells_map_binary = filter_cells_hide();
-global GBL_foreigns_cells_map = convertBinaryMapToCellIdMap(
-	GBL_foreigns_cells_map_binary.map, GBL_foreigns_cells_map_binary.coordinates_min, GBL_foreigns_cells_map_binary.coordinates_max);
+//global GBL_foreigns_cells_map_binary = filter_cells_hide();
+//global GBL_foreigns_cells_map = convertBinaryMapToCellIdMap(
+//	GBL_foreigns_cells_map_binary.map, GBL_foreigns_cells_map_binary.coordinates_min, GBL_foreigns_cells_map_binary.coordinates_max);
 global GBL_full_path_map_cells = convertBinaryMapToCellIdMap(soustraire(GBL_full_binary_map, GBL_obstacles_map_binary, 0, 34), {
 	line: 0,
 	cell: 0

@@ -4,167 +4,84 @@ global _IA_tank_cards = [];
 function _IA_tank() {
 	out.info('ROLE_TANK');
 	displayContext();
-
-	// - --- ---------------------------
-
 	// - INIT TANK CARDS
 	if (!_IA_tank_init) {
-		TANK_DEVIL_EFFECT_DAMAGE = arrayFind(getToolById(CHIP_DEVIL_STRIKE).tool_effects, function(_tool_effect) {
-			return _tool_effect.type === EFFECT_DAMAGE;
-		});
-		var _tpMax = myLeek().leek_tpMax + 6;
+		var _tpMax = myLeek().leek_tpMax + GBL_TP_BONUS;
 		_IA_tank_init = true;
 		_IA_tank_cards = [
 			'BUFF_SHIELD': new ToolCard([], [CHIP_RAMPART, CHIP_CARAPACE, CHIP_DOME], _tpMax),
-			'BUFF': new ToolCard([], [CHIP_COVETOUSNESS, CHIP_STEROID, CHIP_MOTIVATION, CHIP_PROTEIN, CHIP_ADRENALINE], _tpMax),
 		];
 		myLeek().setWeaponById(myLeek().leek_weapons[0]);
 	}
-
 	// - --- ---------------------------
 	var tacticalMove = TANK_Resolve_TACTICAL_MOVE();
-	var _isJump = GBL_Resolve_JUMP(tacticalMove.isPriority, tacticalMove.targetCell);
-	if (_isJump) {
+	if (tacticalMove._isDistant) {
+		tacticalMove.moveHalfTo();
+	}
+
+	if (GBL_Resolve_JUMP(tacticalMove._isDistant, tacticalMove._distant_cell)) {
 		tacticalMove = TANK_Resolve_TACTICAL_MOVE();
 	}
 	// - --- ---------------------------
-	GBL_Resolve_KILL_SHOOT(0);
-	GBL_Resolve_HEAL_ANTIDOTE();
-	GBL_Resolve_HEAL_EMERGENCY();
-	GBL_Resolve_HEAL_WARN();
-	TANK_Resolve_BUFF();
-	GBL_Resolve_ABSOLUTE_SHIELD(tacticalMove.cell_id);
-	TANK_Resolve_BUFF_SHIELD(6);
-	GBL_Resolve_INVERSION()
-	GBL_Resolve_DAMAGE_ZONE();
-	GBL_Resolve_RELATIVE_SHIELD(tacticalMove.cell_id);
-	TANK_Resolve_BUFF_SHIELD(0);
-	GBL_Resolve_WEAPONS();
-	// - --- ---------------------------
+	if (GBL_is_fight_type.FIGHT_TYPE_TEAM || GBL_is_fight_type.FIGHT_TYPE_FARMER) {
+		GBL_Resolve_BUFF(8, tacticalMove._target_cell);
+		GBL_Resolve_HEAL_ANTIDOTE(tacticalMove._target_cell);
+		GBL_Resolve_HEAL_EMERGENCY(tacticalMove._target_cell);
+		GBL_Resolve_KILL_SHOOT(0, tacticalMove._target_cell);
 
+		GBL_Resolve_ABSOLUTE_SHIELD(tacticalMove._target_cell);
+		GBL_Resolve_HEAL_REGEN(tacticalMove._target_cell);
+		GBL_Resolve_DAMAGE_ZONE(tacticalMove._target_cell);
+		GBL_Resolve_BUFF_SHIELD(0, tacticalMove._target_cell);
+		GBL_Resolve_WEAPONS(tacticalMove._target_cell);
+		GBL_Resolve_HEAL_WARN(tacticalMove._target_cell);
+		GBL_Resolve_RELATIVE_SHIELD(tacticalMove._target_cell);
+	} else {
+		GBL_Resolve_BUFF(8, tacticalMove._target_cell);
+		GBL_Resolve_KILL_SHOOT(0, tacticalMove._target_cell);
+		GBL_Resolve_HEAL_ANTIDOTE(tacticalMove._target_cell);
+		GBL_Resolve_HEAL_EMERGENCY(tacticalMove._target_cell);
+
+		GBL_Resolve_ABSOLUTE_SHIELD(tacticalMove._target_cell);
+		GBL_Resolve_DAMAGE_ZONE(tacticalMove._target_cell);
+		GBL_Resolve_HEAL_REGEN(tacticalMove._target_cell);
+		GBL_Resolve_HEAL_WARN(tacticalMove._target_cell);
+		GBL_Resolve_WEAPONS(tacticalMove._target_cell);
+		GBL_Resolve_RELATIVE_SHIELD(tacticalMove._target_cell);
+	}
+	// - --- ---------------------------
+	_refreshRadarTactic();
 	tacticalMove = TANK_Resolve_TACTICAL_MOVE();
 	tacticalMove.moveTo();
-
-	// - --- ---------------------------
-
 }
 // --- ---------------------------------------------------------------------------------------------
 function TANK_Resolve_TACTICAL_MOVE() {
 	var myLeekState = getLeekStateById(GBL_myLeek_id);
 	var _tacticalMove = resolveTacticalPositionByTargetsLeeksNdTacticalArea(
-		getAllEnemiesAliveLeeks(),
+		getAllAlliesAliveLeeks(),
 		_sortLeekByLifeRateASC,
-		GBL_effect_area_template_by_area_type_id[myLeekState.leek_lifePop ? AREA_CIRCLE_6_15 : AREA_CIRCLE_2_8],
-		myLeekState.leek_lifePop ? _sortPositionsSafest : _sortPositionsRudest
-	);
+		GBL_effect_area_template_by_area_type_id[AREA_CIRCLE_2_8],
+		_sortPositionsRudest
+	)
+	if (_tacticalMove._target_cell === myLeek().leek_cell) {
+		_tacticalMove = resolveTacticalPositionByTargetsLeeksNdTacticalArea(
+			getAllAlliesAliveLeeks(),
+			_sortLeekByLevelDSC,
+			GBL_effect_area_template_by_area_type_id[myLeekState.leek_lifePop ? AREA_CIRCLE_6_15 : AREA_CIRCLE_4_8],
+			myLeekState.leek_lifePop ? _sortPositionsSafest : _sortPositionsRudest
+		)
+	}
+
+	if (_tacticalMove._target_cell === myLeek().leek_cell) {
+		_tacticalMove = resolveTacticalPositionByTargetsLeeksNdTacticalArea(
+			getAllEnemiesAliveLeeks(),
+			_sortLeekByLevelASC,
+			GBL_effect_area_template_by_area_type_id[myLeekState.leek_lifePop ? AREA_CIRCLE_6_15 : AREA_CIRCLE_4_8],
+			myLeekState.leek_lifePop ? _sortPositionsSafest : _sortPositionsRudest
+		);
+	}
+
 
 	return _tacticalMove;
 }
 // --- ---------------------------------------------------------------------------------------------
-function TANK_Resolve_BUFF() {
-	var _selectedOptions = _IA_tank_cards['BUFF'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _isExecuted = false;
-	var _excludeTools = [];
-	var _currentOption, _tool_id, _contract, _launchs, _selected_launch;
-	while (count(_selectedOptions) > 0 && !_isExecuted) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			if (_tool_id === CHIP_COVETOUSNESS) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_AT_LEAST_X_TYPE_OF_LEEKS([{
-							typesOf: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-							count: 2
-						}]),
-					],
-					[],
-					[launch_sorters.SORT_MAX_EFFECT_VALUE, launch_sorters.SORT_MIN_CAST_DISTANCE],
-					_tool_id);
-			} else {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_ALLIES,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY,
-						GBL_launch_filters_before_linearize.TARGET_NOT_SUMMONS,
-					],
-					[],
-					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_UNSAFER_TARGET_CELL,
-						launch_sorters.SORT_MIN_CAST_DISTANCE
-					],
-					_tool_id);
-			}
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_isExecuted = true;
-				_launchs.selected_launchs[0].launch();
-			} else {
-				_isExecuted = false;
-				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_tank_cards['BUFF'].getOptionsBy(
-					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
-				break;
-			}
-		}
-	}
-}
-// --- ---------------------------------------------------------------------------------------------
-function TANK_Resolve_BUFF_SHIELD(_tpSave) {
-	var _selectedOptions = _IA_tank_cards['BUFF_SHIELD'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp - _tpSave)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _isExecuted = false;
-	var _excludeTools = [];
-	var _currentOption, _tool_id, _contract, _launchs, _selected_launch;
-	while (count(_selectedOptions) > 0 && !_isExecuted) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			if (_tool_id === CHIP_CARAPACE) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_ALLIES,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY,
-					],
-					[],
-					[
-						launch_sorters.SORT_UNSAFER_TARGET_CELL,
-						launch_sorters.SORT_MIN_CAST_DISTANCE
-					],
-					_tool_id);
-			} else {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_ALLIES,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY,
-						GBL_launch_filters_before_linearize.TARGET_NOT_SUMMONS,
-					],
-					[],
-					[
-						launch_sorters.SORT_UNSAFER_TARGET_CELL,
-						launch_sorters.SORT_MIN_CAST_DISTANCE
-					],
-					_tool_id);
-			}
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_isExecuted = true;
-				_launchs.selected_launchs[0].launch();
-			} else {
-				_isExecuted = false;
-				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_tank_cards['BUFF_SHIELD'].getOptionsBy(
-					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp - _tpSave)],
-					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
-				break;
-			}
-		}
-	}
-}

@@ -23,7 +23,6 @@ function getEffectAreaTemplateByToolId(tool_id) {
 // --------------------------
 global _tool_by_id = []; // Tool object
 global GBL_launch_area_template_by_ToolId = []; // Binary template maps
-global GBL_effect_area_template_by_ToolId = []; // Binary template maps
 global AREA_X_2_4 = 100;
 global AREA_CIRCLE_2_4 = 101;
 global AREA_CIRCLE_2_6 = 103;

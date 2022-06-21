@@ -1,3 +1,4 @@
+include('Cards/index');
 // -- ---------------
 include('IaDdStrength');
 include('IaDdMagic');

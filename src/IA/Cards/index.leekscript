@@ -1,0 +1,4 @@
+include('MovingCards');
+include('HealingCards');
+include('TankingCards');
+include('DamagesCards');

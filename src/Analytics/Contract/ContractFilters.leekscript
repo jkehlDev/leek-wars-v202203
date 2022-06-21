@@ -1,0 +1,160 @@
+/**
+ * [FILTER NAME]:[FILTER PARAMETERS]
+ * TARGETS_ONLY : _target_type
+ * TARGETS_OR / TARGETS_AND : [{_target_type, _min_count, _max_count}]
+ * EFFECTS_OR / EFFECTS_AND : [{_effect_type, _target_type, _minValue, _maxValue}]
+ * EFFECTS_LESSER : {_effect_type, _target_type_ref, _target_type_to, _factor}
+ * HAS_TARGETS_Q1 / HAS_TARGETS_Q2 / HAS_TARGETS_Q3 : _target_type
+ * HAS_TARGETS_POISONED : _target_type
+ * */
+global GBL_Contract_filters = {
+	TARGETS_ONLY: function(_target_type) {
+		return new ContractFilter(GBL_Contract_filter_type_target_preselect, _fct_target_only(_target_type), _target_type);
+	},
+	TARGETS_OR: function(_params) {
+		return new ContractFilter(GBL_Contract_filter_type_target, arrayFoldLeft(_params, _fct_targets_or, GBL_fold_filter_false), 0);
+	},
+	TARGETS_AND: function(_params) {
+		return new ContractFilter(GBL_Contract_filter_type_target, arrayFoldLeft(_params, _fct_targets_and, GBL_fold_filter_true), 0);
+	},
+	EFFECTS_OR: function(_params) {
+		return new ContractFilter(GBL_Contract_filter_type_option, arrayFoldLeft(_params, _fct_effects_or, GBL_fold_filter_false), 0);
+	},
+	EFFECTS_AND: function(_params) {
+		return new ContractFilter(GBL_Contract_filter_type_option, arrayFoldLeft(_params, _fct_effects_and, GBL_fold_filter_true), 0);
+	},
+	EFFECTS_LESSER: function(_params) {
+		return new ContractFilter(GBL_Contract_filter_type_option, _fct_effect_lesser(_params), 0);
+	},
+	HAS_TARGETS_Q1: function(_target_type) {
+		return new ContractFilter(GBL_Contract_filter_type_target_preselect, _fct_has_targets_q1(_target_type), _target_type);
+	},
+	HAS_TARGETS_Q2: function(_target_type) {
+		return new ContractFilter(GBL_Contract_filter_type_target_preselect, _fct_has_targets_q2(_target_type), _target_type);
+	},
+	HAS_TARGETS_Q3: function(_target_type) {
+		return new ContractFilter(GBL_Contract_filter_type_target_preselect, _fct_has_targets_q3(_target_type), _target_type);
+	},
+	HAS_TARGETS_POISONED: function(_target_type) {
+		return new ContractFilter(GBL_Contract_filter_type_target_preselect, _fct_has_targets_poisoned(_target_type), _target_type);
+	},
+};
+// ____________________________________________________
+// ---------------------- UTILS -----------------------
+global GBL_fold_filter_true = function(_option) {
+	return true;
+};
+global GBL_fold_filter_false = function(_option) {
+	return false;
+};
+
+function _FoldFilters(_fold, _filter) {
+	return function(_option) {
+		return _fold(_option) && _filter(_option);
+	};
+}
+// ____________________________________________________
+// ------------------ FILTER EFFECTS ------------------
+/**
+ * FILTER EFFECTS 
+ * @param _option : ContractOption
+ * @param _paramEffect : {_effect_type, _target_type, _minValue, _maxValue}
+ * */
+function _filter_effects(_option, _paramEffect) {
+	var _value = _effect_sum_value(_option, _paramEffect._effect_type, _paramEffect._target_type);
+	return _value > _paramEffect._minValue && _value <= _paramEffect._maxValue;
+};
+
+function _fct_effects_or(_fold, _paramEffect) {
+	return function(_option) {
+		return _fold(_option) || _filter_effects(_option, _paramEffect);
+	};
+};
+
+function _fct_effects_and(_fold, _paramEffect) {
+	return function(_option) {
+		return _fold(_option) && _filter_effects(_option, _paramEffect);
+	};
+};
+
+function _fct_effect_lesser(_paramEffect) {
+	return function(_option) {
+		return _effect_sum_value(_option, _paramEffect._effect_type, _paramEffect._target_type_from) * (1 + _paramEffect._factor) <= 
+			_effect_sum_value(_option, _paramEffect._effect_type, _paramEffect._target_type_to);
+	};
+}
+// ____________________________________________________
+// ---------------- FILTER TARGET ONLY ----------------
+/**
+ * FILTER TARGETS 
+ * @param _option : ContractOption
+ * @param _paramEffect : {_target_type, _min_count, _max_count}
+ * */
+function _filter_targets(_option, _paramEffect) {
+	var _targetCount = arrayCount(_option._targets, function(_option_target) {
+		return (getLeekById(_option_target._target_id).leek_type & _paramEffect._target_type) !== 0;
+	});
+	return _targetCount > _paramEffect._min_count && _targetCount <= _paramEffect._max_count;
+};
+
+function _fct_targets_or(_fold, _paramEffect) {
+	return function(_option) {
+		return _fold(_option) || _filter_targets(_option, _paramEffect);
+	};
+};
+
+function _fct_targets_and(_fold, _paramEffect) {
+	return function(_option) {
+		return _fold(_option) && _filter_targets(_option, _paramEffect);
+	};
+};
+// --
+function _fct_has_targets_q1(_target_type) {
+	return function(_option) {
+		return arrayInclude(_option._targets, function(_option_target) {
+			return ((_target_type & getLeekById(_option_target._target_id).leek_type) !== 0) &&
+				getLeekStateById(_option_target._target_id).leek_lifeQ1;
+		});
+	};
+};
+
+function _fct_has_targets_q2(_target_type) {
+	return function(_option) {
+		return arrayInclude(_option._targets, function(_option_target) {
+			return ((_target_type & getLeekById(_option_target._target_id).leek_type) !== 0) &&
+				getLeekStateById(_option_target._target_id).leek_lifeQ2;
+		});
+	};
+};
+
+function _fct_has_targets_q3(_target_type) {
+	return function(_option) {
+		return arrayInclude(_option._targets, function(_option_target) {
+			return ((_target_type & getLeekById(_option_target._target_id).leek_type) !== 0) &&
+				getLeekStateById(_option_target._target_id).leek_lifeQ3;
+		});
+	};
+};
+
+function _fct_has_targets_poisoned(_target_type) {
+	return function(_option) {
+		return arrayInclude(_option._targets, function(_option_target) {
+			var _leek_state = getLeekStateById(_option_target._target_id);
+			return ((_target_type & getLeekById(_option_target._target_id).leek_type) !== 0) &&
+				(_leek_state.leek_poison >= _leek_state.leek_lifeNext);
+		});
+	};
+};
+
+
+function _fct_target_only(_target_type) {
+	return function(_option) {
+		return !arrayInclude(_option._targets, function(_option_target) {
+				return ((_target_type & getLeekById(_option_target._target_id).leek_type) === 0);
+			}) &&
+			arrayInclude(_option._targets, function(_option_target) {
+				return ((_target_type & getLeekById(_option_target._target_id).leek_type) !== 0);
+			});
+	};
+};
+// ____________________________________________________

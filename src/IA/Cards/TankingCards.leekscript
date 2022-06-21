@@ -1,0 +1,115 @@
+// -- --------------------------------------------------------------------------------------------------
+function GBL_Resolve_ABSOLUTE_SHIELD(_next_cell) {
+	if (GBL_radar_tactic_map_by_cells[_next_cell].enemies_data.zone_sum_life > 0) {
+		var _selectedOptions = _IA_cards['ABSOLUTE_SHIELD'].getOptionsBy(
+			[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
+			GBL_sort_toolCardOption_by_cost_dsc, []);
+		var _currentOption, _tool_id, _contract, _contract_options;
+		if (count(_selectedOptions) > 0) {
+			_currentOption = shift(_selectedOptions);
+			for (_tool_id in _currentOption._cast_array) {
+				_contract = new Contract(
+					_tool_id,
+					GBL_Contract_types.ON_ME,
+					[
+						GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ALLY_CASTER),
+					],
+					[]);
+				_contract_options = FCT_ResolveContractOptions(_contract);
+				if (count(_contract_options) > 0) {
+					shift(_contract_options).use();
+				}
+			}
+		}
+	}
+}
+// -- --------------------------------------------------------------------------------------------------
+function GBL_Resolve_RELATIVE_SHIELD(_next_cell) {
+	if (GBL_radar_tactic_map_by_cells[_next_cell].enemies_data.zone_sum_life > 0) {
+		var _selectedOptions = _IA_cards['RELATIVE_SHIELD'].getOptionsBy(
+			[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
+			GBL_sort_toolCardOption_by_cost_dsc, []);
+		var _currentOption, _tool_id, _contract, _contract_options;
+		if (count(_selectedOptions) > 0) {
+			_currentOption = shift(_selectedOptions);
+			for (_tool_id in _currentOption._cast_array) {
+				_contract = new Contract(
+					_tool_id,
+					GBL_Contract_types.ON_ME,
+					[
+						GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ALLY_CASTER),
+					],
+					[]);
+				_contract_options = FCT_ResolveContractOptions(_contract);
+				if (count(_contract_options) > 0) {
+					shift(_contract_options).use();
+				}
+			}
+		}
+	}
+}
+// --- ---------------------------------------------------------------------------------------------
+function GBL_Resolve_BUFF_SHIELD(_tpSave, _target_cell) {
+	var _selectedOptions = _IA_tank_cards['BUFF_SHIELD'].getOptionsBy(
+		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp - _tpSave)],
+		GBL_sort_toolCardOption_by_cost_dsc, []);
+	var _isExecuted = false;
+	var _excludeTools = [];
+	var _currentOption, _tool_id, _contract, _contract_options;
+	while (count(_selectedOptions) > 0 && !_isExecuted) {
+		_currentOption = shift(_selectedOptions);
+		for (_tool_id in _currentOption._cast_array) {
+			if (_tool_id === CHIP_SOLIDIFICATION) {
+				_contract = new Contract(
+					_tool_id,
+					GBL_Contract_types.ON_ME,
+					[
+						GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ALLY_CASTER),
+					],
+					[]);
+			} else
+			if (_tool_id === CHIP_CARAPACE) {
+				_contract = new Contract(
+					_tool_id,
+					GBL_Contract_types.TARGET,
+					[
+						GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ALLY | LEEK_TYPE_ALLY_SUMMON),
+					],
+					[
+						GBL_Contract_sorters.TARGET_EFFECT_ASC({
+							_target_type: LEEK_TYPE_ALLY | LEEK_TYPE_ALLY_SUMMON,
+							_effect_type: EFFECT_ABSOLUTE_SHIELD
+						}),
+						_target_cell !== null ? GBL_Contract_sorters.DIST_CAST_ASC_TO(_target_cell) : GBL_Contract_sorters.TARGET_SAFEST(),
+					]);
+			} else {
+				_contract = new Contract(
+					_tool_id,
+					GBL_Contract_types.TARGET,
+					[
+						GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ALLY),
+					],
+					[
+						GBL_Contract_sorters.TARGET_EFFECT_ASC({
+							_target_type: LEEK_TYPE_ALLY,
+							_effect_type: EFFECT_ABSOLUTE_SHIELD
+						}),
+						_target_cell !== null ? GBL_Contract_sorters.DIST_CAST_ASC_TO(_target_cell) : GBL_Contract_sorters.TARGET_SAFEST(),
+					]);
+			}
+			_contract_options = FCT_ResolveContractOptions(_contract);
+			if (count(_contract_options) > 0) {
+				_isExecuted = true;
+				shift(_contract_options).use();
+			} else {
+				_isExecuted = false;
+				push(_excludeTools, _tool_id);
+				_selectedOptions = _IA_tank_cards['BUFF_SHIELD'].getOptionsBy(
+					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp - _tpSave)],
+					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
+				break;
+			}
+		}
+	}
+}
+// -- --------------------------------------------------------------------------------------------------
