@@ -1,5 +1,8 @@
 //var op_init = getOperations();
 function _refreshLeekStatePerTurn() {
+	// Remove oldest leekstates
+	GBL_leekStatePerTurnCol.removeMany(["turn": [_lt: GBL_currentTurn - 1]]);
+
 	var allLeek = getAllAliveLeeks();
 	var leek, currentLeekState, previousLeekStateDocument;
 	for (leek in allLeek) {
@@ -31,7 +34,7 @@ function _getLeeksState(filter_leekIds) {
 	})
 }
 
-function getLeekStateById(_leek_id){
+function getLeekStateById(_leek_id) {
 	return shift(_getLeeksState([_leek_id]));
 }
 
@@ -42,25 +45,25 @@ function getLeeksStateWithRadarSelect(leeksRadarSelect) {
 	return _getLeeksState(filter_leekIds);
 }
 
-function updateLeekState(_leek_id){
+function updateLeekState(_leek_id) {
 	var currentLeekState, previousLeekStateDocument;
-		currentLeekState = GBL_leekStatePerTurnCol.findOne(
-			[_and: [
-				["turn": [_eq: GBL_currentTurn]],
-				["leek_id": [_eq: _leek_id]]
-			]]
-		)
-		currentLeekState = currentLeekState === null ? new LeekState(_leek_id): new LeekState(currentLeekState);
-		previousLeekStateDocument = GBL_leekStatePerTurnCol.findOne(
-			[_and: [
-				["turn": [_eq: GBL_currentTurn - 1]],
-				["leek_id": [_eq: _leek_id]]
-			]]
-		)
-		if (previousLeekStateDocument !== null) {
-			currentLeekState.updateStateWithPrevious(previousLeekStateDocument);
-		}
-		GBL_leekStatePerTurnCol.upsert(currentLeekState.toDocument());
+	currentLeekState = GBL_leekStatePerTurnCol.findOne(
+		[_and: [
+			["turn": [_eq: GBL_currentTurn]],
+			["leek_id": [_eq: _leek_id]]
+		]]
+	)
+	currentLeekState = currentLeekState === null ? new LeekState(_leek_id) : new LeekState(currentLeekState);
+	previousLeekStateDocument = GBL_leekStatePerTurnCol.findOne(
+		[_and: [
+			["turn": [_eq: GBL_currentTurn - 1]],
+			["leek_id": [_eq: _leek_id]]
+		]]
+	)
+	if (previousLeekStateDocument !== null) {
+		currentLeekState.updateStateWithPrevious(previousLeekStateDocument);
+	}
+	GBL_leekStatePerTurnCol.upsert(currentLeekState.toDocument());
 }
 
 //console.warn('LeekStates ops : ' + (getOperations() - op_init));

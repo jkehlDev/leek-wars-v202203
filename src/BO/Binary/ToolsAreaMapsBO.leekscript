@@ -33,54 +33,73 @@ function resolveAreaTemplate(launch_area_templateXY) {
 		return {
 			map: map_template_binary,
 			center_binary_coordinates: convertCellIdToLineNdCell(cell_origin),
-			coordinates_min: {line: line_min, cell: cell_min},
-			coordinates_max: {line: line_max, cell: cell_max},
+			coordinates_min: {
+				line: line_min,
+				cell: cell_min
+			},
+			coordinates_max: {
+				line: line_max,
+				cell: cell_max
+			},
 		};
 	};
 	return [resolve(launch_area_templateXY, 323), resolve(launch_area_templateXY, 306)];
 }
 
-
+global GBL_Launch_area_on_cell = [];
 /**
  * Resolve tool launch area binary map on cell
  * { map, coordinates_min: {line: line_min, cell: cell_min}, coordinates_max: {line: line_max, cell: cell_max},	cell_center	}
  * */
-function resolveToolLaunchAreaTemplateOnCell(tool_id, cell_center_id, hasObstacles) {
-	var selected_launch_area_templates_binary = getLaunchAreaTemplateByToolId(tool_id);
-	return resolveAreaTemplateOnCell(selected_launch_area_templates_binary, cell_center_id, hasObstacles);
+function resolveToolLaunchAreaTemplateOnCell(tool_id, cell_center_id) {
+	if (GBL_Launch_area_on_cell[tool_id] === null) {
+		var selected_launch_area_templates_binary = getLaunchAreaTemplateByToolId(tool_id);
+		GBL_Launch_area_on_cell[tool_id] = [cell_center_id: resolveAreaTemplateOnCell(selected_launch_area_templates_binary, cell_center_id, true, GBL_obstacles_map_binary)];
+	} else if (GBL_Launch_area_on_cell[tool_id][cell_center_id] === null) {
+		var selected_launch_area_templates_binary = getLaunchAreaTemplateByToolId(tool_id);
+		GBL_Launch_area_on_cell[tool_id][cell_center_id] = resolveAreaTemplateOnCell(selected_launch_area_templates_binary, cell_center_id, true, GBL_obstacles_map_binary);
+	}
+	return GBL_Launch_area_on_cell[tool_id][cell_center_id];
 }
 
+global GBL_Effect_area_on_cell = [];
 /**
  * Resolve tool effect area binary map on cell
  * { map, coordinates_min: {line: line_min, cell: cell_min}, coordinates_max: {line: line_max, cell: cell_max},	cell_center	}
  * */
-function resolveToolEffectAreaTemplateOnCell(tool_id, cell_center_id, hasObstacles) {
-	var selected_effect_area_templates_binary = getEffectAreaTemplateByToolId(tool_id);
-	return resolveAreaTemplateOnCell(selected_effect_area_templates_binary, cell_center_id, hasObstacles);
+function resolveToolEffectAreaTemplateOnCell(tool_id, cell_center_id) {
+	if (GBL_Effect_area_on_cell[tool_id] === null) {
+		var selected_effect_area_templates_binary = getEffectAreaTemplateByToolId(tool_id);
+		GBL_Effect_area_on_cell[tool_id] = [cell_center_id: resolveAreaTemplateOnCell(selected_effect_area_templates_binary, cell_center_id, true, GBL_obstacles_map_binary)];
+	} else if (GBL_Effect_area_on_cell[tool_id][cell_center_id] === null) {
+		var selected_effect_area_templates_binary = getEffectAreaTemplateByToolId(tool_id);
+		GBL_Effect_area_on_cell[tool_id][cell_center_id] = resolveAreaTemplateOnCell(selected_effect_area_templates_binary, cell_center_id, true, GBL_obstacles_map_binary);
+	}
+	return GBL_Effect_area_on_cell[tool_id][cell_center_id];
 }
 
 /**
  * Utility - resolve area template binary on cell
  * { map, coordinates_min: {line: line_min, cell: cell_min}, coordinates_max: {line: line_max, cell: cell_max},	cell_center	}
  * */
-function resolveAreaTemplateOnCell(selected_area_templates_binary, cell_center_id, hasObstacles) {
+function resolveAreaTemplateOnCell(selected_area_templates_binary, cell_center_id, hasObstacles, _obstacles_map) {
 	var cell_center_binary_coordinates = convertCellIdToLineNdCell(cell_center_id);
 	var selected_area_template_binary = selected_area_templates_binary[(cell_center_binary_coordinates.line % 2)];
 	var translate_coordinates = {
 		line: selected_area_template_binary.center_binary_coordinates.line - cell_center_binary_coordinates.line,
 		cell: selected_area_template_binary.center_binary_coordinates.cell - cell_center_binary_coordinates.cell
 	}
-	
+
 	var line_min = selected_area_template_binary.coordinates_min.line - translate_coordinates.line;
 	line_min < 0 ? 0 : line_min;
 	var line_max = selected_area_template_binary.coordinates_max.line - translate_coordinates.line;
-	line_max > 34 ? 34 : line_max;	
-	
+	line_max > 34 ? 34 : line_max;
+
 	var cell_min = selected_area_template_binary.coordinates_min.cell - translate_coordinates.cell;
 	cell_min < 0 ? 0 : cell_min;
 	var cell_max = selected_area_template_binary.coordinates_max.cell - translate_coordinates.cell;
-	cell_max > 17 ? 17 : cell_max;	
-	
+	cell_max > 17 ? 17 : cell_max;
+
 	var map_binary = clone(GBL_empty_binary_map, 2);
 	if (translate_coordinates.cell > 0) {
 		for (var line = line_min; line <= line_max; line++) {
@@ -91,14 +110,20 @@ function resolveAreaTemplateOnCell(selected_area_templates_binary, cell_center_i
 			map_binary[line] |= (selected_area_template_binary.map[line + translate_coordinates.line] << (-translate_coordinates.cell));
 		}
 	}
-	if(hasObstacles){
-		map_binary = soustraire(map_binary, GBL_obstacles_map_binary, line_min, line_max);
-	}	
-	
+	if (hasObstacles) {
+		map_binary = soustraire(map_binary, _obstacles_map, line_min, line_max);
+	}
+
 	return {
 		map: map_binary,
-		coordinates_min: {line: line_min, cell: cell_min},
-		coordinates_max: {line: line_max, cell: cell_max},
+		coordinates_min: {
+			line: line_min,
+			cell: cell_min
+		},
+		coordinates_max: {
+			line: line_max,
+			cell: cell_max
+		},
 		cell_center: cell_center_id
 	};
 }

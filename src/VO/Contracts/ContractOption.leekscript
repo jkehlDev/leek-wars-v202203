@@ -1,0 +1,81 @@
+/**
+ * _tool_id;
+ * _caster_cell;
+ * _target_cell;
+ * _targets;
+ * 
+ * cloneByCasterCell(caster_cell)
+ * use()
+ * */
+class ContractOption {
+	_tool_id;
+	_caster_cell;
+	_target_cell;
+	_targets;
+	_isCaster_affected;
+
+	constructor(
+		tool_id,
+		caster_cell,
+		target_cell,
+		targets,
+	) {
+		this._tool_id = tool_id;
+		this._caster_cell = caster_cell;
+		this._target_cell = target_cell;
+		this._targets = targets;
+	}
+
+	cloneByCasterCell(caster_cell) {
+		return new ContractOption(this._tool_id,
+			caster_cell,
+			this._target_cell,
+			clone(this._targets, 2))
+	}
+	
+	use(){
+		var state = 0;
+		var tool = getToolById(this._tool_id)
+		if (myLeek().leek_cell !== this._caster_cell) {
+			moveTowardCell(this._caster_cell);
+			myLeek().update();
+		}
+		if (myLeek().leek_cell === this._caster_cell) {
+			if (tool.tool_isWeapon) {
+				if (myLeek().setWeaponById(this._tool_id)) {
+					state = useWeaponOnCell(this._target_cell);
+				}
+			} else if (tool.tool_isSummon) {
+				state = summon(this._tool_id, this._target_cell, _main_run);
+
+			} else {
+				state = useChipOnCell(this._tool_id, this._target_cell);
+			}
+			var _option_target;
+			for (_option_target in this._targets) {
+				getLeekById(_option_target._target_id).update();
+			}
+			myLeek().update();
+		}
+		if (state > 0) {
+			if (arrayInclude([CHIP_INVERSION, CHIP_JUMP, CHIP_GRAPPLE], function(_tool_id) {
+					return _tool_id === this._tool_id
+				})) {
+				_refreshRadarZones();
+				GBL_myLeek_current_path = resolvePathMap(myLeek().leek_mp, myLeek().leek_mp, myLeek().leek_cell, GBL_obstacles_map_binary_with_leek_area.map, false);
+			}
+			if (tool.tool_isSummon) {
+				getLeekById(getEntityOnCell(this._target_cell));
+			}
+			out.info(arrayConcat(['SUCCESS USE - ' +
+				getToolById(this._tool_id).tool_name +
+				', target cell [ ' + this._target_cell +
+				' ] from cell [ ' + this._caster_cell + ' ], '], this._targets));
+		} else {
+			out.error('FAIL USE - [ ' + state + ' ] ' +
+				getToolById(this._tool_id).tool_name +
+				', target cell [ ' + this._target_cell +
+				' ] from cell [ ' + this._caster_cell + ' ]');
+		}
+	}
+}

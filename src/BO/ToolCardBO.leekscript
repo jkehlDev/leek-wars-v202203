@@ -131,7 +131,7 @@ global GBL_sort_toolCardOption_by_cost_asc = function(_next) {
 
 /**
  * Sorter - GBL_sort_toolCardOption_by_cost
- * Sort by total cost value ascending
+ * Sort by total cost value descending
  **/
 global GBL_sort_toolCardOption_by_cost_dsc = function(_next) {
 	return function(_option1, _option2) {
@@ -297,14 +297,12 @@ function _resolveOptions(prerequis_tools, optionnal_tools, max_cost) {
 		}
 	}
 	return allOptions;
-}
-
+};
 
 function _resolveOptionsStepper(allOptions, currentOption, tools_left, max_cost) {
 	if (count(tools_left) === 0) {
 		return allOptions;
 	}
-
 	var tool_id, tool, tools_left_tmp, currentOption_tmp;
 	for (tool_id in tools_left) {
 		tool = getToolById(tool_id);
@@ -325,6 +323,15 @@ function _resolveOptionsStepper(allOptions, currentOption, tools_left, max_cost)
 			allOptions = _resolveOptionsStepper(allOptions, currentOption_tmp, tools_left_tmp, max_cost);
 		}
 	}
-
 	return allOptions;
-}
+};
+
+function _isToolAvailableForLeek(tool, currentLeek) {
+	return (currentLeek.leekHaveToolById(tool.tool_id)) && (tool.tool_isWeapon || !_isToolHaveCooldownForLeek(tool, currentLeek)) && (currentLeek.leek_tp >= tool.tool_cost);
+};
+
+function _isToolHaveCooldownForLeek(tool, currentLeek) {
+	return arrayInclude(currentLeek.leek_chipsCooldown, function(chip_cooldown) {
+		return chip_cooldown.chip === tool.tool_id && chip_cooldown.cooldown > 0;
+	});
+};

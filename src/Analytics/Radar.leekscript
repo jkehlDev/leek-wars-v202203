@@ -27,68 +27,68 @@ function resolveZonesRadar(deep_factor, radarleek) {
 			map: radar_leek_path_map.mapZones[zone] !== null ? radar_leek_path_map.mapZones[zone] : clone(GBL_empty_binary_map, 2),
 			coordinates_min: radar_leek_path_map.coordinates_min,
 			coordinates_max: radar_leek_path_map.coordinates_max,
-			leeks: [
-				LEEK_TYPE_ALLY: [],
-				LEEK_TYPE_ALLY_SUMMON: [],
-				LEEK_TYPE_ENEMY: [],
-				LEEK_TYPE_ENEMY_SUMMON: [],
-			]
+			//leeks: [
+				//LEEK_TYPE_ALLY: [],
+				//LEEK_TYPE_ALLY_SUMMON: [],
+				//LEEK_TYPE_ENEMY: [],
+				//LEEK_TYPE_ENEMY_SUMMON: [],
+			//]
 		};
 
-		// - ----
-		// LEEK_TYPE_ALLY
-		for (leek in getAliveLeeksByType(LEEK_TYPE_ALLY)) {
-			if (radar_zones[zone].map[leek.leek_coordinates.line] & (1 << leek.leek_coordinates.cell)) {
-				radar_zones[zone].leeks[LEEK_TYPE_ALLY][leek.leek_id] = {
-					leek_id: leek.leek_id,
-					pathLength: getPathLengthByPathCube(radar_leek_path_map, leek.leek_cell)
-				};
-			}
-		}
-		radar_zones[zone].leeks[LEEK_TYPE_ALLY] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ALLY], sortByPathLengthAsc);
-		pushAll(all_leeks_in_zones[LEEK_TYPE_ALLY], clone(radar_zones[zone].leeks[LEEK_TYPE_ALLY], 2));
-		// - ----
-		// LEEK_TYPE_ENEMY
-		for (leek in getAliveLeeksByType(LEEK_TYPE_ENEMY)) {
-			if (radar_zones[zone].map[leek.leek_coordinates.line] & (1 << leek.leek_coordinates.cell)) {
-				radar_zones[zone].leeks[LEEK_TYPE_ENEMY][leek.leek_id] = {
-					leek_id: leek.leek_id,
-					pathLength: getPathLengthByPathCube(radar_leek_path_map, leek.leek_cell)
-				};
-			}
-		}
-		radar_zones[zone].leeks[LEEK_TYPE_ENEMY] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ENEMY], sortByPathLengthAsc);
-		pushAll(all_leeks_in_zones[LEEK_TYPE_ENEMY], clone(radar_zones[zone].leeks[LEEK_TYPE_ENEMY], 2));
-		// - ----
-		// LEEK_TYPE_ALLY_SUMMON
-		for (leek in getAliveLeeksByType(LEEK_TYPE_ALLY_SUMMON)) {
-			if (radar_zones[zone].map[leek.leek_coordinates.line] & (1 << leek.leek_coordinates.cell)) {
-				radar_zones[zone].leeks[LEEK_TYPE_ALLY_SUMMON][leek.leek_id] = {
-					leek_id: leek.leek_id,
-					pathLength: getPathLengthByPathCube(radar_leek_path_map, leek.leek_cell)
-				};
-			}
-		}
-		radar_zones[zone].leeks[LEEK_TYPE_ALLY_SUMMON] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ALLY_SUMMON], sortByPathLengthAsc);
-		pushAll(all_leeks_in_zones[LEEK_TYPE_ALLY_SUMMON], clone(radar_zones[zone].leeks[LEEK_TYPE_ALLY_SUMMON], 2));
-		// - ----
-		// LEEK_TYPE_ENEMY_SUMMON
-		for (leek in getAliveLeeksByType(LEEK_TYPE_ENEMY_SUMMON)) {
-			if (radar_zones[zone].map[leek.leek_coordinates.line] & (1 << leek.leek_coordinates.cell)) {
-				radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON][leek.leek_id] = {
-					leek_id: leek.leek_id,
-					pathLength: getPathLengthByPathCube(radar_leek_path_map, leek.leek_cell)
-				};
-			}
-		}
-		radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON], sortByPathLengthAsc);
-		pushAll(all_leeks_in_zones[LEEK_TYPE_ENEMY_SUMMON], clone(radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON], 2));
+		//// - ----
+		//// LEEK_TYPE_ALLY
+		//for (leek in getAliveLeeksByType(LEEK_TYPE_ALLY)) {
+			//if (radar_zones[zone].map[leek.leek_coordinates.line] & (1 << leek.leek_coordinates.cell)) {
+				//radar_zones[zone].leeks[LEEK_TYPE_ALLY][leek.leek_id] = {
+					//leek_id: leek.leek_id,
+					//pathLength: getPathLengthByPathCube(radar_leek_path_map, leek.leek_cell)
+				//};
+			//}
+		//}
+		//radar_zones[zone].leeks[LEEK_TYPE_ALLY] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ALLY], sortByPathLengthAsc);
+		//pushAll(all_leeks_in_zones[LEEK_TYPE_ALLY], clone(radar_zones[zone].leeks[LEEK_TYPE_ALLY], 2));
+		//// - ----
+		//// LEEK_TYPE_ENEMY
+		//for (leek in getAliveLeeksByType(LEEK_TYPE_ENEMY)) {
+			//if (radar_zones[zone].map[leek.leek_coordinates.line] & (1 << leek.leek_coordinates.cell)) {
+				//radar_zones[zone].leeks[LEEK_TYPE_ENEMY][leek.leek_id] = {
+					//leek_id: leek.leek_id,
+					//pathLength: getPathLengthByPathCube(radar_leek_path_map, leek.leek_cell)
+				//};
+			//}
+		//}
+		//radar_zones[zone].leeks[LEEK_TYPE_ENEMY] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ENEMY], sortByPathLengthAsc);
+		//pushAll(all_leeks_in_zones[LEEK_TYPE_ENEMY], clone(radar_zones[zone].leeks[LEEK_TYPE_ENEMY], 2));
+		//// - ----
+		//// LEEK_TYPE_ALLY_SUMMON
+		//for (leek in getAliveLeeksByType(LEEK_TYPE_ALLY_SUMMON)) {
+			//if (radar_zones[zone].map[leek.leek_coordinates.line] & (1 << leek.leek_coordinates.cell)) {
+				//radar_zones[zone].leeks[LEEK_TYPE_ALLY_SUMMON][leek.leek_id] = {
+					//leek_id: leek.leek_id,
+					//pathLength: getPathLengthByPathCube(radar_leek_path_map, leek.leek_cell)
+				//};
+			//}
+		//}
+		//radar_zones[zone].leeks[LEEK_TYPE_ALLY_SUMMON] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ALLY_SUMMON], sortByPathLengthAsc);
+		//pushAll(all_leeks_in_zones[LEEK_TYPE_ALLY_SUMMON], clone(radar_zones[zone].leeks[LEEK_TYPE_ALLY_SUMMON], 2));
+		//// - ----
+		//// LEEK_TYPE_ENEMY_SUMMON
+		//for (leek in getAliveLeeksByType(LEEK_TYPE_ENEMY_SUMMON)) {
+			//if (radar_zones[zone].map[leek.leek_coordinates.line] & (1 << leek.leek_coordinates.cell)) {
+				//radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON][leek.leek_id] = {
+					//leek_id: leek.leek_id,
+					//pathLength: getPathLengthByPathCube(radar_leek_path_map, leek.leek_cell)
+				//};
+			//}
+		//}
+		//radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON] = arraySort(radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON], sortByPathLengthAsc);
+		//pushAll(all_leeks_in_zones[LEEK_TYPE_ENEMY_SUMMON], clone(radar_zones[zone].leeks[LEEK_TYPE_ENEMY_SUMMON], 2));
 	}
 	return {
 		leek_id: radarleek.leek_id,
 		radar_zones: radar_zones,
 		leek_path_map: radar_leek_path_map,
-		all_leeks_in_zones: all_leeks_in_zones
+		//all_leeks_in_zones: all_leeks_in_zones
 	};
 }
 

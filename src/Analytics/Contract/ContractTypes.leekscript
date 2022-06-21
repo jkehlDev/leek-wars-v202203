@@ -1,0 +1,157 @@
+/**
+ * AROUND
+ * TARGET
+ * PUSH
+ */
+global GBL_Contract_types = {
+	ON_ME: function(_contract) {
+		var binaryCell = convertCellIdToLineNdCell(myLeek().leek_cell);
+		return arrayFlatten(_fct_resolveContractOptions(
+			[],
+			_contract,
+			myLeek().leek_cell, {
+				map: [binaryCell.line: (1 << binaryCell.cell)],
+				coordinates_min: {
+					line: binaryCell.line cell: binaryCell.cell
+				},
+				coordinates_max: {
+					line: binaryCell.line cell: binaryCell.cell
+				},
+			},
+		));
+	},
+	AROUND: function(_contract) {
+		var _target_map = resolveToolLaunchAreaTemplateOnCell(_contract._tool_id, myLeek().leek_cell);
+		if (_contract._tool_id === CHIP_JUMP) {
+			_target_map.map = soustraire(
+				_target_map.map,
+				GBL_obstacles_map_binary_with_leek.map,
+				_target_map.coordinates_min.line,
+				_target_map.coordinates_max.line
+			);
+		}
+		return arrayFlatten(_fct_resolveContractOptions(
+			[],
+			_contract,
+			myLeek().leek_cell,
+			_target_map,
+		));
+	},
+	TARGET: function(_contract) {
+		var _leek;
+		var _contract_options = [];
+		var _target_area_by_leek_id = [];
+		var _all_leeks = arrayFilter(getAllAliveLeeks(), function(_leek) {
+			return _contract._filters_targets_preselect === 0 || ((_leek.leek_type & _contract._filters_targets_preselect) !== 0);
+		});
+		for (_leek in _all_leeks) {
+			_target_area_by_leek_id[_leek.leek_id] = resolveToolEffectAreaTemplateOnCell(_contract._tool_id, _leek.leek_cell);
+			if (_contract._tool_id === CHIP_JUMP) {
+				_target_area_by_leek_id[_leek.leek_id].map = soustraire(
+					_target_area_by_leek_id[_leek.leek_id].map,
+					GBL_obstacles_map_binary_with_leek.map,
+					_target_area_by_leek_id[_leek.leek_id].coordinates_min.line,
+					_target_area_by_leek_id[_leek.leek_id].coordinates_max.line
+				);
+			}
+		}
+		var _caster_cell_ids = convertBinaryMapToCellIdMap(
+			GBL_myLeek_current_path.mapAll,
+			GBL_myLeek_current_path.coordinates_min,
+			GBL_myLeek_current_path.coordinates_max);
+		_caster_cell_ids = arrayFilter(_caster_cell_ids, function(_cell) {
+			return getCellDistance(_cell.cell_id, myLeek().leek_cell) <= myLeek().leek_mp;
+		});
+		var _caster_cell, _launch_area_map, _touch_map;
+		for (_caster_cell in _caster_cell_ids) {
+			_launch_area_map = resolveToolLaunchAreaTemplateOnCell(_contract._tool_id, _caster_cell.cell_id);
+			for (_leek in _all_leeks) {
+				if (_leek.leek_id !== GBL_myLeek_id) {
+					_touch_map = {
+						map: intersection(_launch_area_map.map,
+							_target_area_by_leek_id[_leek.leek_id].map,
+							_target_area_by_leek_id[_leek.leek_id].coordinates_min.line,
+							_target_area_by_leek_id[_leek.leek_id].coordinates_max.line),
+						coordinates_min: _target_area_by_leek_id[_leek.leek_id].coordinates_min,
+						coordinates_max: _target_area_by_leek_id[_leek.leek_id].coordinates_max
+					};
+					if (binaryMapNotEmpty(_touch_map.map, _touch_map.coordinates_min.line, _touch_map.coordinates_max.line)) {
+						_contract_options = _fct_resolveContractOptions(
+							_contract_options,
+							_contract,
+							_caster_cell.cell_id,
+							_touch_map,
+						);
+					}
+				}
+			}
+		}
+
+		// CASTING ON SELF
+		if (_target_area_by_leek_id[GBL_myLeek_id] !== null) {
+			_launch_area_map = resolveToolLaunchAreaTemplateOnCell(_contract._tool_id, myLeek().leek_cell);
+			_touch_map = {
+				map: intersection(_launch_area_map.map,
+					_target_area_by_leek_id[GBL_myLeek_id].map,
+					_target_area_by_leek_id[GBL_myLeek_id].coordinates_min.line,
+					_target_area_by_leek_id[GBL_myLeek_id].coordinates_max.line),
+				coordinates_min: _target_area_by_leek_id[GBL_myLeek_id].coordinates_min,
+				coordinates_max: _target_area_by_leek_id[GBL_myLeek_id].coordinates_max
+			};
+			if (binaryMapNotEmpty(_touch_map.map, _touch_map.coordinates_min.line, _touch_map.coordinates_max.line)) {
+				_contract_options = _fct_resolveContractOptions(
+					_contract_options,
+					_contract,
+					myLeek().leek_cell,
+					_touch_map,
+				);
+			}
+		}
+
+		return arrayFlatten(_contract_options);
+	},
+	PUSH: function(_contract) {
+		var _contract_options = [];
+		var _leek, _target_leek_cell_id, _resolved_cast_map, _caster_cell_ids, _caster_cell, _select_target_area_map;
+		var _launch_area_map, _touch_map;
+		var _all_leeks = arrayFilter(getAllAliveLeeks(), function(_leek) {
+			return _contract._filters_targets_preselect === 0 || (_leek.leek_type & _contract._filters_targets_preselect) !== 0;
+		});
+		for (_leek in _all_leeks) {
+			if (_leek.leek_id !== GBL_myLeek_id) {
+				_target_leek_cell_id = getLeekById(_leek.leek_id).leek_cell;
+				_resolved_cast_map = intersection(resolveAreaTemplateOnCell(AREA_PUNCH.select_cast_area, _target_leek_cell_id, true, GBL_obstacles_map_binary).map,
+					GBL_myLeek_current_path.mapAll,
+					GBL_myLeek_current_path.coordinates_min.line,
+					GBL_myLeek_current_path.coordinates_max.line);
+				_caster_cell_ids = convertBinaryMapToCellIdMap(_resolved_cast_map,
+					GBL_myLeek_current_path.coordinates_min,
+					GBL_myLeek_current_path.coordinates_max);
+				_caster_cell_ids = arrayFilter(_caster_cell_ids, function(_cell) {
+					return getCellDistance(_cell.cell_id, myLeek().leek_cell) <= myLeek().leek_mp;
+				});
+				for (_caster_cell in _caster_cell_ids) {
+					// resolve intersection between launch area and target area 
+					_launch_area_map = resolveAreaTemplateOnCell(AREA_PUNCH.select_target_area, _caster_cell.cell_id, true, GBL_obstacles_map_binary);
+					_select_target_area_map = resolveAreaTemplateOnCell(AREA_PUNCH.select_target_area, _target_leek_cell_id, true, GBL_obstacles_map_binary);
+					_touch_map = {
+						map: intersection(
+							_select_target_area_map.map,
+							_launch_area_map.map,
+							_select_target_area_map.coordinates_min.line,
+							_select_target_area_map.coordinates_max.line),
+						coordinates_min: _select_target_area_map.coordinates_min,
+						coordinates_max: _select_target_area_map.coordinates_max
+					};
+					_contract_options = _fct_resolveContractOptions(
+						_contract_options,
+						_contract,
+						_caster_cell.cell_id,
+						_touch_map,
+					);
+				}
+			}
+		}
+		return arrayFlatten(_contract_options);
+	},
+}

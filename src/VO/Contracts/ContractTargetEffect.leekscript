@@ -1,0 +1,20 @@
+/**
+ * _effect_type;
+ * _effect_value;
+ * _effect_duration;
+ * */
+class ContractTargetEffect {
+	_effect_type;
+	_effect_value;
+	_effect_duration;
+
+	constructor(
+		effect_type,
+		effect_value,
+		effect_duration,
+	) {
+		this._effect_type = effect_type;
+		this._effect_value = effect_value;
+		this._effect_duration = effect_duration;
+	}
+}

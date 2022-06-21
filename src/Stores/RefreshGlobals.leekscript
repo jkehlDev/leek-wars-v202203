@@ -6,6 +6,7 @@ function refreshGlobals() {
 	// -- LEEKS -- 
 	GBL_myLeek_id = getEntity();
 	_updateStorageLeeks();
+	_refreshLeekStatePerTurn();
 	GBL_obstacles_map_binary_with_leek = filter_cells_all_obstacles();
 	GBL_obstacles_map_binary_with_leek_area = filter_cells_all_obstacles_nd_leek_allies_area();
 	// -- ANALYTICS --	
@@ -14,7 +15,7 @@ function refreshGlobals() {
 	GBL_myLeek_is_stick = isLeekStickByLeekId(_myLeek_tmp);
 	_refreshRadarZones();
 	_refreshRadarTactic();
-	_refreshLeekStatePerTurn();
+
 	// -- -- 
 	//console.warn('Globals refresh Ops : ' + (getOperations() - init_op));
 };

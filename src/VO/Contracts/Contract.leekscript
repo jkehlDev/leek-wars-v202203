@@ -1,0 +1,43 @@
+/**
+ * _tool_id;
+ * _type;
+ * _filters;
+ * _sorters;
+ * */
+class Contract {
+	_tool_id;
+	_type;
+	_filters_targets_preselect;
+	_filters_targets_Fct;
+	_filters_options_Fct;
+	_sorters_fct;
+
+	constructor(tool_id, type, filters, sorters) {
+		this._type = type;
+		this._tool_id = tool_id;
+
+		this._filters_targets_preselect = arrayFoldLeft(
+			arrayFilter(filters, function(_filter) {
+				return (_filter._type & GBL_Contract_filter_type_target_preselect) === GBL_Contract_filter_type_target_preselect;
+			}),
+			function(_fold, _filterObj) {
+				return _fold | _filterObj._target_type;
+			}, 0);
+		
+		var _target_filters = arrayMap(arrayFilter(filters, function(_filter) {
+			return (_filter._type & GBL_Contract_filter_type_target) !== 0;
+		}), function(_filterObj) {
+			return _filterObj._filter;
+		});
+		this._filters_targets_Fct = arrayFoldLeft(_target_filters, _FoldFilters, GBL_fold_filter_true);
+
+		var _option_filters = arrayMap(arrayFilter(filters, function(_filter) {
+			return (_filter._type & GBL_Contract_filter_type_option) !== 0;
+		}), function(_filterObj) {
+			return _filterObj._filter;
+		});
+		this._filters_options_Fct = arrayFoldLeft(_option_filters, _FoldFilters, GBL_fold_filter_true);
+
+		this._sorters_fct = arrayFoldLeft(sorters, _FoldSorters, GBL_fold_sorter_zero);
+	}
+}

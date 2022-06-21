@@ -49,6 +49,12 @@ class Tool {
 			this.tool_isSummon = isToolCastSummon(this.tool_id);
 		}
 	}
+
+	getToolEffectiveArea(_caster_cell, _target_cell) {
+		return this.tool_isWeapon ?
+			getWeaponEffectiveArea(this.tool_id, _target_cell, _caster_cell) :
+			getChipEffectiveArea(this.tool_id, _target_cell, _caster_cell);
+	}
 }
 
 function isToolCastSummon(tool_id) {

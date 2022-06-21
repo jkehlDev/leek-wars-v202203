@@ -1,0 +1,181 @@
+/**
+ * Contract options resolvers
+ * @param _contract : Contract  Contract to resolve
+ * @return Resolved options for contract
+ * */
+function FCT_ResolveContractOptions(_contract) {
+	return arraySort(arrayFilter(_contract._type(_contract), _contract._filters_options_Fct), _contract._sorters_fct);
+}
+// ____________________________________________________
+// ---------------------- UTILS -----------------------
+function _fct_resolveContractOptions(_contract_options, _contract, _caster_cell, _target_map) {
+	var currentTool = getToolById(_contract._tool_id);
+	var _target_cells = arrayMap(convertBinaryMapToCellIdMap(_target_map.map,
+		_target_map.coordinates_min,
+		_target_map.coordinates_max), function(_target_cell) {
+		return _target_cell.cell_id;
+	});
+
+	if (currentTool.tool_needLos) {
+		_target_cells = arrayFilter(_target_cells, function(_target_cell) {
+			return lineOfSight(_caster_cell, _target_cell);
+		});
+	}
+	var _target_cell, _affected_cells, _cell_id, _leek_id_tmp, _is_caster_affected, _affected_leeks;
+	var _options_partials = [];
+	for (_target_cell in _target_cells) {
+		_affected_leeks = [];
+		_is_caster_affected = false;
+		_affected_cells = currentTool.getToolEffectiveArea(_caster_cell, _target_cell);
+		if (_affected_cells === null) {
+			_affected_cells = [];
+		}
+		for (_cell_id in _affected_cells) {
+			if (_caster_cell === _cell_id) {
+				if (
+					arrayInclude(currentTool.tool_effects,
+						function(_tool_effect) {
+							return isEffectEnableOn(myLeek(), _tool_effect);
+						})
+				) {
+					_is_caster_affected = true;
+					push(_affected_leeks, GBL_myLeek_id);
+				}
+
+			} else {
+				_leek_id_tmp = getEntityOnCell(_cell_id);
+				if (_leek_id_tmp !== -1) {
+					push(_affected_leeks, _leek_id_tmp);
+				}
+			}
+
+		}
+
+		if (
+			currentTool.tool_effectAreaType === AREA_LASER_LINE ||
+			currentTool.tool_effectAreaType === AREA_FIRST_INLINE ||
+			_contract_options[_target_cell] === null ||
+			(_is_caster_affected && count(_contract_options[_target_cell]) < 6)
+		) {
+			push(_options_partials, new ContractOption(
+				_contract._tool_id,
+				_caster_cell,
+				_target_cell,
+				_fct_resolveContractOptionTargets(_contract, _caster_cell, _target_cell, _affected_leeks)));
+		} else {
+			push(_options_partials, new ContractOption(
+				-1,
+				_caster_cell,
+				_target_cell,
+				[],
+			));
+		}
+	}
+
+	var _contract_options_partial =
+		arrayFilter(
+			_options_partials,
+			function(_options_partial) {
+				return _options_partial._tool_id === -1 || _contract._filters_targets_Fct({
+					_tool_id: _options_partial._tool_id,
+					_caster_cell: _options_partial._caster_cell,
+					_target_cell: _options_partial._target_cell,
+					_targets: _options_partial._targets._option_targets,
+				});
+			});
+	var _options_partial_tmp;
+	for (_options_partial_tmp in _contract_options_partial) {
+		if (_options_partial_tmp._tool_id === -1) {
+			_options_partial_tmp = _contract_options[_options_partial_tmp._target_cell][0];
+			_options_partial_tmp._caster_cell = _caster_cell;
+		} else {
+			_options_partial_tmp._targets = _fct_resolveContractOptionTargetsWithEffects(_options_partial_tmp._targets);
+		}
+		if (_contract_options[_options_partial_tmp._target_cell] !== null) {
+			push(_contract_options[_options_partial_tmp._target_cell], _options_partial_tmp);
+		} else {
+			_contract_options[_options_partial_tmp._target_cell] = [_options_partial_tmp];
+		}
+	}
+
+	return _contract_options;
+};
+
+function _fct_resolveContractOptionTargets(_contract, _caster_cell, _target_cell, _affected_leeks) {
+	var _option_tool_effects = arrayMap(
+		getToolById(_contract._tool_id).tool_effects,
+		function(_tool_effect) {
+			var _effect_on_leeks = [];
+			var _touched_leeks = [];
+			var _effect_leeks = [];
+			_touched_leeks =
+				arrayFilter(
+					_affected_leeks,
+					function(_leek_id) {
+						return isEffectEnableOn(getLeekById(_leek_id), _tool_effect);
+					});
+			var _touched_leeks_count = count(_touched_leeks);
+
+			if (_tool_effect.isOnCaster) {
+				if (_tool_effect.isStackable || !isEffectToolExistOn(myLeek(), _contract._tool_id)) {
+					_effect_leeks = [myLeek().leek_id];
+					push(_touched_leeks, myLeek().leek_id);
+				}
+			} else {
+				_effect_leeks = _touched_leeks;
+			}
+
+			return {
+				_tool_id: _contract._tool_id,
+				_caster_cell: _caster_cell,
+				_target_cell: _target_cell,
+				_tool_effect: _tool_effect,
+				_touched_leeks: _touched_leeks,
+				_effect_leeks: _effect_leeks,
+				_touched_leeks_count: _touched_leeks_count
+			}
+		});
+	var _option_targets = [];
+	var _tool_effect, _touched_leek_id;
+	for (_tool_effect in _option_tool_effects) {
+		for (_touched_leek_id in _tool_effect._touched_leeks) {
+			if (_option_targets[_touched_leek_id] === null) {
+				_option_targets[_touched_leek_id] = new ContractOptionTarget(_touched_leek_id, _tool_effect._target_cell, []);
+			}
+		}
+	}
+	return {
+		_option_targets: _option_targets,
+		_option_tool_effects: _option_tool_effects
+	};
+
+}
+
+function _fct_resolveContractOptionTargetsWithEffects(_option_targets_partial) {
+	var _tool_effect, _touched_leek_id, _touched_leek, _tool_effect_on_leek;
+	for (_tool_effect in _option_targets_partial._option_tool_effects) {
+		for (_touched_leek_id in _tool_effect._effect_leeks) {
+			_touched_leek = getLeekById(_touched_leek_id);
+			_tool_effect_on_leek = new ContractTargetEffect(
+				_tool_effect._tool_effect.type,
+				EvalEffectValue[_tool_effect._tool_effect.type](
+					myLeek(),
+					_touched_leek,
+					_tool_effect._tool_effect,
+					_tool_effect._tool_id,
+					_tool_effect._touched_leeks_count,
+					_tool_effect._caster_cell,
+					_tool_effect._target_cell,
+					_touched_leek.leek_isCaster ?
+					(_tool_effect._tool_effect.isOnCaster ?
+						_tool_effect._target_cell :
+						_tool_effect._caster_cell) :
+					_touched_leek.leek_cell
+				),
+				_tool_effect._tool_effect.nbTurns
+			);
+			push(_option_targets_partial._option_targets[_touched_leek_id]._target_effects, _tool_effect_on_leek);
+		}
+	}
+	return _option_targets_partial._option_targets;
+};

@@ -107,7 +107,7 @@ function filter_cells_all_obstacles_nd_leek_allies_area() {
 	var _leek, coord, area_map;
 	for (_leek in getAllAlliesAliveLeeks()) {
 		if (_leek.leek_id !== GBL_myLeek_id && _leek.leek_isAlive) {
-			area_map = resolveAreaTemplateOnCell(GBL_effect_area_template_by_area_type_id[GBL_LEEK_AREA], _leek.leek_cell, true);
+			area_map = resolveAreaTemplateOnCell(GBL_effect_area_template_by_area_type_id[GBL_LEEK_AREA], _leek.leek_cell, true, GBL_obstacles_map_binary);
 			result = union(result, area_map.map, area_map.coordinates_min.line, area_map.coordinates_max.line);
 		}
 	}

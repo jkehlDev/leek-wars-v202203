@@ -1,0 +1,20 @@
+/**
+ * _target_id;
+ * _target_cell;
+ * _target_effects;
+ * */
+class ContractOptionTarget {
+	_target_id;
+	_target_cell;
+	_target_effects;
+
+	constructor(
+		target_id,
+		target_cell,
+		target_effects
+	) {
+		this._target_id = target_id;
+		this._target_cell = target_cell;
+		this._target_effects = target_effects;
+	}
+}

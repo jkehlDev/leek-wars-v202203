@@ -11,17 +11,19 @@ global resolve_IA_by_role = [
 global _IA_init = false;
 global _IA_cards = [];
 global TANK_DEVIL_EFFECT_DAMAGE;
+global GBL_TP_BONUS = 10;
 
 // - INIT GLOBALS CARDS
-if (!_IA_tank_init) {
+if (!_IA_init) {
 	TANK_DEVIL_EFFECT_DAMAGE = arrayFind(getToolById(CHIP_DEVIL_STRIKE).tool_effects, function(_tool_effect) {
 		return _tool_effect.type === EFFECT_DAMAGE;
 	});
-	var _tpMax = myLeek().leek_tpMax + 6;
+	var _tpMax = myLeek().leek_tpMax + GBL_TP_BONUS;
 	_IA_init = true;
 	_IA_cards = [
 		'JUMP': new ToolCard([], [CHIP_JUMP], _tpMax),
 		'PUSH': new ToolCard([], [CHIP_BOXING_GLOVE], _tpMax),
+		'BUFF': new ToolCard([], [CHIP_COVETOUSNESS, CHIP_ADRENALINE, CHIP_THORN, CHIP_MOTIVATION], _tpMax),
 		'ABSOLUTE_SHIELD': new ToolCard([], [
 			CHIP_SOLIDIFICATION,
 			CHIP_ARMOR,
@@ -33,28 +35,22 @@ if (!_IA_tank_init) {
 			CHIP_FORTRESS,
 			CHIP_WALL
 		], _tpMax),
-		'HEAL_EMERGENCY': new ToolCard([], [
+		'HEAL': new ToolCard([], [
 			CHIP_KNOWLEDGE,
-			CHIP_VAMPIRIZATION,
 			CHIP_REGENERATION,
+			CHIP_VAMPIRIZATION,
+			CHIP_THERAPY,
 			CHIP_REMISSION,
-			CHIP_INVERSION,
-			CHIP_CURE,
 			CHIP_DRIP,
+			CHIP_CURE,
 			CHIP_BANDAGE,
-			CHIP_VACCINE,
-			CHIP_ARMORING
 		], _tpMax),
-		'HEAL_WARN': new ToolCard([], [
+		'HEAL_2': new ToolCard([], [
 			CHIP_KNOWLEDGE,
 			CHIP_VAMPIRIZATION,
-			CHIP_REMISSION,
-			CHIP_INVERSION,
-			CHIP_CURE,
 			CHIP_DRIP,
+			CHIP_CURE,
 			CHIP_BANDAGE,
-			CHIP_VACCINE,
-			CHIP_ARMORING
 		], _tpMax),
 		'HEAL_ANTIDOTE': new ToolCard([], [CHIP_ANTIDOTE, CHIP_LIBERATION], _tpMax),
 		'HEAL_REGEN': new ToolCard([], [
@@ -64,14 +60,6 @@ if (!_IA_tank_init) {
 			CHIP_MUTATION
 			CHIP_ARMORING,
 			CHIP_LOAM,
-		], _tpMax),
-		'HEAL_SELF': new ToolCard([], [
-			CHIP_KNOWLEDGE,
-			CHIP_VAMPIRIZATION,
-			CHIP_REMISSION,
-			CHIP_CURE,
-			CHIP_BANDAGE,
-			CHIP_DRIP
 		], _tpMax),
 		'DEBUFF': new ToolCard([], [
 			CHIP_LIBERATION,
@@ -84,8 +72,20 @@ if (!_IA_tank_init) {
 			CHIP_FRACTURE,
 			CHIP_CRUSHING
 		], _tpMax),
+		'BUFF': new ToolCard([], [
+			CHIP_COVETOUSNESS,
+			CHIP_ADRENALINE,
+			CHIP_MOTIVATION,
+			CHIP_WIZARDRY,
+			CHIP_STEROID,
+			CHIP_PROTEIN,
+			CHIP_WARM_UP,
+			CHIP_STRETCHING,
+			CHIP_LEATHER_BOOTS,
+		], _tpMax),
 		'DAMAGE_ZONE': new ToolCard([], [
 			CHIP_PROTEIN,
+			CHIP_STEROID,
 			CHIP_DESINTEGRATION,
 			CHIP_ALTERATION,
 			CHIP_DEVIL_STRIKE,
@@ -107,6 +107,7 @@ if (!_IA_tank_init) {
 		'WEAPONS': new ToolCard([],
 			arrayConcat([
 					CHIP_PROTEIN,
+					CHIP_STEROID,
 					CHIP_WIZARDRY
 				],
 				arrayConcat(myLeek().leek_weapons, [
@@ -139,745 +140,130 @@ function displayContext() {
 		' - leek_lifePop : ' + myLeekState.leek_lifePop,
 	]);
 }
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_JUMP(_priority, _target_cell) {
-	var myLeekState = getLeekStateById(GBL_myLeek_id);
-	var _isJump = false;
-	if (GBL_myLeek_is_stick || _priority) {
-		var _selectedOptions = _IA_cards['JUMP'].getOptionsBy(
-			[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-			GBL_sort_toolCardOption_by_cost_dsc, []);
-		var _currentOption, _tool_id, _contract, _launchs;
-		if (count(_selectedOptions) > 0) {
-			_currentOption = shift(_selectedOptions);
-			_tool_id = shift(_currentOption._cast_array);
-			_contract = new LaunchContract(
-				launch_resolvers.CAST_AROUND,
-				[],
-				[],
-				[_priority ? launch_sorters.SORT_MIN_TARGET_DISTANCE_TO(_target_cell) : launch_sorters.SORT_SAFER_TARGET_CELL],
-				_tool_id);
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_launchs.selected_launchs[0].launch();
-				_isJump = true;
-			}
-		}
-	}
-	return _isJump;
-}
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_JUMP_TO(_priority, _target_cell) {
-	var _isJump = false;
-	if (_priority) {
-		var _selectedOptions = _IA_cards['JUMP'].getOptionsBy(
-			[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-			GBL_sort_toolCardOption_by_cost_dsc, []);
-		var _currentOption, _tool_id, _contract, _launchs;
-		if (count(_selectedOptions) > 0) {
-			_currentOption = shift(_selectedOptions);
-			_tool_id = shift(_currentOption._cast_array);
-			_contract = new LaunchContract(
-				launch_resolvers.CAST_AROUND,
-				[],
-				[],
-				[launch_sorters.SORT_MIN_TARGET_DISTANCE_TO(_target_cell)],
-				_tool_id);
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_launchs.selected_launchs[0].launch();
-				_isJump = true;
-			}
-		}
-	}
-	return _isJump;
-}
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_PUSH() {
-	var _selectedOptions = _IA_cards['PUSH'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _currentOption, _tool_id, _contract, _launchs;
-	if (count(_selectedOptions) > 0) {
-		_currentOption = shift(_selectedOptions);
-		_tool_id = shift(_currentOption._cast_array);
-		_contract = new LaunchContract(
-			launch_resolvers.CAST_PUSH,
-			[
-				GBL_launch_filters_before_linearize.TARGET_ONLY_ENEMIES,
-				GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-			],
-			[GBL_launch_filters_after_linearize.NO_LESS_EFFECT_OF(
-				[{
-					type: EFFECT_PUSH,
-					value: 3
-				}]
-			)],
-			[launch_sorters.SORT_UNSAFER_TARGET_CELL],
-			_tool_id);
-		_launchs = new Launchs(_contract);
-		if (count(_launchs.selected_launchs) > 0) {
-			_launchs.selected_launchs[0].launch();
-		}
-	}
-}
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_ABSOLUTE_SHIELD(_next_cell) {
-	if (GBL_radar_tactic_map_by_cells[_next_cell].enemies_data.zone_sum_life > 0) {
-		var _selectedOptions = _IA_cards['ABSOLUTE_SHIELD'].getOptionsBy(
-			[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-			GBL_sort_toolCardOption_by_cost_dsc, []);
-		var _currentOption, _tool_id, _contract, _launchs;
-		if (count(_selectedOptions) > 0) {
-			_currentOption = shift(_selectedOptions);
-			for (_tool_id in _currentOption._cast_array) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_AROUND,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_CASTER,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-					],
-					[],
-					[],
-					_tool_id);
-				_launchs = new Launchs(_contract);
-				if (count(_launchs.selected_launchs) > 0) {
-					_launchs.selected_launchs[0].launch();
-				}
-			}
-		}
-	}
-}
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_RELATIVE_SHIELD(_next_cell) {
-	if (GBL_radar_tactic_map_by_cells[_next_cell].enemies_data.zone_sum_life > 0) {
-		var _selectedOptions = _IA_cards['RELATIVE_SHIELD'].getOptionsBy(
-			[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-			GBL_sort_toolCardOption_by_cost_dsc, []);
-		var _currentOption, _tool_id, _contract, _launchs;
-		if (count(_selectedOptions) > 0) {
-			_currentOption = shift(_selectedOptions);
-			for (_tool_id in _currentOption._cast_array) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_AROUND,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_CASTER,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-					],
-					[],
-					[],
-					_tool_id);
-				_launchs = new Launchs(_contract);
-				if (count(_launchs.selected_launchs) > 0) {
-					_launchs.selected_launchs[0].launch();
-				}
-			}
-		}
-	}
-}
-// -- --------------------------------------------------------------------------------------------------
+
+
 function GBL_Resolve_SUMMONS() {
 	var _selectedOptions = _IA_cards['SUMMONS'].getOptionsBy(
 		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
 		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _currentOption, _tool_id, _contract, _launchs;
+	var _currentOption, _tool_id, _contract, _contract_options;
 	if (count(_selectedOptions) > 0) {
 		_currentOption = shift(_selectedOptions);
 		for (_tool_id in _currentOption._cast_array) {
-			_contract = new LaunchContract(
-				launch_resolvers.CAST_AROUND,
+			_contract = new Contract(
+				_tool_id,
+				GBL_Contract_types.AROUND,
 				[],
-				[],
-				[launch_sorters.SORT_UNSAFER_TARGET_CELL, ],
-				_tool_id);
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_launchs.selected_launchs[0].launch();
+				[GBL_Contract_sorters.TARGET_SAFEST()]);
+			_contract_options = FCT_ResolveContractOptions(_contract);
+			if (count(_contract_options) > 0) {
+				shift(_contract_options).use();
 			}
 		}
 	}
 }
 // -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_HEAL_EMERGENCY() {
-	var _selectedOptions = _IA_cards['HEAL_EMERGENCY'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _isExecuted = false;
-	var _excludeTools = [];
-	var _currentOption, _tool_id, _contract, _launchs, _selected_launch;
-	while (count(_selectedOptions) > 0 && !_isExecuted) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			if (_tool_id === CHIP_KNOWLEDGE) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_AROUND,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_CASTER,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-					],
-					[],
-					[],
-					_tool_id);
-			} else
-			if (_tool_id === CHIP_REGENERATION) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_ALLIES,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY,
-						GBL_launch_filters_before_linearize.TARGET_NOT_SUMMONS
-					],
-					[
-						GBL_launch_filters_after_linearize.NO_EFFECT_LESS_ON(
-							EFFECT_HEAL,
-							LEEK_TYPE_ALLY,
-							400),
-						GBL_launch_filters_after_linearize.PRIORITY_TARGET(
-							getLeeksStateWithRadarSelect(getAllAlliesAliveLeeks()),
-							function(_leek_state) {
-								return _leek_state.leek_lifeEmergency;
-							}
-						)
-					],
-					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_UNSAFER_TARGET_CELL,
-						launch_sorters.SORT_MIN_CAST_DISTANCE
-					],
-					_tool_id);
-			} else
-			if (_tool_id === CHIP_VAMPIRIZATION) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_AT_LEAST_X_TYPE_OF_LEEKS([{
-							typesOf: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-							count: 2
-						}])
-					],
-					[
-						GBL_launch_filters_after_linearize.NO_EFFECT_LESS_ON(
-							EFFECT_HEAL,
-							LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-							100),
-						GBL_launch_filters_after_linearize.PRIORITY_TARGET(
-							getLeeksStateWithRadarSelect(getAllAlliesAliveLeeks()),
-							function(_leek_state) {
-								return _leek_state.leek_lifeEmergency;
-							}
-						)
-					],
-					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_MIN_CAST_DISTANCE
-					],
-					_tool_id);
-			} else {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_ALLIES,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY,
-						GBL_launch_filters_before_linearize.TARGET_NOT_SUMMONS
-					],
-					[
-						GBL_launch_filters_after_linearize.NO_EFFECT_LESS_ON(
-							EFFECT_HEAL,
-							LEEK_TYPE_ALLY,
-							50),
-						GBL_launch_filters_after_linearize.PRIORITY_TARGET(
-							getLeeksStateWithRadarSelect(getAllAlliesAliveLeeks()),
-							function(_leek_state) {
-								return _leek_state.leek_lifeEmergency;
-							}
-						)
-					],
-					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_UNSAFER_TARGET_CELL,
-						launch_sorters.SORT_MIN_CAST_DISTANCE
-					],
-					_tool_id);
-			}
-
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_isExecuted = true;
-				_launchs.selected_launchs[0].launch();
-			} else {
-				_isExecuted = false;
-				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_cards['HEAL_EMERGENCY'].getOptionsBy(
-					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
-				break;
-			}
-		}
-	}
-}
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_HEAL_WARN() {
-	var _selectedOptions = _IA_cards['HEAL_WARN'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _isExecuted = false;
-	var _excludeTools = [];
-	var _currentOption, _tool_id, _contract, _launchs, _selected_launch;
-	while (count(_selectedOptions) > 0 && !_isExecuted) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			if (_tool_id === CHIP_KNOWLEDGE) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_AROUND,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_CASTER,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-					],
-					[],
-					[],
-					_tool_id);
-			}
-			if (_tool_id === CHIP_VAMPIRIZATION) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_AT_LEAST_X_TYPE_OF_LEEKS([{
-							typesOf: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-							count: 2
-						}])
-					],
-					[
-						GBL_launch_filters_after_linearize.NO_EFFECT_LESS_ON(
-							EFFECT_HEAL,
-							LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-							150),
-						GBL_launch_filters_after_linearize.PRIORITY_TARGET(
-							getLeeksStateWithRadarSelect(getAllAlliesAliveLeeks()),
-							function(_leek_state) {
-								return _leek_state.leek_lifeWarn;
-							}
-						)
-					],
-					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_MIN_CAST_DISTANCE
-					],
-					_tool_id);
-			} else {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_ALLIES,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY,
-						GBL_launch_filters_before_linearize.TARGET_NOT_SUMMONS
-					],
-					[
-						GBL_launch_filters_after_linearize.NO_EFFECT_LESS_ON(
-							EFFECT_HEAL,
-							LEEK_TYPE_ALLY,
-							50),
-						GBL_launch_filters_after_linearize.PRIORITY_TARGET(
-							getLeeksStateWithRadarSelect(getAllAlliesAliveLeeks()),
-							function(_leek_state) {
-								return _leek_state.leek_lifeWarn;
-							}
-						)
-					],
-					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_UNSAFER_TARGET_CELL,
-						launch_sorters.SORT_MIN_CAST_DISTANCE
-					],
-					_tool_id);
-			}
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_isExecuted = true;
-				_launchs.selected_launchs[0].launch();
-			} else {
-				_isExecuted = false;
-				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_cards['HEAL_WARN'].getOptionsBy(
-					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
-				break;
-			}
-		}
-	}
-}
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_HEAL_ANTIDOTE() {
-	var _selectedOptions = _IA_cards['HEAL_ANTIDOTE'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _isExecuted = false;
-	var _excludeTools = [];
-	var _currentOption, _tool_id, _contract, _launchs, _selected_launch;
-	while (count(_selectedOptions) > 0 && !_isExecuted) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			_contract = new LaunchContract(
-				launch_resolvers.CAST_ON_TARGET,
-				[
-					GBL_launch_filters_before_linearize.TARGET_ONLY_ALLIES,
-					GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY,
-					GBL_launch_filters_before_linearize.TARGET_NOT_SUMMONS
-				],
-				[
-					GBL_launch_filters_after_linearize.PRIORITY_TARGET(
-						getLeeksStateWithRadarSelect(getAllAlliesAliveLeeks()),
-						function(_leek_state) {
-							return _leek_state.leek_poison >= floor(_leek_state.leek_life / 3);
-						}
-					)
-				],
-				[
-					launch_sorters.SORT_MAX_EFFECT_VALUE,
-					launch_sorters.SORT_UNSAFER_TARGET_CELL,
-					launch_sorters.SORT_MIN_CAST_DISTANCE
-				],
-				_tool_id);
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_isExecuted = true;
-				_launchs.selected_launchs[0].launch();
-			} else {
-				_isExecuted = false;
-				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_cards['HEAL_ANTIDOTE'].getOptionsBy(
-					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
-				break;
-			}
-		}
-	}
-}
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_HEAL_REGEN(_targetParams) {
-	var _selectedOptions = _IA_cards['HEAL_REGEN'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _isExecuted = false;
-	var _excludeTools = [];
-	var _currentOption, _tool_id, _contract, _launchs, _selected_launch;
-	while (count(_selectedOptions) > 0 && !_isExecuted) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			if (_tool_id === CHIP_KNOWLEDGE) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_AROUND,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_CASTER,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-					],
-					[],
-					[],
-					_tool_id);
-			} else {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					_targetParams,
-					[],
-					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_UNSAFER_TARGET_CELL,
-						launch_sorters.SORT_MIN_CAST_DISTANCE
-					],
-					_tool_id);
-			}
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_isExecuted = true;
-				_launchs.selected_launchs[0].launch();
-			} else {
-				_isExecuted = false;
-				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_cards['HEAL_REGEN'].getOptionsBy(
-					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
-				break;
-			}
-		}
-	}
-}
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_DAMAGE_ZONE() {
-	var _selectedOptions = _IA_cards['DAMAGE_ZONE'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _isExecuted = false;
-	var _excludeTools = [];
-	var _contract, _currentOption, _tool_id, _launchs;
-	while (count(_selectedOptions) > 0 && !_isExecuted) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			if (_tool_id === CHIP_PROTEIN || _tool_id === CHIP_STEROID) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_AROUND,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_CASTER,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-					],
-					[],
-					[],
-					_tool_id);
-			} else
-			if (_tool_id === CHIP_DEVIL_STRIKE) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_AT_LEAST_X_TYPE_OF_LEEKS([{
-							typesOf: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-							count: 2
-						}]),
-						GBL_launch_filters_before_linearize.TARGET_CASTER_AND_ENEMIES
-					],
-					[
-						GBL_launch_filters_after_linearize.NO_EFFECT_LESS_ON(
-							EFFECT_DAMAGE,
-							LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-							min(300, evaluateEffect(myLeek(), myLeek(), TANK_DEVIL_EFFECT_DAMAGE, CHIP_DEVIL_STRIKE, 0) * 2))
-					],
-					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_SAFER_TARGET_CELL,
-						launch_sorters.SORT_MIN_CAST_DISTANCE,
-					],
-					_tool_id);
-			} else {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_ENEMIES,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY,
-					],
-					[
-						GBL_launch_filters_after_linearize.NO_EFFECTS_LESS_ON([{
-								effect_type: EFFECT_DAMAGE,
-								leek_type: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-								valueMin: 0
-							},
-							{
-								effect_type: EFFECT_LIFE_DAMAGE,
-								leek_type: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-								valueMin: 0
-							}, {
-								effect_type: EFFECT_NOVA_VITALITY,
-								leek_type: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-								valueMin: 0
-							}, {
-								effect_type: EFFECT_POISON,
-								leek_type: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-								valueMin: 0
-							}
-						]),
-					],
-					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_SAFER_TARGET_CELL,
-						launch_sorters.SORT_MIN_CAST_DISTANCE,
-					],
-					_tool_id);
-			}
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_isExecuted = true;
-				_launchs.selected_launchs[0].launch();
-			} else {
-				_isExecuted = false;
-				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_cards['DAMAGE_ZONE'].getOptionsBy(
-					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
-				break;
-			}
-		}
-	}
-}
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_WEAPONS() {
-	var _selectedOptions = _IA_cards['WEAPONS'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _isExecuted = false;
-	var _excludeTools = [];
-	var _contract, _currentOption, _tool_id, _launchs, _selected_launch;
-	while (count(_selectedOptions) > 0 && !_isExecuted) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			if (_tool_id === CHIP_PROTEIN || _tool_id === CHIP_STEROID) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_AROUND,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_CASTER,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-					],
-					[],
-					[],
-					_tool_id);
-			} else {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_ENEMIES,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-					],
-					[
-						GBL_launch_filters_after_linearize.NO_EFFECTS_LESS_ON([{
-								effect_type: EFFECT_DAMAGE,
-								leek_type: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-								valueMin: 0
-							},
-							{
-								effect_type: EFFECT_LIFE_DAMAGE,
-								leek_type: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-								valueMin: 0
-							}, {
-								effect_type: EFFECT_NOVA_VITALITY,
-								leek_type: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-								valueMin: 0
-							}, {
-								effect_type: EFFECT_POISON,
-								leek_type: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-								valueMin: 0
-							}
-						]),
-					],
-					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_SAFER_TARGET_CELL,
-						launch_sorters.SORT_MIN_CAST_DISTANCE,
-					],
-					_tool_id);
-			}
-
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_isExecuted = true;
-				_launchs.selected_launchs[0].launch();
-			} else {
-				_isExecuted = false;
-				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_cards['WEAPONS'].getOptionsBy(
-					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
-				break;
-			}
-		}
-	}
-}
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_POISON() {
-	var _selectedOptions = _IA_cards['POISON'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _isExecuted = false;
-	var _excludeTools = [];
-	var _contract, _currentOption, _tool_id, _launchs, _selected_launch;
-	while (count(_selectedOptions) > 0 && !_isExecuted) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			if (_tool_id === CHIP_WIZARDRY) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_AROUND,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_CASTER,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-					],
-					[],
-					[],
-					_tool_id);
-			} else {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_ENEMIES,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-					],
-					[
-						GBL_launch_filters_after_linearize.NO_EFFECT_LESS_ON(
-							EFFECT_POISON,
-							LEEK_TYPE_ENEMY,
-							0),
-					],
-					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_SAFER_TARGET_CELL,
-						launch_sorters.SORT_MIN_CAST_DISTANCE,
-
-					],
-					_tool_id);
-			}
-
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_isExecuted = true;
-				_launchs.selected_launchs[0].launch();
-			} else {
-				_isExecuted = false;
-				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_cards['POISON'].getOptionsBy(
-					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
-				break;
-			}
-		}
-	}
-}
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_DEBUFF(_tpMalus) {
+function GBL_Resolve_DEBUFF(_tpMalus, _target_cell) {
 	var _selectedOptions = _IA_cards['DEBUFF'].getOptionsBy(
 		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp - _tpMalus)],
 		GBL_sort_toolCardOption_by_cost_dsc, []);
 	var _isExecuted = false;
 	var _excludeTools = [];
-	var _currentOption, _tool_id, _contract, _launchs, _selected_launch;
+	var _currentOption, _tool_id, _contract, _contract_options;
 	while (count(_selectedOptions) > 0 && !_isExecuted) {
 		_currentOption = shift(_selectedOptions);
 		_tool_id = shift(_currentOption._cast_array);
 		if (_tool_id === CHIP_LIBERATION) {
-			_contract = new LaunchContract(
-				launch_resolvers.CAST_ON_TARGET,
+			_contract = new Contract(
+				_tool_id,
+				GBL_Contract_types.TARGET,
 				[
-					GBL_launch_filters_before_linearize.TARGET_HAS_ONE_OF_EFFECTS(
-						[
-							EFFECT_ABSOLUTE_SHIELD,
-							EFFECT_RELATIVE_SHIELD,
-							EFFECT_RAW_BUFF_STRENGTH,
-							EFFECT_RAW_BUFF_MAGIC
-						], 0),
-					GBL_launch_filters_before_linearize.TARGET_ONLY_ENEMIES,
-					GBL_launch_filters_before_linearize.TARGET_NOT_SUMMONS,
-					GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
+					GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ENEMY),
+					GBL_Contract_filters.EFFECTS_OR([{
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_DEBUFF,
+						_minValue: 50,
+						_maxValue: 20000
+					}]),
 				],
-				[],
-				[launch_sorters.SORT_MAX_EFFECT_VALUE, launch_sorters.SORT_MIN_CAST_DISTANCE],
-				_tool_id);
+				[
+					GBL_Contract_sorters.EFFECT_DSC({
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_DEBUFF
+					}),
+					_target_cell !== null ? GBL_Contract_sorters.DIST_CAST_ASC_TO(_target_cell) : GBL_Contract_sorters.TARGET_SAFEST(),
+				]);
 		} else {
-			_contract = new LaunchContract(
-				launch_resolvers.CAST_ON_TARGET,
+			_contract = new Contract(
+				_tool_id,
+				GBL_Contract_types.TARGET,
 				[
-					GBL_launch_filters_before_linearize.TARGET_ONLY_ENEMIES,
-					GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
+					GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON),
+					GBL_Contract_filters.EFFECTS_OR([{
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_SHACKLE_AGILITY,
+						_minValue: 0,
+						_maxValue: 20000
+					}, {
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_SHACKLE_MAGIC,
+						_minValue: 0,
+						_maxValue: 20000
+					}, {
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_SHACKLE_MP,
+						_minValue: 0,
+						_maxValue: 20000
+					}, {
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_SHACKLE_STRENGTH,
+						_minValue: 0,
+						_maxValue: 20000
+					}, {
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_SHACKLE_TP,
+						_minValue: 0,
+						_maxValue: 20000
+					}, {
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_SHACKLE_WISDOM,
+						_minValue: 0,
+						_maxValue: 20000
+					}]),
 				],
-				[GBL_launch_filters_after_linearize.NO_NULL_EFFECT_OF(
-					[
-						EFFECT_SHACKLE_AGILITY,
-						EFFECT_SHACKLE_MAGIC,
-						EFFECT_SHACKLE_MP,
-						EFFECT_SHACKLE_STRENGTH,
-						EFFECT_SHACKLE_TP,
-						EFFECT_SHACKLE_WISDOM,
-					]
-				), ],
-				[launch_sorters.SORT_MAX_EFFECT_VALUE, launch_sorters.SORT_MIN_CAST_DISTANCE],
-				_tool_id);
+				[
+					GBL_Contract_sorters.EFFECT_DSC({
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_SHACKLE_AGILITY
+					}),
+					GBL_Contract_sorters.EFFECT_DSC({
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_SHACKLE_MAGIC
+					}),
+					GBL_Contract_sorters.EFFECT_DSC({
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_SHACKLE_MP
+					}),
+					GBL_Contract_sorters.EFFECT_DSC({
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_SHACKLE_STRENGTH
+					}),
+					GBL_Contract_sorters.EFFECT_DSC({
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_SHACKLE_TP
+					}),
+					GBL_Contract_sorters.EFFECT_DSC({
+						_target_type: LEEK_TYPE_ENEMY,
+						_effect_type: EFFECT_SHACKLE_WISDOM
+					}),
+					_target_cell !== null ? GBL_Contract_sorters.DIST_CAST_ASC_TO(_target_cell) : GBL_Contract_sorters.TARGET_SAFEST(),
+				]);
 		}
 
-		_launchs = new Launchs(_contract);
-		if (count(_launchs.selected_launchs) > 0) {
+		_contract_options = FCT_ResolveContractOptions(_contract);
+		if (count(_contract_options) > 0) {
+			shift(_contract_options).use();
 			_isExecuted = true;
-			_launchs.selected_launchs[0].launch();
 		} else {
 			_isExecuted = false;
 			push(_excludeTools, _tool_id);
@@ -888,191 +274,74 @@ function GBL_Resolve_DEBUFF(_tpMalus) {
 		}
 	}
 }
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_KILL_SHOOT(_tpMalus) {
-	var _selectedOptions = _IA_cards['DAMAGE_ZONE'].getOptionsBy(
+
+function GBL_Resolve_BUFF(_tpMalus, _target_cell) {
+	var _selectedOptions = _IA_cards['BUFF'].getOptionsBy(
 		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp - _tpMalus)],
 		GBL_sort_toolCardOption_by_cost_dsc, []);
 	var _isExecuted = false;
 	var _excludeTools = [];
-	var _contract, _currentOption, _tool_id, _launchs, _selected_launch;
+	var _currentOption, _tool_id, _contract, _contract_options;
 	while (count(_selectedOptions) > 0 && !_isExecuted) {
 		_currentOption = shift(_selectedOptions);
 		for (_tool_id in _currentOption._cast_array) {
-			if (_tool_id === CHIP_DEVIL_STRIKE) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
+			if (_tool_id === CHIP_COVETOUSNESS) {
+				_contract = new Contract(
+					_tool_id,
+					GBL_Contract_types.TARGET,
 					[
-						GBL_launch_filters_before_linearize.TARGET_AT_LEAST_X_TYPE_OF_LEEKS([{
-							typesOf: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-							count: 2
+						GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON | LEEK_TYPE_ALLY_CASTER),
+						GBL_Contract_filters.EFFECTS_OR([{
+							_target_type: LEEK_TYPE_ALLY_CASTER,
+							_effect_type: EFFECT_RAW_BUFF_TP,
+							_minValue: 2,
+							_maxValue: 100
 						}]),
-						GBL_launch_filters_before_linearize.TARGET_CASTER_AND_ENEMIES
 					],
 					[
-						GBL_launch_filters_after_linearize.NO_EFFECT_LESS_ON(
-							EFFECT_DAMAGE,
-							LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-							min(300, evaluateEffect(myLeek(), myLeek(), TANK_DEVIL_EFFECT_DAMAGE, CHIP_DEVIL_STRIKE, 0) * 2)),
-						GBL_launch_filters_after_linearize.PRIORITY_TARGET(
-							getLeeksStateWithRadarSelect(getAllEnemiesAliveLeeks()),
-							function(_leek_state) {
-								return _leek_state.leek_lifePop;
-							}
-						)
+						GBL_Contract_sorters.EFFECT_DSC({
+							_target_type: LEEK_TYPE_ALLY_CASTER,
+							_effect_type: EFFECT_RAW_BUFF_TP
+						}),
+						_target_cell !== null ? GBL_Contract_sorters.DIST_CAST_ASC_TO(_target_cell) : GBL_Contract_sorters.TARGET_SAFEST(),
+					]);
+			} else if (_tool_id === CHIP_THORN) {
+				_contract = new Contract(
+					_tool_id,
+					GBL_Contract_types.TARGET,
+					[
+						GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ALLY_CASTER | LEEK_TYPE_ALLY | LEEK_TYPE_ALLY_SUMMON),
+						GBL_Contract_filters.TARGETS_OR([{
+							_target_type: LEEK_TYPE_ALLY_CASTER,
+							_min_count: 1,
+							_max_count: 20
+						}]),
 					],
 					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_MIN_CAST_DISTANCE,
-						launch_sorters.SORT_UNSAFER_TARGET_CELL
-					],
-					_tool_id);
+						GBL_Contract_sorters.EFFECT_DSC({
+							_target_type: LEEK_TYPE_ALLY,
+							_effect_type: EFFECT_DAMAGE_RETURN
+						}),
+						_target_cell !== null ? GBL_Contract_sorters.DIST_CAST_ASC_TO(_target_cell) : GBL_Contract_sorters.TARGET_SAFEST(),
+					]);
 			} else {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
+				_contract = new Contract(
+					_tool_id,
+					GBL_Contract_types.ON_ME,
 					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_ENEMIES,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
+						GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ALLY_CASTER),
 					],
-					[
-						GBL_launch_filters_after_linearize.NO_EFFECTS_LESS_ON([{
-								effect_type: EFFECT_DAMAGE,
-								leek_type: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-								valueMin: 0
-							},
-							{
-								effect_type: EFFECT_LIFE_DAMAGE,
-								leek_type: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-								valueMin: 0
-							}, {
-								effect_type: EFFECT_NOVA_VITALITY,
-								leek_type: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-								valueMin: 0
-							}, {
-								effect_type: EFFECT_POISON,
-								leek_type: LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON,
-								valueMin: 0
-							}
-						]),
-						GBL_launch_filters_after_linearize.PRIORITY_TARGET(
-							getLeeksStateWithRadarSelect(getAllEnemiesAliveLeeks()),
-							function(_leek_state) {
-								return _leek_state.leek_lifePop;
-							}
-						)
-					],
-					[
-						launch_sorters.SORT_MAX_EFFECT_VALUE,
-						launch_sorters.SORT_MIN_CAST_DISTANCE,
-						launch_sorters.SORT_UNSAFER_TARGET_CELL
-					],
-					_tool_id);
+					[]);
 			}
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
+			_contract_options = FCT_ResolveContractOptions(_contract);
+			if (count(_contract_options) > 0) {
 				_isExecuted = true;
-				_launchs.selected_launchs[0].launch();
+				shift(_contract_options).use();
 			} else {
 				_isExecuted = false;
 				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_cards['DAMAGE_ZONE'].getOptionsBy(
+				_selectedOptions = _IA_cards['BUFF'].getOptionsBy(
 					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp - _tpMalus)],
-					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
-				break;
-			}
-		}
-	}
-
-	_selectedOptions = _IA_cards['WEAPONS'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	_isExecuted = false;
-	_excludeTools = [];
-	while (count(_selectedOptions) > 0 && !_isExecuted) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			_contract = new LaunchContract(
-				launch_resolvers.CAST_ON_TARGET,
-				[
-					GBL_launch_filters_before_linearize.TARGET_ONLY_ENEMIES,
-					GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-				],
-				[
-					GBL_launch_filters_after_linearize.NO_NULL_EFFECT_OF(
-						[
-							EFFECT_DAMAGE,
-							EFFECT_LIFE_DAMAGE,
-							EFFECT_NOVA_VITALITY,
-							EFFECT_POISON
-						]
-					),
-					GBL_launch_filters_after_linearize.PRIORITY_TARGET(
-						getLeeksStateWithRadarSelect(getAllEnemiesAliveLeeks()),
-						function(_leek_state) {
-							return _leek_state.leek_lifePop;
-						}
-					)
-				],
-				[
-					launch_sorters.SORT_MAX_EFFECT_VALUE,
-					launch_sorters.SORT_MIN_CAST_DISTANCE,
-					launch_sorters.SORT_UNSAFER_TARGET_CELL
-				],
-				_tool_id);
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_isExecuted = true;
-				_launchs.selected_launchs[0].launch();
-			} else {
-				_isExecuted = false;
-				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_cards['WEAPONS'].getOptionsBy(
-					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
-				break;
-			}
-		}
-	}
-}
-// -- --------------------------------------------------------------------------------------------------
-function GBL_Resolve_INVERSION() {
-	var _selectedOptions = _IA_cards['INVERSION'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _isExecuted = false;
-	var _excludeTools = [];
-	var _currentOption, _tool_id, _contract, _launchs, _selected_launch;
-	while (count(_selectedOptions) > 0 && !_isExecuted) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-				_contract = new LaunchContract(
-					launch_resolvers.CAST_ON_TARGET,
-					[
-						GBL_launch_filters_before_linearize.TARGET_ONLY_ENEMIES,
-						GBL_launch_filters_before_linearize.TARGET_NOT_SUMMONS,
-						GBL_launch_filters_before_linearize.TARGET_NOT_EMPTY
-					],
-					[
-						GBL_launch_filters_after_linearize.PRIORITY_TARGET(
-							getLeeksStateWithRadarSelect(getAllEnemiesAliveLeeks()),
-							function(_leek_state) {
-								return _leek_state.leek_lifePop;
-							}
-						)
-					],
-					[
-						launch_sorters.SORT_MIN_CAST_DISTANCE
-					],
-					_tool_id);
-			_launchs = new Launchs(_contract);
-			if (count(_launchs.selected_launchs) > 0) {
-				_isExecuted = true;
-				_launchs.selected_launchs[0].launch();
-			} else {
-				_isExecuted = false;
-				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_dd_science_cards['INVERSION'].getOptionsBy(
-					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
 					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
 				break;
 			}

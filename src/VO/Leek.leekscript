@@ -31,6 +31,7 @@ class Leek {
 	leek_chipsCooldown;
 	leek_tools;
 	leek_role;
+	leek_type;
 
 	/**
 	 * Leek - All leek informations
@@ -80,6 +81,7 @@ class Leek {
 				(this.leek_isCaster ? EFFECT_TARGET_CASTER : 0);
 			this.leek_role = LEEK_ROLE_UNDEFINED;
 			this.updateRole();
+			this.leek_type = this._getLeekType();
 		} else {
 			this.clone(idOrLeek);
 		}
@@ -246,5 +248,12 @@ class Leek {
 		return arrayInclude(this.leek_tools, function(tmpTool_id) {
 			return tool_id === tmpTool_id;
 		});
+	}
+
+	_getLeekType() {
+		return this.leek_isCaster ? LEEK_TYPE_ALLY_CASTER :
+			(this.leek_isAlly ?
+				(this.leek_isSummon ? LEEK_TYPE_ALLY_SUMMON : LEEK_TYPE_ALLY) :
+				(this.leek_isSummon ? LEEK_TYPE_ENEMY_SUMMON : LEEK_TYPE_ENEMY));
 	}
 }
