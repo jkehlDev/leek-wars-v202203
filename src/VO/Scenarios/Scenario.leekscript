@@ -1,0 +1,40 @@
+class Scenario {
+	_cards;
+	_costMin;
+	_sorter;
+
+	constructor(_scenario_card_sorters) {
+		this._cards = [];
+		this._costMin = -1;
+		this._sorter = arrayFoldLeft(_scenario_card_sorters, _FoldSorters, GBL_fold_sorter_zero);
+	}
+
+	add(_card) {
+		push(this._cards, _card);
+		this._costMin = this._costMin === -1 ? _card._cost : min(this._costMin, _card._cost);
+	}
+
+	run(_tpLeft, _excludeTools, _defaultContract, _contract_by_tool_ids) {
+		var _isExecuted = false;
+		var _costMax = max(myLeek().leek_tp - _tpLeft, 0);
+		if (_costMax >= this._costMin) {
+			var _card = this._firstAvailableCard(_costMax, _excludeTools);
+			if (_card !== null) {
+				var _card_run_state = _card.run(_defaultContract, _contract_by_tool_ids);
+				_isExecuted |= _card_run_state._isOneExecuted;
+				if (!_card_run_state._success) {
+					push(_excludeTools, _card_run_state._exclude_tool_id);
+					_isExecuted |= this.run(_tpLeft, _excludeTools, _defaultContract, _contract_by_tool_ids);
+				}
+			}
+		}
+		return _isExecuted;
+	}
+
+	_firstAvailableCard(_costMax, _excludeTools) {
+		var _card = arraySort(arrayFilter(this._cards, function(_card) {
+			return _card.isEnable(_costMax, _excludeTools);
+		}), this._sorter)[0];
+		return _card === null ? null : _card.cloneObj();
+	}
+}

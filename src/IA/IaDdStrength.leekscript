@@ -1,16 +1,6 @@
-global _IA_dd_strength_init = false;
-global _IA_dd_strength_cards = [];
-
 function _IA_DD_strength() {
 	out.info('ROLE_DD_STRENGTH');
 	displayContext();
-	// - INIT STRENGTH CARDS
-	if (!_IA_dd_strength_init) {
-		var _tpMax = myLeek().leek_tpMax + GBL_TP_BONUS;
-		_IA_dd_strength_init = true;
-		_IA_dd_strength_cards = [];
-		myLeek().setWeaponById(myLeek().leek_weapons[0]);
-	}
 	// - --- ---------------------------
 	var tacticalMove = DD_STRENGTH_Resolve_TACTICAL_MOVE();
 	if (tacticalMove._isDistant) {
@@ -23,25 +13,35 @@ function _IA_DD_strength() {
 	}
 	// - --- ---------------------------
 	if (GBL_is_fight_type.FIGHT_TYPE_TEAM || GBL_is_fight_type.FIGHT_TYPE_FARMER) {
-		GBL_Resolve_BUFF(8, tacticalMove._target_cell);
+		GBL_Resolve_BUFF(0, tacticalMove._target_cell);
 		GBL_Resolve_HEAL_ANTIDOTE(tacticalMove._target_cell);
 		GBL_Resolve_HEAL_EMERGENCY(tacticalMove._target_cell);
 		GBL_Resolve_KILL_SHOOT(0, tacticalMove._target_cell);
+		
 		GBL_Resolve_ABSOLUTE_SHIELD(tacticalMove._target_cell);
-		GBL_Resolve_HEAL_REGEN(tacticalMove._target_cell);
-		GBL_Resolve_DAMAGE_ZONE(tacticalMove._target_cell);
-		GBL_Resolve_HEAL_WARN(tacticalMove._target_cell);
+		GBL_Resolve_RELATIVE_SHIELD(tacticalMove._target_cell);
+		GBL_Resolve_DEBUFF(8, tacticalMove._target_cell);
 		GBL_Resolve_WEAPONS(tacticalMove._target_cell);
+		GBL_Resolve_DAMAGE_ZONE(tacticalMove._target_cell);
+		GBL_Resolve_POISON(tacticalMove._target_cell);
+
+		GBL_Resolve_HEAL_REGEN(tacticalMove._target_cell);
+		GBL_Resolve_HEAL_WARN(tacticalMove._target_cell);
 	} else {
-		GBL_Resolve_BUFF(8, tacticalMove._target_cell);
+		GBL_Resolve_BUFF(0, tacticalMove._target_cell);
 		GBL_Resolve_KILL_SHOOT(0, tacticalMove._target_cell);
 		GBL_Resolve_HEAL_ANTIDOTE(tacticalMove._target_cell);
 		GBL_Resolve_HEAL_EMERGENCY(tacticalMove._target_cell);
+
 		GBL_Resolve_ABSOLUTE_SHIELD(tacticalMove._target_cell);
-		GBL_Resolve_HEAL_REGEN(tacticalMove._target_cell);
-		GBL_Resolve_DAMAGE_ZONE(tacticalMove._target_cell);
-		GBL_Resolve_HEAL_WARN(tacticalMove._target_cell);
+		GBL_Resolve_RELATIVE_SHIELD(tacticalMove._target_cell);
+		GBL_Resolve_DEBUFF(8, tacticalMove._target_cell);
 		GBL_Resolve_WEAPONS(tacticalMove._target_cell);
+		GBL_Resolve_DAMAGE_ZONE(tacticalMove._target_cell);
+		GBL_Resolve_POISON(tacticalMove._target_cell);
+
+		GBL_Resolve_HEAL_REGEN(tacticalMove._target_cell);
+		GBL_Resolve_HEAL_WARN(tacticalMove._target_cell);
 	}
 	// - --- ---------------------------
 	_refreshRadarTactic();
@@ -52,19 +52,11 @@ function _IA_DD_strength() {
 function DD_STRENGTH_Resolve_TACTICAL_MOVE() {
 	var myLeekState = getLeekStateById(GBL_myLeek_id);
 	var _tacticalMove = resolveTacticalPositionByTargetsLeeksNdTacticalArea(
-		getAllAlliesAliveLeeks(),
-		_sortLeekByLevelDSC,
-		GBL_effect_area_template_by_area_type_id[myLeekState.leek_lifePop ? AREA_CIRCLE_6_15 : AREA_CIRCLE_4_8],
-		_sortPositionsRudest
-	)
-	if (_tacticalMove._target_cell === myLeek().leek_cell) {
-		_tacticalMove = resolveTacticalPositionByTargetsLeeksNdTacticalArea(
-			getAllEnemiesAliveLeeks(),
-			_sortLeekByLevelASC,
-			GBL_effect_area_template_by_area_type_id[myLeekState.leek_lifePop ? AREA_CIRCLE_6_15 : AREA_CIRCLE_4_8],
-			myLeekState.leek_lifePop ? _sortPositionsSafest : _sortPositionsRudest
-		);
-	}
+		getAllEnemiesAliveLeeks(),
+		_sortLeekByLevelASC,
+		TACTICAL_AREA_5_10,
+		myLeekState.leek_lifePop ? _sortPositionsSafest : _sortPositionsRudest
+	);
 
 	return _tacticalMove;
 }

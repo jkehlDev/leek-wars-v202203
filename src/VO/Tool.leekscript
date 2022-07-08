@@ -51,9 +51,32 @@ class Tool {
 	}
 
 	getToolEffectiveArea(_caster_cell, _target_cell) {
-		return this.tool_isWeapon ?
-			getWeaponEffectiveArea(this.tool_id, _target_cell, _caster_cell) :
-			getChipEffectiveArea(this.tool_id, _target_cell, _caster_cell);
+		if (arrayInclude([AREA_LASER_LINE, AREA_FIRST_INLINE],
+				function(_tool_effectAreaType) {
+					return _tool_effectAreaType === this.tool_effectAreaType;
+				})) {
+			return this.tool_isWeapon ?
+				getWeaponEffectiveArea(this.tool_id, _target_cell, _caster_cell) :
+				getChipEffectiveArea(this.tool_id, _target_cell, _caster_cell);
+		} else {
+			var _area_map = resolveToolEffectAreaTemplateOnCell(this.tool_id, _target_cell);
+			return arrayMap(
+				convertBinaryMapToCellIdMap(
+					_area_map.map,
+					_area_map.coordinates_min,
+					_area_map.coordinates_max
+				),
+				function(_cell) {
+					return _cell.cell_id;
+				}
+			);
+		}
+	}
+
+	hasEffectType(_effectType) {
+		return arrayInclude(this.tool_effects, function(_effect) {
+			return _effect.type === _effectType;
+		});
 	}
 }
 

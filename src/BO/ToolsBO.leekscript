@@ -1,0 +1,9 @@
+function _isToolAvailableForLeek(tool, currentLeek) {
+	return (currentLeek.leekHaveToolById(tool.tool_id)) && (tool.tool_isWeapon || !_isToolHaveCooldownForLeek(tool, currentLeek)) && (currentLeek.leek_tp >= tool.tool_cost);
+};
+
+function _isToolHaveCooldownForLeek(tool, currentLeek) {
+	return arrayInclude(currentLeek.leek_chipsCooldown, function(chip_cooldown) {
+		return chip_cooldown.chip === tool.tool_id && chip_cooldown.cooldown > 0;
+	});
+};

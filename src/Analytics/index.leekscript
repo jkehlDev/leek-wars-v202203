@@ -1,2 +1,6 @@
 include('Radar');
-include('Contract/index');
+include('TacticalPositions');
+//_______________________________
+include('Contracts/index');
+include('Scenarios/index');
+include('TacticMaps/index');

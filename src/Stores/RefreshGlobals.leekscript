@@ -10,12 +10,23 @@ function refreshGlobals() {
 	GBL_obstacles_map_binary_with_leek = filter_cells_all_obstacles();
 	GBL_obstacles_map_binary_with_leek_area = filter_cells_all_obstacles_nd_leek_allies_area();
 	// -- ANALYTICS --	
-	var _myLeek_tmp = clone(myLeek());
-	GBL_myLeek_current_path = resolvePathMap(_myLeek_tmp.leek_mp,_myLeek_tmp.leek_mp, _myLeek_tmp.leek_cell, GBL_obstacles_map_binary_with_leek_area.map, false);
-	GBL_myLeek_is_stick = isLeekStickByLeekId(_myLeek_tmp);
+	GBL_RefreshMyPath();
 	_refreshRadarZones();
 	_refreshRadarTactic();
-
 	// -- -- 
-	//console.warn('Globals refresh Ops : ' + (getOperations() - init_op));
+	//FCT_Refresh_binary_map_restricted();
+	//FCT_Refresh_BinaryPathMap_by_entity_ids();
+	// -- -- 
+	out.info('Globals refresh Ops : ' + (getOperations() - init_op));
 };
+
+
+function GBL_RefreshMyPath() {
+	var _myLeek_tmp = myLeek();
+	GBL_myLeek_current_path = resolvePathMap(_myLeek_tmp.leek_mp, _myLeek_tmp.leek_mp, _myLeek_tmp.leek_cell, GBL_obstacles_map_binary_with_leek_area.map, false);
+	GBL_myLeek_current_path_cell_ids = convertBinaryMapToCellIdMap(
+		GBL_myLeek_current_path.mapAll,
+		GBL_myLeek_current_path.coordinates_min,
+		GBL_myLeek_current_path.coordinates_max);
+	GBL_myLeek_is_stick = isLeekStickByLeekId(_myLeek_tmp);	
+}

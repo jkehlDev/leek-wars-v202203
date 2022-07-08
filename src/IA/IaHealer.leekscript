@@ -9,10 +9,10 @@ function _IA_healer() {
 		var _tpMax = myLeek().leek_tpMax + GBL_TP_BONUS;
 		_IA_heal_init = true;
 		_IA_heal_cards = [
-			'B_LAZER': new ToolCard([], [WEAPON_B_LASER], _tpMax),
-			'J_LAZER': new ToolCard([], [WEAPON_J_LASER], _tpMax),
+			'B_LAZER': FCT_Resolve_scenario([CHIP_KNOWLEDGE], [WEAPON_B_LASER], _tpMax, []),
+			'J_LAZER': FCT_Resolve_scenario([], [WEAPON_J_LASER], _tpMax, []),
 		];
-		myLeek().setWeaponById(myLeek().leek_weapons[0]);
+		//myLeek().setWeaponById(myLeek().leek_weapons[0]);
 	}
 	// - --- ---------------------------
 	var tacticalMove = HEALER_Resolve_TACTICAL_MOVE();
@@ -33,130 +33,106 @@ function _IA_healer() {
 
 		GBL_Resolve_HEAL_WARN(tacticalMove._target_cell);
 		GBL_Resolve_ABSOLUTE_SHIELD(tacticalMove._target_cell);
+		GBL_Resolve_RELATIVE_SHIELD(tacticalMove._target_cell);
 		GBL_Resolve_HEAL_REGEN(tacticalMove._target_cell);
-		GBL_Resolve_POISON(tacticalMove._target_cell);
+
+		GBL_Resolve_DEBUFF(6, tacticalMove._target_cell);
 		GBL_Resolve_WEAPONS(tacticalMove._target_cell);
-		GBL_Resolve_DEBUFF(0, tacticalMove._target_cell);
+		GBL_Resolve_DAMAGE_ZONE(tacticalMove._target_cell);
+		GBL_Resolve_POISON(tacticalMove._target_cell);
+		
+
 	} else {
-		GBL_Resolve_BUFF(8, tacticalMove._target_cell);
+		GBL_Resolve_BUFF(0, tacticalMove._target_cell);
 		GBL_Resolve_KILL_SHOOT(0, tacticalMove._target_cell);
 		GBL_Resolve_HEAL_ANTIDOTE(tacticalMove._target_cell);
 		GBL_Resolve_HEAL_EMERGENCY(tacticalMove._target_cell);
 
-		GBL_Resolve_HEAL_WARN(tacticalMove._target_cell);
 		GBL_Resolve_ABSOLUTE_SHIELD(tacticalMove._target_cell);
-		GBL_Resolve_HEAL_REGEN(tacticalMove._target_cell);
-		GBL_Resolve_POISON(tacticalMove._target_cell);
+		GBL_Resolve_RELATIVE_SHIELD(tacticalMove._target_cell);
+		GBL_Resolve_DEBUFF(8, tacticalMove._target_cell);
 		GBL_Resolve_WEAPONS(tacticalMove._target_cell);
-		GBL_Resolve_DEBUFF(0, tacticalMove._target_cell);
+		GBL_Resolve_DAMAGE_ZONE(tacticalMove._target_cell);
+		GBL_Resolve_POISON(tacticalMove._target_cell);
+
+		GBL_Resolve_HEAL_REGEN(tacticalMove._target_cell);
+		GBL_Resolve_HEAL_WARN(tacticalMove._target_cell);
 	}
 	// - --- ---------------------------
 	_refreshRadarTactic();
 	tacticalMove = HEALER_Resolve_TACTICAL_MOVE();
 	tacticalMove.moveTo();
 }
-// --- ---------------------------------------------------------------------------------------------
+// _______________________________________________________________________________________________________
 function HEALER_Resolve_TACTICAL_MOVE() {
 	var myLeekState = getLeekStateById(GBL_myLeek_id);
 	var _tacticalMove = resolveTacticalPositionByTargetsLeeksNdTacticalArea(
 		getAllAlliesAliveLeeks(),
 		_sortLeekByLifeRateASC,
-		GBL_effect_area_template_by_area_type_id[AREA_CIRCLE_2_8],
+		TACTICAL_AREA_5_10,
 		_sortPositionsSafest
 	)
-	if (_tacticalMove._target_cell === myLeek().leek_cell) {
-		_tacticalMove = resolveTacticalPositionByTargetsLeeksNdTacticalArea(
-			getAllAlliesAliveLeeks(),
-			_sortLeekByLevelDSC,
-			GBL_effect_area_template_by_area_type_id[myLeekState.leek_lifePop ? AREA_CIRCLE_6_15 : AREA_CIRCLE_4_8],
-			_sortPositionsSafest
-		)
-	}
 
 	if (_tacticalMove._target_cell === myLeek().leek_cell) {
 		_tacticalMove = resolveTacticalPositionByTargetsLeeksNdTacticalArea(
 			getAllEnemiesAliveLeeks(),
 			_sortLeekByLevelASC,
-			GBL_effect_area_template_by_area_type_id[myLeekState.leek_lifePop ? AREA_CIRCLE_6_15 : AREA_CIRCLE_4_8],
+			TACTICAL_AREA_5_10,
 			myLeekState.leek_lifePop ? _sortPositionsSafest : _sortPositionsRudest
 		);
 	}
 
 	return _tacticalMove;
 }
-// --- ---------------------------------------------------------------------------------------------
+// _______________________________________________________________________________________________________
 function HEALER_Resolve_B_LAZER(_target_cell) {
-	var _selectedOptions = _IA_heal_cards['B_LAZER'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _currentOption, _tool_id, _contract, _contract_options;
-	if (count(_selectedOptions) > 0) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			_contract = new Contract(
-				_tool_id,
-				GBL_Contract_types.TARGET,
-				[
-					GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ALLY | LEEK_TYPE_ALLY_SUMMON),
-					GBL_Contract_filters.EFFECTS_OR([{
-						_target_type: LEEK_TYPE_ALLY,
-						_effect_type: EFFECT_HEAL,
-						_minValue: 50,
-						_maxValue: 20000
-					}]),
-				],
-				[
-					GBL_Contract_sorters.TARGET_EFFECT_DSC({
-						_target_type: LEEK_TYPE_ENEMY,
-						_effect_type: EFFECT_ABSOLUTE_SHIELD
-					}),
-					GBL_Contract_sorters.EFFECT_DSC({
-						_target_type: LEEK_TYPE_ALLY,
-						_effect_type: EFFECT_HEAL
-					}),
-					_target_cell !== null ? GBL_Contract_sorters.DIST_CAST_ASC_TO(_target_cell) : GBL_Contract_sorters.TARGET_SAFEST(),
-				]);
-			_contract_options = FCT_ResolveContractOptions(_contract);
-			if (count(_contract_options) > 0) {
-				shift(_contract_options).use();
-			} else {
-				break;
-			}
-		}
-	}
+	_IA_cards['B_LAZER'].run(
+		0,
+		[],
+		new Contract(
+			null,
+			GBL_Contract_types.TARGET,
+			[
+				GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ALLY | LEEK_TYPE_ALLY_SUMMON),
+				GBL_Contract_filters.EFFECTS_OR([{
+					_target_type: LEEK_TYPE_ALLY,
+					_effect_type: EFFECT_HEAL,
+					_minValue: 50,
+					_maxValue: 20000
+				}]),
+			],
+			[
+				GBL_Contract_sorters.EFFECT_DSC({
+					_target_type: LEEK_TYPE_ALLY,
+					_effect_type: EFFECT_HEAL
+				}),
+				_target_cell !== null ? GBL_Contract_sorters.DIST_CAST_ASC_TO(_target_cell) : GBL_Contract_sorters.CAST_SAFEST(),
+			]),
+		[]
+	);
 }
-
+// _______________________________________________________________________________________________________
 function HEALER_Resolve_J_LAZER(_target_cell) {
-	var _selectedOptions = _IA_heal_cards['J_LAZER'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _currentOption, _tool_id, _contract, _contract_options;
-	if (count(_selectedOptions) > 0) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			_contract = new Contract(
-				_tool_id,
-				GBL_Contract_types.TARGET,
-				[
-					GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON),
-				],
-				[
-					GBL_Contract_sorters.TARGET_EFFECT_DSC({
-						_target_type: LEEK_TYPE_ENEMY,
-						_effect_type: EFFECT_ABSOLUTE_SHIELD
-					}),
-					GBL_Contract_sorters.EFFECT_DSC({
-						_target_type: LEEK_TYPE_ENEMY,
-						_effect_type: EFFECT_ABSOLUTE_VULNERABILITY
-					}),
-					_target_cell !== null ? GBL_Contract_sorters.DIST_CAST_ASC_TO(_target_cell) : GBL_Contract_sorters.TARGET_SAFEST(),
-				]);
-			_contract_options = FCT_ResolveContractOptions(_contract);
-			if (count(_contract_options) > 0) {
-				shift(_contract_options).use();
-			} else {
-				break;
-			}
-		}
-	}
+	_IA_cards['J_LAZER'].run(
+		0,
+		[],
+		new Contract(
+			null,
+			GBL_Contract_types.TARGET,
+			[
+				GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ENEMY | LEEK_TYPE_ENEMY_SUMMON),
+			],
+			[
+				GBL_Contract_sorters.TARGET_EFFECT_DSC({
+					_target_type: LEEK_TYPE_ENEMY,
+					_effect_type: EFFECT_ABSOLUTE_SHIELD
+				}),
+				GBL_Contract_sorters.EFFECT_DSC({
+					_target_type: LEEK_TYPE_ENEMY,
+					_effect_type: EFFECT_ABSOLUTE_VULNERABILITY
+				}),
+				_target_cell !== null ? GBL_Contract_sorters.DIST_CAST_ASC_TO(_target_cell) : GBL_Contract_sorters.CAST_SAFEST(),
+			]),
+		[]
+	);
 }

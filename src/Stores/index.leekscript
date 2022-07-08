@@ -4,5 +4,9 @@ include('ToolsStorage');
 include('RadarStorage');
 include('LeeksRolesStorage');
 // -- ---------------
+include('BinaryMapsStorage');
+include('BinaryPathMapsStorage');
+include('TacticalMapsStorage');
+// -- ---------------
 include('RefreshGlobals');
 // -- ---------------

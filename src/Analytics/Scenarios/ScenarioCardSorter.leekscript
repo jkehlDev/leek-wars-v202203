@@ -1,0 +1,55 @@
+/**
+ * [SORTER NAME]:[SORTER PARAMETERS]
+ * EFFECT_VALUE_DSC : {_target_type, _effect_type, _effect_buff_type}
+ * */
+global GBL_ScenarioCards_sorters = {
+	EFFECT_VALUE_DSC: _fct_ScenarioCard_effect_value_dsc,
+};
+
+function _fct_ScenarioCard_effect_value_dsc(param) {
+	return function(_card_1, _card_2) {
+		var _effect_buff_value_card_1 = arrayFoldLeft(
+			arrayFilter(
+				_card_1._effects,
+				function(_effect) {
+					return _effect.type === param._effect_buff_type;
+				}),
+			function(_fold, _effect) {
+				return _fold + _effect.value;
+			},
+			0);
+
+		var _effect_buff_value_card_2 = arrayFoldLeft(
+			arrayFilter(
+				_card_2._effects,
+				function(_effect) {
+					return _effect.type === param._effect_buff_type;
+				}),
+			function(_fold, _effect) {
+				return _fold + _effect.value;
+			},
+			0);
+		var _effect_value_card_1 = arrayFoldLeft(
+			arrayFilter(
+				_card_1._effects,
+				function(_effect) {
+					return _effect.type === param._effect_type && isEffectEnableOnLeekType(param._target_type, _effect);
+				}),
+			function(_fold, _effect) {
+				return _fold + _effect.value;
+			},
+			0) * (1 + _effect_buff_value_card_1 / 100);
+
+		var _effect_value_card_2 = arrayFoldLeft(
+			arrayFilter(
+				_card_2._effects,
+				function(_effect) {
+					return _effect.type === param._effect_type && isEffectEnableOnLeekType(param._target_type, _effect);
+				}),
+			function(_fold, _effect) {
+				return _fold + _effect.value;
+			},
+			0) * (1 + _effect_buff_value_card_2 / 100);
+		return (_effect_value_card_1 > _effect_value_card_2 ? -1 : (_effect_value_card_1 < _effect_value_card_2 ? 1 : 0));
+	};
+}

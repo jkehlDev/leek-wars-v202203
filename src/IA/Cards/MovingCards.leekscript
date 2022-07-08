@@ -1,42 +1,28 @@
-// -- --------------------------------------------------------------------------------------------------
+// _______________________________________________________________________________________________________
 function GBL_Resolve_JUMP(_priority, _target_cell) {
-	var myLeekState = getLeekStateById(GBL_myLeek_id);
-	var _isJump = false;
 	if (GBL_myLeek_is_stick || _priority) {
-		var _selectedOptions = _IA_cards['JUMP'].getOptionsBy(
-			[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-			GBL_sort_toolCardOption_by_cost_dsc, []);
-		var _currentOption, _tool_id, _contract, _contract_options;
-		if (count(_selectedOptions) > 0) {
-			_currentOption = shift(_selectedOptions);
-			_tool_id = shift(_currentOption._cast_array);
-			_contract = new Contract(
-				_tool_id,
+		return _IA_cards['JUMP'].run(
+			0,
+			[],
+			new Contract(
+				null,
 				GBL_Contract_types.AROUND,
 				[],
 				[
-					_target_cell !== null ? GBL_Contract_sorters.DIST_TARGET_ASC_TO(_target_cell) : GBL_Contract_sorters.TARGET_SAFEST (),
-				]);
-			_contract_options = FCT_ResolveContractOptions(_contract);
-			if (count(_contract_options) > 0) {
-				shift(_contract_options).use();
-				_isJump = true;
-			}
-		}
+					_target_cell !== null ? GBL_Contract_sorters.DIST_TARGET_ASC_TO(_target_cell) : GBL_Contract_sorters.TARGET_SAFEST(),
+				]),
+			[]
+		);
 	}
-	return _isJump;
+	return false;
 }
-// -- --------------------------------------------------------------------------------------------------
+// _______________________________________________________________________________________________________
 function GBL_Resolve_PUSH(_target_cell) {
-	var _selectedOptions = _IA_cards['PUSH'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _currentOption, _tool_id, _contract, _contract_options;
-	if (count(_selectedOptions) > 0) {
-		_currentOption = shift(_selectedOptions);
-		_tool_id = shift(_currentOption._cast_array);
-		_contract = new Contract(
-			_tool_id,
+	_IA_cards['PUSH'].run(
+		0,
+		[],
+		new Contract(
+			null,
 			GBL_Contract_types.PUSH,
 			[
 				GBL_Contract_filters.TARGET_OR([{
@@ -56,57 +42,36 @@ function GBL_Resolve_PUSH(_target_cell) {
 					_target_type: LEEK_TYPE_ENEMY,
 					_effect_type: EFFECT_PUSH
 				}),
-				GBL_Contract_sorters.DIST_CAST_ASC_TO(myLeek().leek_cell),
-			]);
-		_contract_options = FCT_ResolveContractOptions(_contract);
-		if (count(_contract_options) > 0) {
-			shift(_contract_options).use();
-		}
-	}
+				_target_cell !== null ? GBL_Contract_sorters.DIST_CAST_ASC_TO(_target_cell) : GBL_Contract_sorters.TARGET_SAFEST(),
+			]),
+		[]
+	);
 }
-// -- --------------------------------------------------------------------------------------------------
+// _______________________________________________________________________________________________________
 function GBL_Resolve_INVERSION(_target_cell) {
-	var _selectedOptions = _IA_cards['INVERSION'].getOptionsBy(
-		[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-		GBL_sort_toolCardOption_by_cost_dsc, []);
-	var _isExecuted = false;
-	var _excludeTools = [];
-	var _currentOption, _tool_id, _contract, _launchs, _contract_options;
-	while (count(_selectedOptions) > 0 && !_isExecuted) {
-		_currentOption = shift(_selectedOptions);
-		for (_tool_id in _currentOption._cast_array) {
-			_contract = new Contract(
-				_tool_id,
-				GBL_Contract_types.TARGET,
-				[
-					GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ENEMY),
-					GBL_Contract_filters.EFFECTS_OR([{
-						_target_type: LEEK_TYPE_ENEMY,
-						_effect_type: EFFECT_INVERT,
-						_minValue: 0,
-						_maxValue: 14
-					}]),
-				],
-				[
-					GBL_Contract_sorters.TARGET_LIFE_ASC(LEEK_TYPE_ENEMY),
-					GBL_Contract_sorters.EFFECT_DSC({
-						_target_type: LEEK_TYPE_ENEMY,
-						_effect_type: EFFECT_INVERT
-					}),
-					GBL_Contract_sorters.DIST_CAST_ASC_TO(myLeek().leek_cell),
-				]);
-			_contract_options = FCT_ResolveContractOptions(_contract);
-			if (count(_contract_options) > 0) {
-				_isExecuted = true;
-				shift(_contract_options).use();
-			} else {
-				_isExecuted = false;
-				push(_excludeTools, _tool_id);
-				_selectedOptions = _IA_cards['INVERSION'].getOptionsBy(
-					[GBL_filter_toolCardOption_by_cost(myLeek().leek_tp)],
-					GBL_sort_toolCardOption_by_cost_dsc, _excludeTools);
-				break;
-			}
-		}
-	}
+	_IA_cards['INVERSION'].run(
+		0,
+		[],
+		new Contract(
+			null,
+			GBL_Contract_types.TARGET,
+			[
+				GBL_Contract_filters.TARGETS_ONLY(LEEK_TYPE_ENEMY),
+				GBL_Contract_filters.EFFECTS_OR([{
+					_target_type: LEEK_TYPE_ENEMY,
+					_effect_type: EFFECT_INVERT,
+					_minValue: 0,
+					_maxValue: 14
+				}]),
+			],
+			[
+				GBL_Contract_sorters.TARGET_LIFE_ASC(LEEK_TYPE_ENEMY),
+				GBL_Contract_sorters.EFFECT_DSC({
+					_target_type: LEEK_TYPE_ENEMY,
+					_effect_type: EFFECT_INVERT
+				}),
+				_target_cell !== null ? GBL_Contract_sorters.DIST_CAST_ASC_TO(_target_cell) : GBL_Contract_sorters.TARGET_RUDEST(),
+			]),
+		[]
+	);
 }

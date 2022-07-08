@@ -4,8 +4,8 @@
  * EFFECT_DSC : {_target_type, _effect_type}
  * TARGET_LIFE_ASC : _target_type
  * TARGET_EFFECT_ASC / TARGET_EFFECT_DSC : {_target_type, _effect_type}
- * TARGET_SAFEST : - none -
- * TARGET_RUDEST : - none -
+ * TARGET_SAFEST / TARGET_RUDEST / CAST_SAFEST / CAST_RUDEST : - none -
+ * TARGET_TURRET_FIRST : - none -
  * */
 global GBL_Contract_sorters = {
 	DIST_TARGET_ASC_TO: _fct_distance_target_asc,
@@ -20,19 +20,14 @@ global GBL_Contract_sorters = {
 
 	TARGET_SAFEST: _fct_target_safest,
 	TARGET_RUDEST: _fct_target_rudest,
+	CAST_SAFEST: _fct_cast_safest,
+	CAST_RUDEST: _fct_cast_rudest,
+
+	TARGET_TURRET_FIRST: _fct_target_turret,
 };
 // ____________________________________________________
 // ---------------------- UTILS -----------------------
-global GBL_fold_sorter_zero = function(_value1, _value2) {
-	return 0;
-};
 
-function _FoldSorters(_fold, _sorter) {
-	return function(_option1, _option2) {
-		var currentSortValue = _fold(_option1, _option2);
-		return (currentSortValue !== 0 ? currentSortValue : _sorter(_option1, _option2));
-	};
-};
 
 function _compare_map_danger(_cell_1, _cell_2) {
 	return GBL_radar_tactic_map_by_cells[_cell_1].compareRateSumLife(GBL_radar_tactic_map_by_cells[_cell_2]);
@@ -49,6 +44,14 @@ function _effect_sum_value(_option, _effect_type, _target_type) {
 						0);
 			}, 0) :
 			0;
+	}, 0);
+};
+
+function _life_sum_value(_option, _target_type) {
+	return arrayFoldLeft(_option._targets, function(_target_fold, _option_target) {
+		var _currentLeek = getLeekById(_option_target._target_id);
+		return _target_fold +
+			((_target_type & _currentLeek.leek_type) !== 0) ? _currentLeek.leek_life : 0;
 	}, 0);
 };
 
@@ -135,6 +138,28 @@ function _fct_target_rudest() {
 };
 
 // ____________________________________________________
+// ---------------- CAST MAP SORTER -----------------
+function _fct_cast_safest() {
+	return function(_option1, _option2) {
+		var _dist_1 = getCellDistance(_option1._caster_cell, myLeek().leek_cell);
+		var _dist_2 = getCellDistance(_option2._caster_cell, myLeek().leek_cell);
+		var _dist = _dist_1 < _dist_2 ? -1 : (_dist_1 > _dist_2 ? 1 : 0);
+		var _map_danger = _compare_map_danger(_option1._caster_cell, _option2._caster_cell);
+		return _map_danger !== 0 ? _map_danger : _dist;
+	};
+};
+
+function _fct_cast_rudest() {
+	return function(_option1, _option2) {
+		var _dist_1 = getCellDistance(_option1._caster_cell, myLeek().leek_cell);
+		var _dist_2 = getCellDistance(_option2._caster_cell, myLeek().leek_cell);
+		var _dist = _dist_1 < _dist_2 ? -1 : (_dist_1 > _dist_2 ? 1 : 0);
+		var _map_danger = -_compare_map_danger(_option1._caster_cell, _option2._caster_cell);
+		return _map_danger !== 0 ? _map_danger : _dist;
+	};
+};
+
+// ____________________________________________________
 // -------------- TARGET EFFECT SORTER ----------------
 function _target_effect_sum_value(_option, _effect_type, _target_type) {
 	return arrayFoldLeft(_option._targets, function(_target_fold, _option_target) {
@@ -157,5 +182,17 @@ function _fct_target_effect_dsc(_params) {
 		var _value_1 = _target_effect_sum_value(_option1, _params._effect_type, _params._target_type);
 		var _value_2 = _target_effect_sum_value(_option2, _params._effect_type, _params._target_type);
 		return ((_value_1 > _value_2) ? -1 : ((_value_1 < _value_2) ? 1 : 0));
+	};
+};
+
+function _fct_target_turret() {
+	return function(_option1, _option2) {
+		var _containTurret_1 = arrayInclude(_option1._targets, function(_option_target) {
+			return getLeekById(_option_target._target_id).leek_isTurret;
+		});
+		var _containTurret_2 = arrayInclude(_option2._targets, function(_option_target) {
+			return getLeekById(_option_target._target_id).leek_isTurret;
+		});
+		return _containTurret_1 ? (_containTurret_2 ? 0 : -1) : (_containTurret_2 ? 1 : 0);
 	};
 };

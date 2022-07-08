@@ -1,0 +1,64 @@
+/**
+ * Resolve scenario
+ * */
+function FCT_Resolve_scenario(_buffs, _tools, _costMax, _scenario_card_sorter) {
+	var mapToCase = function(_isBuff) {
+		return function(_tool_id) {
+			var _tool = getToolById(_tool_id);
+			return {
+				_isBuff: _isBuff,
+				_tool_id: _tool_id,
+				_isWeapon: _tool.tool_isWeapon,
+				_isOnceUse: _tool.tool_hasCooldown,
+				_cost: _tool.tool_cost,
+				_effects: _tool.tool_effects
+			};
+		};
+	};
+
+	var filterTool = function(_tool_id) {
+		return arrayInclude(myLeek().leek_tools, function(_leek_tool_id) {
+			return _leek_tool_id === _tool_id;
+		});
+	};
+
+	var _caseArray = arrayConcat(arrayMap(arrayFilter(_buffs, filterTool), mapToCase(true)), arrayMap(arrayFilter(_tools, filterTool), mapToCase(false)));
+	var _scenario = new Scenario(_scenario_card_sorter);
+
+	_FCT_getTreeCase(_caseArray, new ScenarioCard([], [], 0, [], null), _costMax, _scenario);
+
+	return _scenario;
+}
+
+
+/**
+ * Recursive tree cases resolver
+ * */
+function _FCT_getTreeCase(_caseArray, _rootCard, _costMax, _scneario) {
+	if (count(_caseArray) > 0) {
+		var _case, _caseArrayNext, _cardNext;
+		_caseArrayNext = clone(_caseArray, 2);
+		for (_case in _caseArray) {
+			if ((_case._cost + _rootCard._cost + _FCT_weapon_malus(_case, _rootCard._lastWeapon)) > _costMax) {
+				shift(_caseArrayNext);
+			} else {
+				_cardNext = _rootCard.cloneObj();
+				if (_case._isOnceUse) {
+					_cardNext.add(shift(_caseArrayNext));
+					_FCT_getTreeCase(_caseArrayNext, _cardNext, _costMax, _scneario);
+				} else {
+					_cardNext.add(_case);
+					_FCT_getTreeCase(_caseArrayNext, _cardNext, _costMax, _scneario);
+					shift(_caseArrayNext);
+				}
+			}
+		}
+	}
+	if (count(_rootCard._tools) > 0) {
+		_scneario.add(_rootCard);
+	}
+}
+
+function _FCT_weapon_malus(_case, _lastWeapon) {
+	return _case._isWeapon ? (_case._tool_id !== _lastWeapon ? 1 : 0) : 0;
+}

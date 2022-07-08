@@ -41,68 +41,89 @@ global GBL_Contract_types = {
 		var _leek;
 		var _contract_options = [];
 		var _target_area_by_leek_id = [];
-		var _all_leeks = arrayFilter(getAllAliveLeeks(), function(_leek) {
-			return _contract._filters_targets_preselect === 0 || ((_leek.leek_type & _contract._filters_targets_preselect) !== 0);
-		});
-		for (_leek in _all_leeks) {
-			_target_area_by_leek_id[_leek.leek_id] = resolveToolEffectAreaTemplateOnCell(_contract._tool_id, _leek.leek_cell);
-			if (_contract._tool_id === CHIP_JUMP) {
-				_target_area_by_leek_id[_leek.leek_id].map = soustraire(
-					_target_area_by_leek_id[_leek.leek_id].map,
-					GBL_obstacles_map_binary_with_leek.map,
-					_target_area_by_leek_id[_leek.leek_id].coordinates_min.line,
-					_target_area_by_leek_id[_leek.leek_id].coordinates_max.line
-				);
-			}
+		var _all_leeks = getAllAliveLeeks();
+
+		if (_contract._filters_targets_preselect !== 0) {
+			_all_leeks = arrayFilter(_all_leeks, function(_leek) {
+				return ((_leek.leek_type & _contract._filters_targets_preselect) !== 0);
+			});
 		}
-		var _caster_cell_ids = convertBinaryMapToCellIdMap(
-			GBL_myLeek_current_path.mapAll,
-			GBL_myLeek_current_path.coordinates_min,
-			GBL_myLeek_current_path.coordinates_max);
-		_caster_cell_ids = arrayFilter(_caster_cell_ids, function(_cell) {
-			return getCellDistance(_cell.cell_id, myLeek().leek_cell) <= myLeek().leek_mp;
-		});
-		var _caster_cell, _launch_area_map, _touch_map;
-		for (_caster_cell in _caster_cell_ids) {
-			_launch_area_map = resolveToolLaunchAreaTemplateOnCell(_contract._tool_id, _caster_cell.cell_id);
-			for (_leek in _all_leeks) {
-				if (_leek.leek_id !== GBL_myLeek_id) {
-					_touch_map = {
-						map: intersection(_launch_area_map.map,
-							_target_area_by_leek_id[_leek.leek_id].map,
-							_target_area_by_leek_id[_leek.leek_id].coordinates_min.line,
-							_target_area_by_leek_id[_leek.leek_id].coordinates_max.line),
-						coordinates_min: _target_area_by_leek_id[_leek.leek_id].coordinates_min,
-						coordinates_max: _target_area_by_leek_id[_leek.leek_id].coordinates_max
-					};
-					if (binaryMapNotEmpty(_touch_map.map, _touch_map.coordinates_min.line, _touch_map.coordinates_max.line)) {
-						_contract_options = _fct_resolveContractOptions(
-							_contract_options,
-							_contract,
-							_caster_cell.cell_id,
-							_touch_map,
-						);
-					}
+
+		var _effect_area_union = {
+			map: clone(GBL_empty_binary_map),
+			coordinates_min: {
+				line: 0,
+				row: 0
+			},
+			coordinates_max: {
+				line: 34,
+				row: 17
+			},
+		};
+		var _effect_area_on_leek, _effect_area_on_myleek, _launch_area_map, _touch_map;
+		for (_leek in _all_leeks) {
+			_effect_area_on_leek = resolveToolEffectAreaTemplateOnCell(_contract._tool_id, _leek.leek_cell);
+			if (_leek.leek_id !== GBL_myLeek_id) {
+				_effect_area_union = {
+					map: union(_effect_area_union.map, _effect_area_on_leek.map, 0, 34),
+					coordinates_min: {
+						line: 0,
+						row: 0
+					},
+					coordinates_max: {
+						line: 34,
+						row: 17
+					},
+				};
+			} else {
+				_launch_area_map = resolveToolLaunchAreaTemplateOnCell(_contract._tool_id, myLeek().leek_cell);
+				_touch_map = {
+					map: intersection(_launch_area_map.map,
+						_effect_area_on_leek.map,
+						_effect_area_on_leek.coordinates_min.line,
+						_effect_area_on_leek.coordinates_max.line),
+					coordinates_min: _effect_area_on_leek.coordinates_min,
+					coordinates_max: _effect_area_on_leek.coordinates_max
+				};
+				if (binaryMapNotEmpty(_touch_map.map, _touch_map.coordinates_min.line, _touch_map.coordinates_max.line)) {
+					_contract_options = _fct_resolveContractOptions(
+						_contract_options,
+						_contract,
+						myLeek().leek_cell,
+						_touch_map,
+					);
 				}
 			}
 		}
 
-		// CASTING ON SELF
-		if (_target_area_by_leek_id[GBL_myLeek_id] !== null) {
-			_launch_area_map = resolveToolLaunchAreaTemplateOnCell(_contract._tool_id, myLeek().leek_cell);
+		_effect_area_union = {
+			map: soustraire(_effect_area_union.map, GBL_obstacles_map_binary, 0, 34),
+			coordinates_min: {
+				line: 0,
+				row: 0
+			},
+			coordinates_max: {
+				line: 34,
+				row: 17
+			},
+		};
+
+		var _caster_cell;
+		for (_caster_cell in GBL_myLeek_current_path_cell_ids) {
+			_launch_area_map = resolveToolLaunchAreaTemplateOnCell(_contract._tool_id, _caster_cell.cell_id);
 			_touch_map = {
 				map: intersection(_launch_area_map.map,
-					_target_area_by_leek_id[GBL_myLeek_id].map,
-					_target_area_by_leek_id[GBL_myLeek_id].coordinates_min.line,
-					_target_area_by_leek_id[GBL_myLeek_id].coordinates_max.line),
-				coordinates_min: _target_area_by_leek_id[GBL_myLeek_id].coordinates_min,
-				coordinates_max: _target_area_by_leek_id[GBL_myLeek_id].coordinates_max
+					_effect_area_union.map,
+					_launch_area_map.coordinates_min.line,
+					_launch_area_map.coordinates_max.line),
+				coordinates_min: _launch_area_map.coordinates_min,
+				coordinates_max: _launch_area_map.coordinates_max
 			};
 			if (binaryMapNotEmpty(_touch_map.map, _touch_map.coordinates_min.line, _touch_map.coordinates_max.line)) {
 				_contract_options = _fct_resolveContractOptions(
 					_contract_options,
 					_contract,
-					myLeek().leek_cell,
+					_caster_cell.cell_id,
 					_touch_map,
 				);
 			}
@@ -124,13 +145,8 @@ global GBL_Contract_types = {
 					GBL_myLeek_current_path.mapAll,
 					GBL_myLeek_current_path.coordinates_min.line,
 					GBL_myLeek_current_path.coordinates_max.line);
-				_caster_cell_ids = convertBinaryMapToCellIdMap(_resolved_cast_map,
-					GBL_myLeek_current_path.coordinates_min,
-					GBL_myLeek_current_path.coordinates_max);
-				_caster_cell_ids = arrayFilter(_caster_cell_ids, function(_cell) {
-					return getCellDistance(_cell.cell_id, myLeek().leek_cell) <= myLeek().leek_mp;
-				});
-				for (_caster_cell in _caster_cell_ids) {
+
+				for (_caster_cell in GBL_myLeek_current_path_cell_ids) {
 					// resolve intersection between launch area and target area 
 					_launch_area_map = resolveAreaTemplateOnCell(AREA_PUNCH.select_target_area, _caster_cell.cell_id, true, GBL_obstacles_map_binary);
 					_select_target_area_map = resolveAreaTemplateOnCell(AREA_PUNCH.select_target_area, _target_leek_cell_id, true, GBL_obstacles_map_binary);

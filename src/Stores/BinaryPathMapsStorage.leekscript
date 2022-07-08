@@ -1,0 +1,34 @@
+// ________________________________________________________________
+// ------------------- PATH MAPS BY ENTITY IDS --------------------
+global GBL_BinaryPathMap_by_entity_ids;
+
+function _FCT_Build_BinaryPathMap_by_entity_ids(entity_ids) {
+	return arrayIndex(arrayMap(
+		entity_ids,
+		function(_leek_id) {
+			var _leek = getLeekById(_leek_id);
+			return FCT_Build_BinaryPathMap(_leek_id, _leek.leek_cell, (_leek.leek_isTurret ? 5 : _leek.leek_mpMax) * GBL_RADAR_DEPTH, FCT_Get_binary_map_restricted());
+		}
+	), function(_map) {
+		return _map._leek_id;
+	});
+}
+
+function FCT_Refresh_BinaryPathMap_by_entity_ids() {
+	var _turrets = [];
+	if (GBL_is_fight_type.FIGHT_TYPE_TEAM) {
+		_turrets = [getAlliedTurret(), getEnemyTurret()];
+	}
+	GBL_BinaryPathMap_by_entity_ids = _FCT_Build_BinaryPathMap_by_entity_ids(ArrayAccumulate([getAllies(), getEnemies(), _turrets]));
+}
+
+
+function FCT_Get_BinaryPathMap_by_entity_ids() {
+	if (GBL_BinaryPathMap_by_entity_ids === null) {
+		FCT_Refresh_BinaryPathMap_by_entity_ids();
+	}
+	return GBL_BinaryPathMap_by_entity_ids;
+}
+
+
+

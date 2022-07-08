@@ -53,6 +53,36 @@ function isEffectEnableOn(_leek, _tool_effect) {
 	) || false;
 };
 
+function isEffectEnableOnLeekType(_leek_type, _tool_effect) {
+	if ((_leek_type & LEEK_TYPE_ALLY_CASTER) !== 0 && _tool_effect.effectTargetCaster && !_tool_effect.isOnCaster) {
+		return true;
+	}
+	if (_tool_effect.effectTargetAlly) {
+		if ((_leek_type & LEEK_TYPE_ALLY_SUMMON) !== 0 && _tool_effect.effectTargetSummons) {
+			return true;
+		}
+		if ((_leek_type & LEEK_TYPE_ALLY) !== 0 && _tool_effect.effectTargetNonSummons) {
+			return true;
+		}
+	}
+	if (_tool_effect.effectTargetEnemy) {
+		if ((_leek_type & LEEK_TYPE_ENEMY_SUMMON) !== 0 && _tool_effect.effectTargetSummons) {
+			return true;
+		}
+		if ((_leek_type & LEEK_TYPE_ENEMY) !== 0 && _tool_effect.effectTargetNonSummons) {
+			return true;
+		};
+	}
+	return (
+		!_tool_effect.effectTargetCaster &&
+		!_tool_effect.effectTargetAlly &&
+		!_tool_effect.effectTargetEnemy &&
+		!_tool_effect.effectTargetSummons &&
+		!_tool_effect.effectTargetNonSummons
+	) || false;
+};
+
+
 function _effectAreaFactor(_target_cell, _affected_leek_cell, _effect_value) {
 	return floor((1 - getCellDistance(_target_cell, _affected_leek_cell) * 0.20) * _effect_value);
 };

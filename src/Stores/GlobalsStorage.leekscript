@@ -10,7 +10,7 @@ global GBL_is_fight_type = {
 	FIGHT_TYPE_SOLO: (GBL_fight_type === FIGHT_TYPE_SOLO)
 };
 // - Globals tactic parameters
-global GBL_LEEK_AREA = AREA_SQUARE_1;
+global GBL_LEEK_AREA = AREA_SQUARE_2;
 global GBL_RADAR_DEPTH = 3;
 global GBL_life_threshold_emergency = 0.35;
 global GBL_life_threshold_pop = 0.55;
@@ -68,4 +68,5 @@ global GBL_full_path_map_cells = convertBinaryMapToCellIdMap(soustraire(GBL_full
  * cell_origin: cell_origin
  * */
 global GBL_myLeek_current_path;
+global GBL_myLeek_current_path_cell_ids;
 global GBL_myLeek_is_stick = false;

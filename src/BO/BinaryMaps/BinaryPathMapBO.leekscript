@@ -1,0 +1,53 @@
+// _______________________________________________
+// ------------------- BUILDER ------------------- 
+function FCT_Build_BinaryPathMap(leek_id, center_cell_id, path_map_range, binaryMap_restricted) {
+	var _center_binaryCoordinates = FCT_Convert_cellId_to_BinaryCoordinates(center_cell_id);
+
+	var _binary_map_by_dist = arrayFill(FCT_Build_binary_map_empty(), path_map_range + 1);
+	_binary_map_by_dist[0]._map[_center_binaryCoordinates._line] |= (1 << _center_binaryCoordinates._cell);
+	_binary_map_by_dist[0]._coordinates_min = _center_binaryCoordinates.cloneObj();
+	_binary_map_by_dist[0]._coordinates_max = _center_binaryCoordinates.cloneObj();
+
+	var _binary_map = _binary_map_by_dist[0].cloneObj();
+
+	var _step, _binaryPathMap_step;
+	for (_step = 1; _step <= path_map_range; _step++) {
+		_binaryPathMap_step = _FCT_Resolve_PathMap_step(_binary_map_by_dist[_step - 1], _binary_map, binaryMap_restricted);
+		_binary_map_by_dist[_step] = _binaryPathMap_step._nextStep;
+		_binary_map = _binaryPathMap_step._nextAll;
+	}
+	return new BinaryPathMap(leek_id, center_cell_id, path_map_range, _binary_map, _binary_map_by_dist);
+}
+
+// _______________________________________________
+// ------------------- STEPPER ------------------- 
+function _FCT_Resolve_PathMap_step(binaryMap_step_previous, binaryMap_all, binaryMap_restricted) {
+	var _nextStep = FCT_Build_binary_map_empty();
+	_nextStep._coordinates_min = new BinaryCoordinates(max(_nextStep._coordinates_min._line - 1, 0), max(_nextStep._coordinates_min._cell - 1, 0));
+	_nextStep._coordinates_max = new BinaryCoordinates(min(_nextStep._coordinates_max._line + 1, 34), min(_nextStep._coordinates_max._cell + 1, 17));
+
+	var _nextAll = FCT_Build_binary_map_empty();
+	_nextAll._coordinates_min = _nextStep._coordinates_min.cloneObj();
+	_nextAll._coordinates_max = _nextStep._coordinates_max.cloneObj();
+
+
+	var _line_before, _line_after, _line;
+	for (_line = _nextStep._coordinates_min._line; _line <= _nextStep._coordinates_max._line; _line++) {
+		_line_before = ((_line - 1) < _nextStep._coordinates_min._line) ? 0 : binaryMap_step_previous._map[_line - 1];
+		_line_after = ((_line + 1) > _nextStep._coordinates_max._line) ? 0 : binaryMap_step_previous._map[_line + 1];
+		_nextStep._map[_line] = (_line % 2 === 0) ?
+			(_line_before | _line_after | (_line_before << 1) | (_line_after << 1)) & ~binaryMap_all._map[_line] & ~binaryMap_restricted._map[_line] :
+			(_line_before | _line_after | (_line_before >> 1) | (_line_after >> 1)) & ~binaryMap_all._map[_line] & ~binaryMap_restricted._map[_line];
+
+		_line_before = ((_line - 1) < _nextAll._coordinates_min._line) ? 0 : binaryMap_all._map[_line - 1];
+		_line_after = ((_line + 1) > _nextAll._coordinates_max._line) ? 0 : binaryMap_all._map[_line + 1];
+		_nextAll._map[_line] = (_line % 2 === 0) ?
+			(binaryMap_all._map[_line] | _line_before | _line_after | (_line_before << 1) | (_line_after << 1)) & ~binaryMap_restricted._map[_line] :
+			(binaryMap_all._map[_line] | _line_before | _line_after | (_line_before >> 1) | (_line_after >> 1)) & ~binaryMap_restricted._map[_line];
+	}
+
+	return {
+		_nextStep: _nextStep,
+		_nextAll: _nextAll
+	};
+}

@@ -1,0 +1,87 @@
+global __clean_TacticalMap_cells =
+	arrayMap(
+		arrayFill(0, 613),
+		function(_key, _value) {
+			var _is_entity = isEntity(_key);
+			return new TacticalMapCell_v2(
+				_key,
+				0,
+				isObstacle(_key),
+				_is_entity,
+				_is_entity ? getEntityOnCell(_key) : -1
+			)
+		}
+	);
+
+
+/**
+ * _tactical_map_cells;
+ * getCell(_cell_id);
+ * setCell();
+ * cloneObj();
+ * */
+class TacticalMap {
+	_tactical_map_cells;
+	_tactical_map_cell_max;
+	_tactical_map_cell_min;
+
+	constructor() {
+		this._tactical_map_cells =
+			arrayMap(__clean_TacticalMap_cells,
+				function(_tactical_map_cell) {
+					return _tactical_map_cell.cloneObj();
+				});
+		this._tactical_map_cell_max = this._tactical_map_cells[0].cloneObj();
+		this._tactical_map_cell_min = this._tactical_map_cells[0].cloneObj();
+	}
+
+	constructor(_tacticalMap) {
+		this._tactical_map_cells =
+			arrayMap(_tacticalMap._tactical_map_cells,
+				function(_tactical_map_cell) {
+					return _tactical_map_cell.cloneObj();
+				});
+
+		this._tactical_map_cell_max = _tacticalMap._tactical_map_cell_max.cloneObj();
+		this._tactical_map_cell_min = _tacticalMap._tactical_map_cell_min.cloneObj();
+	}
+
+	getCellValue(_cell_id) {
+		return this._tactical_map_cells[_cell_id];
+	}
+
+	setCellValue(_cell_id, _cell_value) {
+		this._tactical_map_cells[_cell_id]._value = _cell_value;
+
+		this._tactical_map_cell_max =
+			this._tactical_map_cells[_cell_id]._value > this._tactical_map_cell_max._value ?
+			this._tactical_map_cells[_cell_id].cloneObj() : this._tactical_map_cell_max;
+
+		this._tactical_map_cell_min =
+			this._tactical_map_cells[_cell_id]._value < this._tactical_map_cell_min._value ?
+			this._tactical_map_cells[_cell_id].cloneObj() : this._tactical_map_cell_min;
+	}
+
+	markMap() {
+		var _ratio = floor(200 / abs(this._tactical_map_cell_max._value - this._tactical_map_cell_min._value));
+		arrayIter(
+			arrayFilter(
+				this._tactical_map_cells,
+				function(_tactical_map_cell) {
+					return _tactical_map_cell._value > 0;
+				}
+			),
+			function(_tactical_map_cell) {
+				var _offset = _ratio *
+					abs(
+						max(this._tactical_map_cell_min._value, min(this._tactical_map_cell_max._value, _tactical_map_cell._value)) -
+						this._tactical_map_cell_min._value
+					);
+				mark(_tactical_map_cell._id, getColor(_offset, 255, _offset), 1);
+			});
+	}
+
+	cloneObj() {
+		return new TacticalMap(this);
+	}
+}

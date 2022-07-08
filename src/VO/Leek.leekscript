@@ -26,6 +26,7 @@ class Leek {
 	leek_isEnemy;
 	leek_isSummon;
 	leek_isCaster;
+	leek_isTurret;
 	leek_kind;
 	leek_effects;
 	leek_chipsCooldown;
@@ -74,7 +75,8 @@ class Leek {
 			this.leek_isAlly = isAlly(this.leek_id);
 			this.leek_isEnemy = !this.leek_isAlly;
 			this.leek_isSummon = isSummon(this.leek_id);
-			this.leek_isCaster = this.leek_id === getEntity()
+			this.leek_isCaster = this.leek_id === getEntity();
+			this.leek_isTurret = !GBL_is_fight_type.FIGHT_TYPE_TEAM ? false : isATurret();
 			this.leek_kind = (this.leek_isEnemy ? EFFECT_TARGET_ENEMIES : 0) |
 				(this.leek_isAlly ? EFFECT_TARGET_ALLIES : 0) |
 				(this.leek_isSummon ? EFFECT_TARGET_SUMMONS : EFFECT_TARGET_NON_SUMMONS) |
@@ -116,10 +118,12 @@ class Leek {
 		this.leek_isEnemy = leek.leek_isEnemy;
 		this.leek_isSummon = leek.leek_isSummon;
 		this.leek_isCaster = leek.leek_isCaster;
+		this.leek_isTurret = leek.leek_isTurret;
 		this.leek_effects = clone(leek.leek_effects, 2);
 		this.leek_chipsCooldown = clone(leek.leek_chipsCooldown, 2);
 		this.leek_kind = clone(leek.leek_kind, 2);
 		this.leek_role = clone(leek.leek_role, 2);
+
 	}
 
 	update() {
@@ -148,6 +152,10 @@ class Leek {
 		});
 		this.updateChipsCooldown();
 		updateLeekState(this.leek_id);
+	}
+
+	isATurret() {
+		return (this.leek_id === getAlliedTurret() ? true : (this.leek_id === getEnemyTurret() ? true : false));
 	}
 
 	updateRole() {

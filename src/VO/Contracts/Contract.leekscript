@@ -23,7 +23,7 @@ class Contract {
 			function(_fold, _filterObj) {
 				return _fold | _filterObj._target_type;
 			}, 0);
-		
+
 		var _target_filters = arrayMap(arrayFilter(filters, function(_filter) {
 			return (_filter._type & GBL_Contract_filter_type_target) !== 0;
 		}), function(_filterObj) {
@@ -39,5 +39,31 @@ class Contract {
 		this._filters_options_Fct = arrayFoldLeft(_option_filters, _FoldFilters, GBL_fold_filter_true);
 
 		this._sorters_fct = arrayFoldLeft(sorters, _FoldSorters, GBL_fold_sorter_zero);
+	}
+
+	constructor(tool_id, type,
+		filters_targets_preselect,
+		filters_targets_Fct,
+		filters_options_Fct,
+		sorters_fct) {
+		this._tool_id = tool_id;
+		this._type = type;
+		this._filters_targets_preselect = filters_targets_preselect;
+		this._filters_targets_Fct = filters_targets_Fct;
+		this._filters_options_Fct = filters_options_Fct;
+		this._sorters_fct = sorters_fct;
+	}
+
+	cloneObj(tool_id) {
+		return new Contract(
+			tool_id,
+			clone(this._type, 2),
+			clone(this._filters_targets_preselect, 2),
+			clone(this._filters_targets_Fct, 2),
+			clone(this._filters_options_Fct, 2),
+			clone(this._sorters_fct, 2),
+
+		)
+
 	}
 }

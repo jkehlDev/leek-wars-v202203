@@ -1,25 +1,35 @@
+/**
+ * constructor(target_cell, distant_cell, isDistant)
+ * _target_cell;
+ * _distant_cell;
+ * _isDistant;
+ * */
 class TacticalMove {
 	_target_cell;
 	_distant_cell;
 	_isDistant;
 
 	constructor(target_cell, distant_cell, isDistant) {
-		this._target_cell = target_cell;
-		this._distant_cell = distant_cell;
+		this._target_cell = target_cell === null ? myLeek().leek_cell:  target_cell;
+		this._distant_cell = distant_cell === null ? myLeek().leek_cell:  distant_cell;
 		this._isDistant = isDistant;
 	}
 
 	moveTo() {
 		if (this._target_cell !== null && myLeek().leek_cell !== this._target_cell) {
-			moveTowardCell(this._target_cell);
-			myLeek().update();
+			this._move(this._target_cell, myLeek().leek_mp);
 		}
 	}
 
 	moveHalfTo() {
 		if (this._target_cell !== null && myLeek().leek_cell !== this._target_cell) {
-			moveTowardCell(this._target_cell, floor(myLeek().leek_mp / 2));
-			myLeek().update();
+			this._move(this._target_cell, floor(myLeek().leek_mp / 2));
 		}
+	}
+
+	_move(_target_cell_id, mp) {
+		moveTowardCell(_target_cell_id, mp);
+		myLeek().update();
+		GBL_RefreshMyPath();
 	}
 }

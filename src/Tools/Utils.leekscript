@@ -1,3 +1,22 @@
+global GBL_fold_sorter_zero = function(_value1, _value2) {
+	return 0;
+};
+
+global GBL_fold_filter_true = function(_option) {
+	return true;
+};
+
+global GBL_fold_filter_false = function(_option) {
+	return false;
+};
+
+function _FoldSorters(_fold, _sorter) {
+	return function(_elmt1, _elmt2) {
+		var currentSortValue = _fold(_elmt1, _elmt2);
+		return (currentSortValue !== 0 ? currentSortValue : _sorter(_elmt1, _elmt2));
+	};
+};
+
 function getEmptyBinaryMap() {
 	var map_path_binary = [];
 	fill(map_path_binary, 0, 35);
@@ -147,6 +166,12 @@ function arrayFind(array, f) {
 		}
 	}
 	return null;
+}
+
+function arrayFill(value, size){
+	var _array = [];
+	fill(_array, value, size);
+	return _array;
 }
 
 function arrayCount(array, f) {

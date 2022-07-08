@@ -40,10 +40,11 @@ class TacticMapCell {
 	}
 
 	addLeek(leek, factor) {
-		var leek_state = getLeekStateById(leek.leek_id);
+		//var leek_state = getLeekStateById(leek.leek_id);
 		if (leek.leek_isEnemy) {
 			this.enemies_data.zone_count_leeks += 1;
-			this.enemies_data.zone_sum_life += decimal(leek_state.leek_lifeNext * factor, 2);
+			//this.enemies_data.zone_sum_life += decimal(leek_state.leek_lifeNext * factor, 2);
+			this.enemies_data.zone_sum_life += decimal(leek.leek_life * factor, 2);
 			this.enemies_data.zone_average_lifeRate = getAverageData(this.enemies_data.zone_average_lifeRate, leek.leek_lifeRate);
 			//this.enemies_data.zone_sum_tp += leek.leek_tp;
 			//this.enemies_data.zone_average_power = getAverageData(this.enemies_data.zone_average_power, leek.leek_power * factor);
@@ -53,7 +54,8 @@ class TacticMapCell {
 			//this.enemies_data.zone_average_resistance = getAverageData(this.enemies_data.zone_average_resistance, leek.leek_resistance * factor);
 		} else {
 			this.allies_data.zone_count_leeks += 1;
-			this.allies_data.zone_sum_life += decimal(leek_state.leek_lifeNext * factor, 2);
+			//this.allies_data.zone_sum_life += decimal(leek_state.leek_lifeNext * factor, 2);
+			this.allies_data.zone_sum_life += decimal(leek.leek_life * factor, 2);
 			this.allies_data.zone_average_lifeRate = getAverageData(this.allies_data.zone_average_lifeRate, leek.leek_lifeRate);
 			//this.allies_data.zone_sum_tp += leek.leek_tp;
 			//this.allies_data.zone_average_power = getAverageData(this.allies_data.zone_average_power, leek.leek_power * factor);
