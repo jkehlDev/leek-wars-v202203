@@ -1,0 +1,11 @@
+class ScenarioCardRunState {
+	_success;
+	_exclude_tool_id;
+	_isOneExecuted;
+	
+	constructor(_success, exclude_tool_id, isOneExecuted) {
+		this._success = _success;
+		this._isOneExecuted = isOneExecuted;
+		this._exclude_tool_id = exclude_tool_id;
+	}
+}

@@ -1,0 +1,78 @@
+class ScenarioCard {
+	_buffs;
+	_tools;
+	_cost;
+	_effects;
+	_lastWeapon;
+
+	constructor(buffs, tools, cost, effects, lastWeapon) {
+		this._buffs = buffs;
+		this._tools = tools;
+		this._cost = cost;
+		this._effects = effects;
+		this._lastWeapon = lastWeapon;
+	}
+
+	cloneObj() {
+		return new ScenarioCard(clone(this._buffs, 2), clone(this._tools, 2), clone(this._cost), clone(this._effects, 2), clone(this._lastWeapon));
+	}
+
+	add(_case) {
+		if (_case._isBuff) {
+			push(this._buffs, clone(_case._tool_id));
+		} else {
+			push(this._tools, clone(_case._tool_id));
+		}
+		pushAll(this._effects, clone(_case._effects,2));
+		this._cost = this._cost + _case._cost + _FCT_weapon_malus(_case, this._lastWeapon);
+		this._lastWeapon = _case._isWeapon ? _case._tool_id : this._lastWeapon;
+	}
+
+	isEnable(_costMax, _excludeTools) {
+		var _HasUnableTool = function(_tool_id) {
+			var isExclude = function(_exclude_tool_id) {
+				return _tool_id === _exclude_tool_id;
+			};
+			return !_isToolAvailableForLeek(getToolById(_tool_id), myLeek()) || arrayInclude(_excludeTools, isExclude);
+		}
+		return _costMax >= _cost && !arrayInclude(this._buffs, _HasUnableTool) && !arrayInclude(this._tools, _HasUnableTool);
+	}
+
+	_selectContract(_defaultContract, _contract_by_tool_ids, _tool_id) {
+		var _contract = arrayFind(_contract_by_tool_ids, function(_contract_tool) {
+			return _contract_tool._tool_id === _tool_id;
+		});
+		return _contract === null ? _defaultContract.cloneObj(_tool_id) : _contract;
+	}
+
+	_executeBuffs(_currentBuffs, _defaultContract, _contract_by_tool_ids) {
+		var _buff_tool_id, _buff_options;
+		while (count(_currentBuffs) > 0) {
+			_buff_tool_id = shift(_currentBuffs);
+			_buff_options = FCT_ResolveContractOptions(this._selectContract(_defaultContract, _contract_by_tool_ids, _buff_tool_id));
+			if (count(_buff_options) > 0) {
+				shift(_buff_options).use();
+			}
+		}
+	}
+
+	run(_defaultContract, _contract_by_tool_ids) {
+		var _isOneExecuted = false;
+		var _currentBuffs = clone(this._buffs, 2);
+		var _tool_id, _contract_options;
+		for (_tool_id in this._tools) {
+			_contract_options = FCT_ResolveContractOptions(this._selectContract(_defaultContract, _contract_by_tool_ids, _tool_id));
+			if (count(_contract_options) > 0) {
+				this._executeBuffs(_currentBuffs, _defaultContract, _contract_by_tool_ids);
+				if (shift(_contract_options).use() < 0) {
+					return new ScenarioCardRunState(false, _tool_id, _isOneExecuted);
+				} else {
+					_isOneExecuted = true;
+				};
+			} else {
+				return new ScenarioCardRunState(false, _tool_id, _isOneExecuted);
+			}
+		}
+		return new ScenarioCardRunState(true, null, _isOneExecuted);
+	}
+}

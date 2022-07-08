@@ -105,8 +105,9 @@ function resolvePathBetween(cell_from_id, cell_to_id) {
  * }
  * */
 function resolvePathMap(pathRange, pathRangeZone, cell_origin, map_cellOff_binary, hasZones) {
+	map_cellOff_binary = union(map_cellOff_binary, GBL_empty_binary_map_bordored, 0, 34);
 	var pathCube_binary = [];
-	pathRangeZone = max(1, pathRangeZone);
+	pathRangeZone = max(0, pathRangeZone);
 	pathRange = pathRange >= pathRangeZone ? pathRange : pathRangeZone;
 	var coord = convertCellIdToLineNdCell(cell_origin);
 	pathCube_binary[0] = clone(GBL_empty_binary_map, 2)

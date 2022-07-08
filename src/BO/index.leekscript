@@ -1,5 +1,6 @@
 include('EffectsBO');
 include('ToolAreaTemplateBO');
+include('ToolsBO');
 include('Binary/index');
-include('TacticalPositionsBO');
-include('ToolCardBO');
+
+include('BinaryMaps/index');

@@ -1,0 +1,88 @@
+// __________________________________________________
+// ------------------- MAP EMPTY -------------------- 
+global GBL_Binary_map_empty;
+global GBL_Binary_map_empty_bordered;
+
+function FCT_Build_binary_map_empty() {
+	if (GBL_Binary_map_empty === null) {
+		GBL_Binary_map_empty = new BinaryMap(arrayFill(0, 35), null, null);
+	}
+	return GBL_Binary_map_empty.cloneObj();
+}
+
+function FCT_Build_binary_map_empty_bordered() {
+	if (GBL_Binary_map_empty_bordered === null) {
+		GBL_Binary_map_empty_bordered = new BinaryMap(arrayFill((~0), 35), null, null);
+		var cell_max, line, cell;
+		for (line = 0; line <= 34; line++) {
+			cell_max = (17 - line % 2);
+			for (cell = 0; cell <= cell_max; cell++) {
+				GBL_Binary_map_empty_bordered._map[line] &= ~(1 << cell);
+			}
+		}
+		
+	}
+	return GBL_Binary_map_empty_bordered.cloneObj();
+}
+
+// ______________________________________________________
+// ------------------- MAP OBSTACLES -------------------- 
+global GBL_Binary_map_obstacles_empty;
+global GBL_Binary_map_obstacles_empty_bordered;
+
+function FCT_Build_binary_map_obstacles_empty() {
+	if (GBL_Binary_map_obstacles_empty === null) {
+		GBL_Binary_map_obstacles_empty = FCT_Build_binary_map_empty();
+		arrayIter(getObstacles(), function(_cell_id) {
+			var _binary_coordinates = FCT_Convert_cellId_to_BinaryCoordinates(_cell_id);
+			GBL_Binary_map_obstacles_empty._map[_binary_coordinates._line] |= (1 << _binary_coordinates._cell);
+		});
+	}
+	return GBL_Binary_map_obstacles_empty.cloneObj();
+}
+
+function FCT_Build_binary_map_obstacles_empty_bordered() {
+	if (GBL_Binary_map_obstacles_empty_bordered === null) {
+		GBL_Binary_map_obstacles_empty_bordered = FCT_Build_binary_map_empty_bordered();
+		arrayIter(getObstacles(), function(_cell_id) {
+			var _binary_coordinates = FCT_Convert_cellId_to_BinaryCoordinates(_cell_id);
+			GBL_Binary_map_obstacles_empty_bordered._map[_binary_coordinates._line] |= (1 << _binary_coordinates._cell);
+		});
+	}
+	return GBL_Binary_map_obstacles_empty_bordered.cloneObj();
+}
+// ______________________________________________________
+// ------------------- MAP RESTRICTED ------------------- 
+global GBL_Binary_map_restricted;
+
+function FCT_Refresh_binary_map_restricted() {
+	var _turrets = [];
+	if (GBL_is_fight_type.FIGHT_TYPE_TEAM) {
+		_turrets = [getAlliedTurret(), getEnemyTurret()];
+	}
+	GBL_Binary_map_restricted = _FCT_Build_binary_map_restricted(ArrayAccumulate([getAllies(), getEnemies(), _turrets]));
+}
+
+function _FCT_Build_binary_map_restricted(leek_ids) {
+	var _binaryMap_out = FCT_Build_binary_map_obstacles_empty_bordered();
+	arrayIter(leek_ids, function(_leek_id) {
+		var _leek = getLeekById(_leek_id);
+		var _binary_coordinates = FCT_Convert_cellId_to_BinaryCoordinates(_leek.leek_cell);
+		if (_leek.leek_isAlive && !_leek.leek_isCaster) {
+			if (_leek.leek_isAlly) {
+				var _area_map = FCT_BinaryMap_template_on_cell(GBL_effect_area_template_by_area_type_id[GBL_LEEK_AREA], _leek.leek_cell, true, _binaryMap_out._map);
+				_binaryMap_out = FCT_BinaryMap_operation_union(_binaryMap_out, _area_map);
+			} else {
+				_binaryMap_out._map[_binary_coordinates._line] |= (1 << _binary_coordinates._cell);
+			}
+		}
+	});
+	return _binaryMap_out;
+}
+
+function FCT_Get_binary_map_restricted() {
+	if (GBL_Binary_map_restricted === null) {
+		FCT_Refresh_binary_map_restricted();
+	}
+	return GBL_Binary_map_restricted.cloneObj();
+}

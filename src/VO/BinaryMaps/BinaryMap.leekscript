@@ -1,0 +1,54 @@
+/**
+ * constructor(map_binary, coordinates_min, coordinates_max)
+ * _map_binary
+ * _coordinates_min
+ * _coordinates_max
+ * */
+class BinaryMap {
+	_map;
+	_coordinates_min;
+	_coordinates_max;
+	__cell_ids;
+
+	constructor(map_binary, coordinates_min, coordinates_max) {
+		this._map = map_binary;
+		this._coordinates_min = coordinates_min !== null ? coordinates_min : new BinaryCoordinates(0, 0);
+		this._coordinates_max = coordinates_max !== null ? coordinates_max : new BinaryCoordinates(34, 17);
+		this.__cell_ids = null;
+	}
+
+	getCellIds() {
+		if (this.__cell_ids === null) {
+			this.__cell_ids = FCT_Convert_BinaryMap_to_CellIds(this);
+		}
+		return this.__cell_ids;
+	}
+
+	markMap(color) {
+		mark(this.getCellIds(), color, 1);
+	}
+
+	cloneObj() {
+		return new BinaryMap(clone(this._map, 2), this._coordinates_min.cloneObj(), this._coordinates_max.cloneObj());
+	}
+}
+
+
+/**
+ * constructor(line, cell)
+ * _line
+ * _cell
+ * */
+class BinaryCoordinates {
+	_line;
+	_cell;
+
+	constructor(line, cell) {
+		this._line = max(min(line, 34), 0);
+		this._cell = max(min(cell, 17), 0);
+	}
+
+	cloneObj() {
+		return new BinaryCoordinates(clone(this._line, 2), clone(this._cell, 2));
+	}
+}

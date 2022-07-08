@@ -1,0 +1,44 @@
+/**
+ * 	_id;
+ *	_value;
+ *	_isObstacle;
+ *	_isEntity;
+ *	_entity_id;
+ *
+ * */
+class TacticalMapCell_v2 {
+	_id;
+	_value;
+	_isObstacle;
+	_isEntity;
+	_entity_id;
+
+	constructor(
+		id,
+		value,
+		isObstacle,
+		isEntity,
+		entity_id
+	) {
+		this._id = id;
+		this._value = value;
+		this._isObstacle = isObstacle;
+		this._isEntity = isEntity;
+		this._entity_id = entity_id;
+	}
+
+
+	compareTo(_tactical_map_cell) {
+		return (this._value < _tactical_map_cell._value ? -1 : (this._value > _tactical_map_cell._value ? 1 : 0));
+	}
+
+	cloneObj() {
+		return new TacticalMapCell_v2(
+			clone(this._id, 2),
+			clone(this._value, 2),
+			clone(this._isObstacle, 2),
+			clone(this._isEntity, 2),
+			clone(this._entity_id, 2)
+		);
+	}
+}

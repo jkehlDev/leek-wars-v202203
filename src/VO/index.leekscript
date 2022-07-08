@@ -5,5 +5,9 @@ include('ToolEffect');
 include('TacticMapCell');
 include('LeekState');
 include('Collection');
-include('Contracts/index');
 include('TacticalMove');
+// _______________________
+include('BinaryMaps/index');
+include('Contracts/index');
+include('Scenarios/index');
+include('TacticalMaps/index');

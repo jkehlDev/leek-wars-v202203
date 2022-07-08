@@ -1,0 +1,49 @@
+/**
+ * constructor(leek_id, center_cell_id, path_map_range, binary_map, binary_map_by_dist)
+ * _leek_id
+ * _center_cell_id
+ * _path_map_range
+ * _binary_map
+ * _binary_map_by_dist
+ * */
+class BinaryPathMap {
+	_leek_id;
+	_center_cell_id;
+	_path_map_range;
+	_binary_map;
+	_binary_map_by_dist;
+
+	constructor(leek_id, center_cell_id, path_map_range, binary_map, binary_map_by_dist) {
+		this._leek_id = leek_id;
+		this._center_cell_id = center_cell_id;
+		this._path_map_range = path_map_range;
+		this._binary_map = binary_map;
+		this._binary_map_by_dist = binary_map_by_dist;
+	}
+
+	getMapByDist(_dist) {
+		return ((_dist >= 0) && (_dist <= this._path_map_range)) ? _binary_map_by_dist[_dist] : GBL_empty_binary_map;
+	}
+	
+	markMap(){
+		var _ratio = floor(200 / this._path_map_range);
+		arrayIter(this._binary_map_by_dist, function(_index, _map) {
+			var _offset = _ratio * _index;
+			_map.markMap(getColor(_offset, _offset, 255));
+		});
+	}
+
+	cloneObj() {
+		return new BinaryPathMap(
+			clone(this._leek_id, 2),
+			clone(this._center_cell_id, 2),
+			clone(this._path_map_range, 2),
+			this._binary_map.cloneObj(),
+			arrayMap(
+				this._binary_map_by_dist,
+				function(_map) {
+					return _map.cloneObj();
+				})
+		);
+	}
+}

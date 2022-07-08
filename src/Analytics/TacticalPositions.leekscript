@@ -26,7 +26,7 @@ function _sortPositionsRudest(targeted_leek, myCurrent_leek) {
 	};
 }
 
-function _sortNoSort(leek1, leek2) {
+function _sortNoSort(elmt1, elmt2) {
 	return 0;
 }
 
@@ -53,72 +53,73 @@ function _sortLeekByLevelASC(leek1, leek2) {
  *moveTo
  * */
 function resolveTacticalPositionByTargetsLeeksNdTacticalArea(target_leeks, targetSorter, tactical_area, positionsSorter) {
-	var target_position_cell_id = null;
-	var isDistant = false;
+	var target_position_cell_id;
 	var targetCell_dist;
+	var isDistant = false;
+
 	if (count(target_leeks) > 0) {
 		var positions_binary_aroundTarget, positions_bynary_map, intersect_positions, positions_map_cells, target_position_cell_ids, pathToTargetBinary;
 		var target_leeks_sorted = arraySort(target_leeks, targetSorter);
-		for (var target_leek in target_leeks_sorted) {
-			isDistant = false;
-			if (target_leek.leek_id !== GBL_myLeek_id) {
-				positions_binary_aroundTarget = resolveAreaTemplateOnCell(tactical_area, target_leek.leek_cell, true, GBL_obstacles_map_binary);
-				intersect_positions = intersection(
-					GBL_myLeek_current_path.mapAll,
-					positions_binary_aroundTarget.map,
+
+		var target_leek = shift(target_leeks_sorted);
+		isDistant = false;
+		targetCell_dist = null;
+		target_position_cell_id = null;
+		if (target_leek.leek_id !== GBL_myLeek_id) {
+			positions_binary_aroundTarget = resolveAreaTemplateOnCell(tactical_area, target_leek.leek_cell, true, GBL_obstacles_map_binary);
+			intersect_positions = intersection(
+				GBL_myLeek_current_path.mapAll,
+				positions_binary_aroundTarget.map,
+				GBL_myLeek_current_path.coordinates_min.line,
+				GBL_myLeek_current_path.coordinates_max.line);
+			positions_map_cells = [];
+			target_position_cell_ids = [];
+			if (binaryMapNotEmpty(intersect_positions,
 					GBL_myLeek_current_path.coordinates_min.line,
-					GBL_myLeek_current_path.coordinates_max.line);
-				positions_map_cells = [];
-				target_position_cell_ids = [];
-				if (binaryMapNotEmpty(intersect_positions,
-						GBL_myLeek_current_path.coordinates_min.line,
-						GBL_myLeek_current_path.coordinates_max.line)) {
-					positions_map_cells = convertBinaryMapToCellIdMap(
-						intersect_positions,
-						GBL_myLeek_current_path.coordinates_min,
-						GBL_myLeek_current_path.coordinates_max);
+					GBL_myLeek_current_path.coordinates_max.line)) {
+				positions_map_cells = convertBinaryMapToCellIdMap(
+					intersect_positions,
+					GBL_myLeek_current_path.coordinates_min,
+					GBL_myLeek_current_path.coordinates_max);
 
-					target_position_cell_ids = arraySort(positions_map_cells, positionsSorter(target_leek, myLeek()));
-				} else {
-					positions_map_cells = convertBinaryMapToCellIdMap(
-						positions_binary_aroundTarget.map,
-						positions_binary_aroundTarget.coordinates_min,
-						positions_binary_aroundTarget.coordinates_max);
-					target_position_cell_ids = arraySort(positions_map_cells, positionsSorter(target_leek, myLeek()));
+				target_position_cell_ids = arraySort(positions_map_cells, positionsSorter(target_leek, myLeek()));
+			} else {
+				positions_map_cells = convertBinaryMapToCellIdMap(
+					positions_binary_aroundTarget.map,
+					positions_binary_aroundTarget.coordinates_min,
+					positions_binary_aroundTarget.coordinates_max);
+				target_position_cell_ids = arraySort(positions_map_cells, positionsSorter(target_leek, myLeek()));
 
-					if (count(target_position_cell_ids) > 0) {
-						isDistant = true;
-						targetCell_dist = shift(target_position_cell_ids).cell_id;
-						target_position_cell_ids = [];
-						pathToTargetBinary = resolvePathBetween(myLeek().leek_cell, targetCell_dist);
+				if (count(target_position_cell_ids) > 0) {
+					isDistant = true;
+					targetCell_dist = shift(target_position_cell_ids).cell_id;
+					target_position_cell_ids = [];
+					pathToTargetBinary = resolvePathBetween(myLeek().leek_cell, targetCell_dist);
 
-						if (pathToTargetBinary !== null) {
-							pathToTargetBinary.map = intersection(
-								GBL_myLeek_current_path.mapAll,
-								pathToTargetBinary.map,
-								GBL_myLeek_current_path.coordinates_min.line,
-								GBL_myLeek_current_path.coordinates_max.line);
+					if (pathToTargetBinary !== null) {
+						pathToTargetBinary.map = intersection(
+							GBL_myLeek_current_path.mapAll,
+							pathToTargetBinary.map,
+							GBL_myLeek_current_path.coordinates_min.line,
+							GBL_myLeek_current_path.coordinates_max.line);
 
-							positions_map_cells = convertBinaryMapToCellIdMap(
-								pathToTargetBinary.map,
-								pathToTargetBinary.coordinates_min,
-								pathToTargetBinary.coordinates_max);
+						positions_map_cells = convertBinaryMapToCellIdMap(
+							pathToTargetBinary.map,
+							pathToTargetBinary.coordinates_min,
+							pathToTargetBinary.coordinates_max);
 
-							target_position_cell_ids = arraySort(positions_map_cells, _sortPositionsNearestTarget(target_leek, myLeek()));
-						}
+						target_position_cell_ids = arraySort(positions_map_cells, _sortPositionsNearestTarget(target_leek, myLeek()));
 					}
 				}
+			}
 
-				target_position_cell_id = null;
-				if (count(target_position_cell_ids) > 0) {
-					target_position_cell_id = shift(target_position_cell_ids);
-					break;
-				}
+			if (count(target_position_cell_ids) > 0) {
+				target_position_cell_id = shift(target_position_cell_ids);
 			}
 		}
 	}
 
-	var tactical_cell_id = (target_position_cell_id !== null) ? target_position_cell_id.cell_id : myLeek().leek_cell;
+	var tactical_cell_id = (target_position_cell_id !== null) ? target_position_cell_id.cell_id : null;
 
 	return new TacticalMove(tactical_cell_id, targetCell_dist, isDistant);
 }

@@ -23,33 +23,22 @@ function getEffectAreaTemplateByToolId(tool_id) {
 // --------------------------
 global _tool_by_id = []; // Tool object
 global GBL_launch_area_template_by_ToolId = []; // Binary template maps
-global AREA_X_2_4 = 100;
-global AREA_CIRCLE_2_4 = 101;
-global AREA_CIRCLE_2_6 = 103;
-global AREA_CIRCLE_2_8 = 105;
-global AREA_CIRCLE_4_8 = 104;
-global AREA_SQUARE_2_4 = 102;
-global AREA_CIRCLE_6_15 = 106;
+
+global TACTICAL_AREA_5_10 = resolveAreaTemplate(generateLaunchAreaTemplateXY_square(5, 18, LAUNCH_TYPE_CIRCLE));
+
 global GBL_effect_area_template_by_area_type_id = [
 	AREA_POINT: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 0, LAUNCH_TYPE_CIRCLE)),
 	AREA_CIRCLE_1: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 1, LAUNCH_TYPE_CIRCLE)),
 	AREA_CIRCLE_2: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 2, LAUNCH_TYPE_CIRCLE)),
 	AREA_CIRCLE_3: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 3, LAUNCH_TYPE_CIRCLE)),
-	AREA_CIRCLE_2_4: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(2, 4, LAUNCH_TYPE_CIRCLE)),
-	AREA_CIRCLE_2_6: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(2, 6, LAUNCH_TYPE_CIRCLE)),
-	AREA_CIRCLE_2_8: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(2, 8, LAUNCH_TYPE_CIRCLE)),
-	AREA_CIRCLE_4_8: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(4, 8, LAUNCH_TYPE_CIRCLE)),
-	AREA_CIRCLE_6_15: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(6, 15, LAUNCH_TYPE_CIRCLE)),
 	AREA_SQUARE_1: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 1, LAUNCH_TYPE_SQUARE)),
 	AREA_SQUARE_2: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 2, LAUNCH_TYPE_SQUARE)),
-	AREA_SQUARE_2_4: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(2, 6, LAUNCH_TYPE_SQUARE)),
 	AREA_PLUS_1: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 1, LAUNCH_TYPE_LINE)),
 	AREA_PLUS_2: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 2, LAUNCH_TYPE_LINE)),
 	AREA_PLUS_3: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 3, LAUNCH_TYPE_LINE)),
 	AREA_X_1: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 2, LAUNCH_TYPE_DIAGONAL)),
 	AREA_X_2: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 4, LAUNCH_TYPE_DIAGONAL)),
 	AREA_X_3: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 6, LAUNCH_TYPE_DIAGONAL)),
-	AREA_X_2_4: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(4, 6, LAUNCH_TYPE_DIAGONAL)),
 	AREA_FIRST_INLINE: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 0, LAUNCH_TYPE_CIRCLE)),
 	AREA_LASER_LINE: resolveAreaTemplate(generateLaunchAreaTemplateXY_square(0, 0, LAUNCH_TYPE_CIRCLE)),
 ]; // Binary template maps

@@ -111,6 +111,12 @@ function filter_cells_all_obstacles_nd_leek_allies_area() {
 			result = union(result, area_map.map, area_map.coordinates_min.line, area_map.coordinates_max.line);
 		}
 	}
+	for (_leek in getAllEnemiesAliveLeeks()) {
+		if (_leek.leek_isAlive) {
+			area_map = resolveAreaTemplateOnCell(GBL_effect_area_template_by_area_type_id[GBL_LEEK_AREA], _leek.leek_cell, true, GBL_obstacles_map_binary);
+			result = union(result, area_map.map, area_map.coordinates_min.line, area_map.coordinates_max.line);
+		}
+	}
 	return {
 		map: result,
 		coordinates_min: {

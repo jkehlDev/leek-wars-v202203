@@ -41,7 +41,6 @@ function _fct_resolveContractOptions(_contract_options, _contract, _caster_cell,
 					_is_caster_affected = true;
 					push(_affected_leeks, GBL_myLeek_id);
 				}
-
 			} else {
 				_leek_id_tmp = getEntityOnCell(_cell_id);
 				if (_leek_id_tmp !== -1) {
@@ -52,10 +51,10 @@ function _fct_resolveContractOptions(_contract_options, _contract, _caster_cell,
 		}
 
 		if (
-			currentTool.tool_effectAreaType === AREA_LASER_LINE ||
-			currentTool.tool_effectAreaType === AREA_FIRST_INLINE ||
-			_contract_options[_target_cell] === null ||
-			(_is_caster_affected && count(_contract_options[_target_cell]) < 6)
+			true
+			//currentTool.tool_effectAreaType === AREA_LASER_LINE ||
+			//currentTool.tool_effectAreaType === AREA_FIRST_INLINE ||
+			//_contract_options[_target_cell] === null || _is_caster_affected 
 		) {
 			push(_options_partials, new ContractOption(
 				_contract._tool_id,

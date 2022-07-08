@@ -57,9 +57,10 @@ function _refreshRadarTactic() {
 	}
 	var offsetLifeMaxBlue = 0;
 	var offsetLifeMaxRed = 0;
-	for (radar_zone in GBL_radar_zones_by_leek) {
-		if (radar_zone.leek_id !== GBL_myLeek_id) {
-			leek = getLeekById(radar_zone.leek_id);
+	for (leek in getAllAliveLeeks()) {
+		radar_zone = GBL_radar_zones_by_leek[leek.leek_id];
+		
+		if (radar_zone !== null && leek.leek_id !== GBL_myLeek_id) {
 			ratio = 1 / radar_zone.leek_path_map.pathRange;
 			for (zone = 0; zone <= radar_zone.leek_path_map.pathRange; zone++) {
 				cellsInMap = convertBinaryMapToCellIdMap(
@@ -73,6 +74,7 @@ function _refreshRadarTactic() {
 					offsetLifeMaxRed = max(offsetLifeMaxRed, GBL_radar_tactic_map_by_cells[cell.cell_id].enemies_data.zone_sum_life);
 				}
 			}
+
 		}
 	}
 	var blue, red, rate;
@@ -92,6 +94,5 @@ function _refreshRadarTactic() {
 				mark(cell.cell_id, getColor(rate, 255 - rate, 255 - rate));
 			}
 		}
-
 	}
 }

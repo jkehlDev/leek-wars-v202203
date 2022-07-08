@@ -41,13 +41,6 @@ global GBL_Contract_filters = {
 };
 // ____________________________________________________
 // ---------------------- UTILS -----------------------
-global GBL_fold_filter_true = function(_option) {
-	return true;
-};
-global GBL_fold_filter_false = function(_option) {
-	return false;
-};
-
 function _FoldFilters(_fold, _filter) {
 	return function(_option) {
 		return _fold(_option) && _filter(_option);
@@ -79,8 +72,10 @@ function _fct_effects_and(_fold, _paramEffect) {
 
 function _fct_effect_lesser(_paramEffect) {
 	return function(_option) {
-		return _effect_sum_value(_option, _paramEffect._effect_type, _paramEffect._target_type_from) * (1 + _paramEffect._factor) <= 
-			_effect_sum_value(_option, _paramEffect._effect_type, _paramEffect._target_type_to);
+		var life_from = _life_sum_value(_option, _paramEffect._target_type_from);
+		var effect_from = _effect_sum_value(_option, _paramEffect._effect_type, _paramEffect._target_type_from);
+		return (effect_from <= (life_from / 2)) && ((effect_from * (1 + _paramEffect._factor)) <=
+			_effect_sum_value(_option, _paramEffect._effect_type, _paramEffect._target_type_to));
 	};
 }
 // ____________________________________________________

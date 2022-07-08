@@ -1,0 +1,4 @@
+global GBL_TACTICAL_MAP_LIFE;
+function FCT_Build_tactical_map_life() {
+	
+}
